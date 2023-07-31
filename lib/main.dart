@@ -60,8 +60,11 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           body: Column(
             children: [
-              HeaderWidget(),
-              Expanded(child: ChatListWidget()),
+              Expanded(
+                  child: Container(
+                      clipBehavior: Clip.antiAlias,
+                      decoration: BoxDecoration(color: Color(0xFF0F1E28)),
+                      child: ChatListWidget())),
             ],
           ),
         ),
@@ -74,11 +77,13 @@ class HeaderWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 150,
-      color: Colors.blue,
-      child: const Text(
-        'Welcome to Cool Chat',
-        style: TextStyle(fontSize: 24, color: Colors.white),
+      width: 393,
+      height: 428,
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: NetworkImage("https://via.placeholder.com/393x428"),
+          fit: BoxFit.cover,
+        ),
       ),
     );
   }
@@ -87,30 +92,46 @@ class HeaderWidget extends StatelessWidget {
 class ChatListWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final List<String> items = List<String>.generate(99, (i) => 'Chat $i');
-    return Column(
-      children: [
-        const Padding(
-          padding: EdgeInsets.all(16.0),
+    final List<String> items = List<String>.generate(9, (i) => 'Chat $i');
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(child: HeaderWidget()),
+        const SliverToBoxAdapter(
+            child: SizedBox(
+          width: 361,
           child: Text(
-            'Choose room for communication',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            'Choose rooms for communication',
+            style: TextStyle(
+              color: Color(0xFFF5FBFF),
+              fontSize: 24,
+              fontFamily: 'Manrope',
+              fontWeight: FontWeight.w500,
+              height: 1.24,
+            ),
           ),
-        ),
-        Expanded(
-          child: ListView.builder(
-            itemCount: items.length ~/ 2 + 1,
-            itemBuilder: (context, index) {
-              return Row(
-                children: [
-                  ChatItemWidget(items: items, index: index * 2),
-                  ChatItemWidget(items: items, index: index * 2 + 1),
-                ],
-              );
-            },
-          ),
-        ),
+        )),
+        scrollChatList(items),
       ],
+    );
+  }
+
+  SliverList scrollChatList(List<String> items) {
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (BuildContext context, int index) {
+          if (index < items.length ~/ 2 + 1) {
+            return Row(
+              children: [
+                ChatItemWidget(items: items, index: index * 2),
+                ChatItemWidget(items: items, index: index * 2 + 1),
+              ],
+            );
+          } else {
+            return SizedBox.shrink();
+          }
+        },
+        childCount: (items.length ~/ 2) + 1,
+      ),
     );
   }
 }
@@ -125,49 +146,166 @@ class ChatItemWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     if (index < items.length) {
       return Expanded(
-        child: Card(
-          color: Colors.amber,
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Container(
-                  height: 150,
-                  color: Colors.grey,
-                  child: ListTile(
-                    title: Text(
-                      '${items[index]}',
-                      style: TextStyle(color: Colors.black),
-                      selectionColor: Colors.black,
+          child: Container(
+        width: 171,
+        height: 212,
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Color(0x660287DF),
+              blurRadius: 8,
+              offset: Offset(2, 2),
+              spreadRadius: 0,
+            )
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 171,
+              height: 171,
+              child: Stack(
+                children: [
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    child: Container(
+                      width: 171,
+                      height: 171,
+                      decoration: ShapeDecoration(
+                        image: DecorationImage(
+                          image: NetworkImage(
+                              "https://via.placeholder.com/171x171"),
+                          fit: BoxFit.cover,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          side:
+                              BorderSide(width: 0.50, color: Color(0xFF0186DF)),
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(10),
+                            topRight: Radius.circular(10),
+                          ),
+                        ),
+                      ),
                     ),
-                    onTap: () {},
+                  ),
+                  Positioned(
+                    left: 27,
+                    top: 133,
+                    child: SizedBox(
+                      width: 117,
+                      child: Text(
+                        'Tents, awnings, canopies',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Color(0xFFF5FBFF),
+                          fontSize: 14,
+                          fontFamily: 'Manrope',
+                          fontWeight: FontWeight.w600,
+                          height: 1.30,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              width: 171,
+              padding: const EdgeInsets.all(10),
+              decoration: ShapeDecoration(
+                color: Color(0xFF0186DF),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(10),
+                    bottomRight: Radius.circular(10),
                   ),
                 ),
               ),
-              Container(
-                height: 50,
-                child: const Row(
-                  verticalDirection: VerticalDirection.up,
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Logo1',
-                      style: TextStyle(color: Colors.black),
-                      selectionColor: Colors.black,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 16,
+                          height: 16,
+                          clipBehavior: Clip.antiAlias,
+                          decoration: BoxDecoration(),
+                          child: Stack(children: []),
+                        ),
+                        const SizedBox(width: 2),
+                        Text(
+                          '4',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Color(0xFFF5FBFF),
+                            fontSize: 12,
+                            fontFamily: 'Manrope',
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
                     ),
-                    Text(
-                      'Logo2',
-                      style: TextStyle(color: Colors.black),
-                      selectionColor: Colors.black,
+                  ),
+                  const SizedBox(width: 100),
+                  Container(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 16,
+                          height: 16,
+                          clipBehavior: Clip.antiAlias,
+                          decoration: BoxDecoration(),
+                          child: Stack(
+                            children: [
+                              Positioned(
+                                left: 13,
+                                top: 1,
+                                child: Container(
+                                  width: 3,
+                                  height: 3,
+                                  decoration: ShapeDecoration(
+                                    color: Color(0xFFF5FBFF),
+                                    shape: OvalBorder(),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 2),
+                        Text(
+                          '2',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Color(0xFFF5FBFF),
+                            fontSize: 12,
+                            fontFamily: 'Manrope',
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      );
+      ));
     } else {
       return Expanded(
         child: Card(),
