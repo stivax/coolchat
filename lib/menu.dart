@@ -48,25 +48,43 @@ class MainDropdownMenu extends StatelessWidget {
             // Handle menu item selection here
             print("Selected: $value");
           },
-          icon: Icon(Icons.menu),
+          icon: Icon(Icons.menu, color: Colors.white),
           itemBuilder: (context) => [
             PopupMenuItem<String>(
               value: 'item1',
-              child: Text('Chat rooms'),
+              child: Text(
+                'Chat rooms',
+                style: TextStyle(color: Color(0xFFF5FBFF)),
+              ),
             ),
             PopupMenuItem<String>(
               value: 'item2',
-              child: Text('Personal chats'),
+              child: Text(
+                'Personal chats',
+                style: TextStyle(color: Color(0xFFF5FBFF)),
+              ),
             ),
             PopupMenuItem<String>(
               value: 'item3',
-              child: Text('Setting'),
+              child: Text(
+                'Setting',
+                style: TextStyle(color: Color(0xFFF5FBFF)),
+              ),
             ),
             PopupMenuItem<String>(
               value: 'item4',
-              child: Text('Rools of the chat'),
+              child: Text(
+                'Rools of the chat',
+                style: TextStyle(color: Color(0xFFF5FBFF)),
+              ),
             ),
           ],
+          //
+          color: const Color(0x990F1E28),
+          elevation: 8,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
         );
       },
     );

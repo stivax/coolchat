@@ -29,14 +29,69 @@ class _MyHomePageState extends State<MyHomePage> {
         create: (context) => MenuBloc(),
         child: Scaffold(
           appBar: AppBar(
-            title: Text("Cool Chat"),
+            backgroundColor: Color(0xFF0F1E28),
+            title: Row(
+              children: [
+                Image.asset('assets/images/logo.png'),
+                SizedBox(width: 10),
+                Container(
+                  width: 50,
+                  height: 35,
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        left: 0,
+                        top: 0,
+                        child: SizedBox(
+                          width: 50,
+                          height: 23,
+                          child: Text(
+                            'Team',
+                            style: TextStyle(
+                              color: Color(0xFFF5FBFF),
+                              fontSize: 18,
+                              fontFamily: 'Helvetica Neue',
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: 1,
+                        top: 12,
+                        child: SizedBox(
+                          width: 50,
+                          height: 23,
+                          child: Text(
+                            'Chat',
+                            style: TextStyle(
+                              color: Color(0xFFF5FBFF),
+                              fontSize: 18,
+                              fontFamily: 'Helvetica Neue',
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.06,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
             leading: MainDropdownMenu(),
             actions: [
               Row(
                 children: [
                   Switch(
-                    activeColor: Colors.red,
-                    activeTrackColor: Colors.amber,
+                    inactiveThumbColor: Color(0xFF0F1E28),
+                    inactiveTrackColor: Color(0xFF0F1E28),
+                    activeColor: Color(0xFFF5FBFF),
+                    activeTrackColor: Color(0xFF0F1E28),
+                    splashRadius: 20,
+                    activeThumbImage: AssetImage('assets/images/tema_dark.png'),
+                    inactiveThumbImage:
+                        AssetImage('assets/images/tema_light.png'),
                     value: _themeMode,
                     onChanged: (bool newValue) {
                       setState(() {
@@ -79,11 +134,43 @@ class HeaderWidget extends StatelessWidget {
     return Container(
       width: 393,
       height: 428,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         image: DecorationImage(
-          image: NetworkImage("https://via.placeholder.com/393x428"),
+          image: AssetImage('assets/images/main.png'),
           fit: BoxFit.cover,
         ),
+      ),
+      child: const Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(left: 20),
+            child: Text(
+              'Welcome every tourist to Teamchat',
+              style: TextStyle(
+                color: Color(0xFFF5FBFF),
+                fontSize: 36,
+                fontFamily: 'Manrope',
+                fontWeight: FontWeight.w700,
+                height: 1.16,
+              ),
+            ),
+          ),
+          //SizedBox(height: 16), // Простір між першим та другим текстом
+          Padding(
+            padding: EdgeInsets.only(left: 20, bottom: 20, top: 10),
+            child: Text(
+              'Chat about a wide variety of tourist equipment. Communicate, get good advice and choose!',
+              style: TextStyle(
+                color: Color(0xFFF5FBFF),
+                fontSize: 16,
+                fontFamily: 'Manrope',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -96,6 +183,9 @@ class ChatListWidget extends StatelessWidget {
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(child: HeaderWidget()),
+        SliverToBoxAdapter(
+          child: SizedBox(height: 30),
+        ),
         const SliverToBoxAdapter(
             child: SizedBox(
           width: 361,
@@ -120,10 +210,15 @@ class ChatListWidget extends StatelessWidget {
       delegate: SliverChildBuilderDelegate(
         (BuildContext context, int index) {
           if (index < items.length ~/ 2 + 1) {
-            return Row(
+            return Column(
               children: [
-                ChatItemWidget(items: items, index: index * 2),
-                ChatItemWidget(items: items, index: index * 2 + 1),
+                SizedBox(height: 5),
+                Row(
+                  children: [
+                    ChatItemWidget(items: items, index: index * 2),
+                    ChatItemWidget(items: items, index: index * 2 + 1),
+                  ],
+                ),
               ],
             );
           } else {
@@ -148,13 +243,13 @@ class ChatItemWidget extends StatelessWidget {
       return Expanded(
           child: Container(
         width: 171,
-        height: 212,
-        decoration: BoxDecoration(
+        height: 207,
+        decoration: const BoxDecoration(
           boxShadow: [
             BoxShadow(
               color: Color(0x660287DF),
               blurRadius: 8,
-              offset: Offset(2, 2),
+              offset: Offset(1, 1),
               spreadRadius: 0,
             )
           ],
@@ -241,7 +336,9 @@ class ChatItemWidget extends StatelessWidget {
                           height: 16,
                           clipBehavior: Clip.antiAlias,
                           decoration: BoxDecoration(),
-                          child: Stack(children: []),
+                          child: Stack(children: [
+                            Image.asset('assets/images/people.png'),
+                          ]),
                         ),
                         const SizedBox(width: 2),
                         Text(
@@ -271,6 +368,7 @@ class ChatItemWidget extends StatelessWidget {
                           decoration: BoxDecoration(),
                           child: Stack(
                             children: [
+                              Image.asset('assets/images/people.png'),
                               Positioned(
                                 left: 13,
                                 top: 1,
