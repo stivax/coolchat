@@ -35,8 +35,6 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
   }
 }
 
-// Dropdown Menu Widget
-
 class MainDropdownMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -48,7 +46,7 @@ class MainDropdownMenu extends StatelessWidget {
             // Handle menu item selection here
             print("Selected: $value");
           },
-          icon: Icon(Icons.menu, color: Colors.white),
+          icon: Icon(Icons.align_horizontal_left, color: Color(0xFFF5FBFF)),
           itemBuilder: (context) => [
             PopupMenuItem<String>(
               value: 'item1',
@@ -80,7 +78,7 @@ class MainDropdownMenu extends StatelessWidget {
             ),
           ],
           //
-          color: const Color(0x990F1E28),
+          color: const Color(0xFF0F1E28),
           elevation: 8,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.0),

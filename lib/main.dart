@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'menu.dart';
 
 void main() => runApp(MyApp());
@@ -37,7 +38,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 Container(
                   width: 50,
                   height: 35,
-                  child: Stack(
+                  child: const Stack(
                     children: [
                       Positioned(
                         left: 0,
@@ -85,13 +86,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 children: [
                   Switch(
                     inactiveThumbColor: Color(0xFF0F1E28),
-                    inactiveTrackColor: Color(0xFF0F1E28),
                     activeColor: Color(0xFFF5FBFF),
-                    activeTrackColor: Color(0xFF0F1E28),
                     splashRadius: 20,
-                    activeThumbImage: AssetImage('assets/images/tema_dark.png'),
+                    activeThumbImage:
+                        const AssetImage('assets/images/tema_dark.png'),
                     inactiveThumbImage:
-                        AssetImage('assets/images/tema_light.png'),
+                        const AssetImage('assets/images/tema_light.png'),
                     value: _themeMode,
                     onChanged: (bool newValue) {
                       setState(() {
@@ -157,7 +157,6 @@ class HeaderWidget extends StatelessWidget {
               ),
             ),
           ),
-          //SizedBox(height: 16), // Простір між першим та другим текстом
           Padding(
             padding: EdgeInsets.only(left: 20, bottom: 20, top: 10),
             child: Text(
@@ -179,7 +178,7 @@ class HeaderWidget extends StatelessWidget {
 class ChatListWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final List<String> items = List<String>.generate(9, (i) => 'Chat $i');
+    final List<String> items = List<String>.generate(99, (i) => 'Chat $i');
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(child: HeaderWidget()),
@@ -209,7 +208,7 @@ class ChatListWidget extends StatelessWidget {
     return SliverList(
       delegate: SliverChildBuilderDelegate(
         (BuildContext context, int index) {
-          if (index < items.length ~/ 2 + 1) {
+          if (index < items.length) {
             return Column(
               children: [
                 SizedBox(height: 5),
@@ -241,173 +240,184 @@ class ChatItemWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     if (index < items.length) {
       return Expanded(
-          child: Container(
-        width: 171,
-        height: 207,
-        decoration: const BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: Color(0x660287DF),
-              blurRadius: 8,
-              offset: Offset(1, 1),
-              spreadRadius: 0,
-            )
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              width: 171,
-              height: 171,
-              child: Stack(
-                children: [
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    child: Container(
-                      width: 171,
-                      height: 171,
-                      decoration: ShapeDecoration(
-                        image: DecorationImage(
-                          image: NetworkImage(
-                              "https://via.placeholder.com/171x171"),
-                          fit: BoxFit.cover,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          side:
-                              BorderSide(width: 0.50, color: Color(0xFF0186DF)),
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(10),
-                            topRight: Radius.circular(10),
+          child: GestureDetector(
+        onTap: () {
+          _playTapSound();
+        },
+        child: Container(
+          width: 171,
+          height: 207,
+          decoration: const BoxDecoration(
+            boxShadow: [
+              BoxShadow(
+                color: Color(0x660287DF),
+                blurRadius: 8,
+                offset: Offset(1, 1),
+                spreadRadius: 0,
+              )
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 171,
+                height: 171,
+                child: Stack(
+                  children: [
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      child: Container(
+                        width: 171,
+                        height: 171,
+                        decoration: ShapeDecoration(
+                          image: DecorationImage(
+                            image: AssetImage('assets/images/tent.png'),
+                            fit: BoxFit.cover,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            side: BorderSide(
+                                width: 0.50, color: Color(0xFF0186DF)),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(10),
+                              topRight: Radius.circular(10),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  Positioned(
-                    left: 27,
-                    top: 133,
-                    child: SizedBox(
-                      width: 117,
-                      child: Text(
-                        'Tents, awnings, canopies',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Color(0xFFF5FBFF),
-                          fontSize: 14,
-                          fontFamily: 'Manrope',
-                          fontWeight: FontWeight.w600,
-                          height: 1.30,
+                    Positioned(
+                      left: 27,
+                      top: 133,
+                      child: SizedBox(
+                        width: 117,
+                        child: Text(
+                          'Chat $index',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Color(0xFFF5FBFF),
+                            fontSize: 14,
+                            fontFamily: 'Manrope',
+                            fontWeight: FontWeight.w600,
+                            height: 1.30,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              width: 171,
-              padding: const EdgeInsets.all(10),
-              decoration: ShapeDecoration(
-                color: Color(0xFF0186DF),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(10),
-                    bottomRight: Radius.circular(10),
-                  ),
+                  ],
                 ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 16,
-                          height: 16,
-                          clipBehavior: Clip.antiAlias,
-                          decoration: BoxDecoration(),
-                          child: Stack(children: [
-                            Image.asset('assets/images/people.png'),
-                          ]),
-                        ),
-                        const SizedBox(width: 2),
-                        Text(
-                          '4',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Color(0xFFF5FBFF),
-                            fontSize: 12,
-                            fontFamily: 'Manrope',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ],
+              Container(
+                width: 171,
+                padding: const EdgeInsets.all(10),
+                decoration: ShapeDecoration(
+                  color: Color(0xFF0186DF),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(10),
+                      bottomRight: Radius.circular(10),
                     ),
                   ),
-                  const SizedBox(width: 100),
-                  Container(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 16,
-                          height: 16,
-                          clipBehavior: Clip.antiAlias,
-                          decoration: BoxDecoration(),
-                          child: Stack(
-                            children: [
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 16,
+                            height: 16,
+                            clipBehavior: Clip.antiAlias,
+                            decoration: BoxDecoration(),
+                            child: Stack(children: [
                               Image.asset('assets/images/people.png'),
-                              Positioned(
-                                left: 13,
-                                top: 1,
-                                child: Container(
-                                  width: 3,
-                                  height: 3,
-                                  decoration: ShapeDecoration(
-                                    color: Color(0xFFF5FBFF),
-                                    shape: OvalBorder(),
+                            ]),
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            '$index',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Color(0xFFF5FBFF),
+                              fontSize: 12,
+                              fontFamily: 'Manrope',
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 90),
+                    Container(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 16,
+                            height: 16,
+                            clipBehavior: Clip.antiAlias,
+                            decoration: BoxDecoration(),
+                            child: Stack(
+                              children: [
+                                Image.asset('assets/images/people.png'),
+                                Positioned(
+                                  left: 13,
+                                  top: 1,
+                                  child: Container(
+                                    width: 3,
+                                    height: 3,
+                                    decoration: ShapeDecoration(
+                                      color: Color(0xFFF5FBFF),
+                                      shape: OvalBorder(),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 2),
-                        Text(
-                          '2',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Color(0xFFF5FBFF),
-                            fontSize: 12,
-                            fontFamily: 'Manrope',
-                            fontWeight: FontWeight.w400,
+                          const SizedBox(width: 2),
+                          Text(
+                            '2',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Color(0xFFF5FBFF),
+                              fontSize: 12,
+                              fontFamily: 'Manrope',
+                              fontWeight: FontWeight.w400,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ));
     } else {
       return Expanded(
         child: Card(),
       );
+    }
+  }
+
+  void _playTapSound() async {
+    if (await Vibrate.canVibrate) {
+      // Відтворюємо стандартний звук тапу
+      Vibrate.vibrate();
     }
   }
 }
