@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'menu.dart';
 import 'themes.dart';
 import 'themeProvider.dart';
+import 'formChatList.dart';
 
 void main() => runApp(
       ChangeNotifierProvider(
@@ -31,9 +32,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  bool _themeMode = false;
-  bool _langMode = false;
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -67,7 +65,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               : AssetImage('assets/images/toogle_dark.png'),
                         ),
                       ),
-                      SizedBox(
+                      const SizedBox(
                         width: 16,
                       ),
                       GestureDetector(
@@ -78,7 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               : AssetImage('assets/images/lang_en_dark.png'),
                         ),
                       ),
-                      SizedBox(
+                      const SizedBox(
                         width: 16,
                       ),
                     ],
@@ -160,11 +158,13 @@ class HeaderWidget extends StatelessWidget {
 class ChatListWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final List<String> items = List<String>.generate(99, (i) => 'Chat $i');
+    //   final List<String> items = List<String>.generate(9, (i) => 'Chat $i');
+    List<ChatItem> items = formChatList();
+    ChatItem addNewItem = addItem;
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(child: HeaderWidget()),
-        SliverToBoxAdapter(
+        const SliverToBoxAdapter(
           child: SizedBox(height: 30),
         ),
         Consumer<ThemeProvider>(
@@ -195,37 +195,44 @@ class ChatListWidget extends StatelessWidget {
     );
   }
 
-  SliverList scrollChatList(List<String> items) {
+  SliverList scrollChatList(List<ChatItem> items) {
     return SliverList(
       delegate: SliverChildBuilderDelegate(
         (BuildContext context, int index) {
-          if (index < items.length) {
+          if (index < (items.length ~/ 2) + 0) {
             return Column(
               children: [
-                SizedBox(height: 5),
                 Row(
                   children: [
-                    ChatItemWidget(items: items, index: index * 2),
-                    ChatItemWidget(items: items, index: index * 2 + 1),
+                    const SizedBox(width: 8),
+                    ChatItemWidget(
+                        items: items, index: index * 2, id: items[index].id),
+                    ChatItemWidget(
+                        items: items,
+                        index: index * 2 + 1,
+                        id: items[index].id),
+                    const SizedBox(width: 8),
                   ],
                 ),
+                const SizedBox(height: 8),
               ],
             );
           } else {
             return SizedBox.shrink();
           }
         },
-        childCount: (items.length ~/ 2) + 1,
+        childCount: (items.length ~/ 2) + 2,
       ),
     );
   }
 }
 
 class ChatItemWidget extends StatelessWidget {
-  final List<String> items;
+  final List<ChatItem> items;
   final int index;
+  final int id;
 
-  ChatItemWidget({required this.items, required this.index});
+  ChatItemWidget({required this.items, required this.index, required this.id});
 
   @override
   Widget build(BuildContext context) {
@@ -238,13 +245,12 @@ class ChatItemWidget extends StatelessWidget {
           child: Consumer<ThemeProvider>(
             builder: (context, themeProvider, child) {
               return Container(
-                width: 171,
                 height: 207,
                 decoration: BoxDecoration(
                   boxShadow: [
                     BoxShadow(
-                      color: themeProvider.currentTheme.shadowColor,
-                      blurRadius: 8,
+                      color: themeProvider.currentTheme.primaryColorDark,
+                      blurRadius: 0,
                       offset: Offset(1, 1),
                       spreadRadius: 0,
                     )
@@ -255,147 +261,164 @@ class ChatItemWidget extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Container(
-                      width: 171,
-                      height: 171,
-                      child: Stack(
-                        children: [
-                          Positioned(
-                            left: 0,
-                            top: 0,
-                            child: Container(
-                              width: 171,
-                              height: 171,
-                              decoration: ShapeDecoration(
-                                image: DecorationImage(
-                                  image: AssetImage('assets/images/tent.png'),
-                                  fit: BoxFit.cover,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  side: BorderSide(
-                                      width: 0.50,
-                                      color: themeProvider
-                                          .currentTheme.highlightColor),
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: Radius.circular(10),
-                                    topRight: Radius.circular(10),
-                                  ),
-                                ),
+                    Expanded(
+                      flex: 5,
+                      child: Padding(
+                        padding:
+                            const EdgeInsets.only(top: 8, left: 8, right: 8),
+                        child: Container(
+                          padding: EdgeInsets.all(8.0),
+                          width: double.infinity,
+                          alignment: Alignment.bottomCenter,
+                          decoration: ShapeDecoration(
+                            image: DecorationImage(
+                              image: items[index].id != 999
+                                  ? AssetImage(items[index].image)
+                                  : themeProvider.isLightMode
+                                      ? AssetImage(
+                                          'assets/images/add_room_light.jpg')
+                                      : AssetImage(
+                                          'assets/images/add_room_dark.jpg'),
+                              fit: BoxFit.cover,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              side: BorderSide(
+                                  width: 0.50,
+                                  color:
+                                      themeProvider.currentTheme.shadowColor),
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(10),
+                                topRight: Radius.circular(10),
                               ),
                             ),
                           ),
-                          Positioned(
-                            left: 27,
-                            top: 133,
-                            child: SizedBox(
-                              width: 117,
-                              child: Text(
-                                'Chat $index',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Color(0xFFF5FBFF),
-                                  fontSize: 14,
-                                  fontFamily: 'Manrope',
-                                  fontWeight: FontWeight.w600,
-                                  height: 1.30,
-                                ),
-                              ),
+                          child: Text(
+                            items[index].name,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Color(0xFFF5FBFF),
+                              fontSize: 14,
+                              fontFamily: 'Manrope',
+                              fontWeight: FontWeight.w600,
+                              height: 1.30,
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      width: 171,
-                      padding: const EdgeInsets.all(10),
-                      decoration: ShapeDecoration(
-                        color: themeProvider.currentTheme.shadowColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(10),
-                            bottomRight: Radius.circular(10),
                           ),
                         ),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Container(
-                                  width: 16,
-                                  height: 16,
-                                  clipBehavior: Clip.antiAlias,
-                                  decoration: BoxDecoration(),
-                                  child: Stack(children: [
-                                    Image.asset('assets/images/people.png'),
-                                  ]),
-                                ),
-                                const SizedBox(width: 2),
-                                Text(
-                                  '$index',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: Color(0xFFF5FBFF),
-                                    fontSize: 12,
-                                    fontFamily: 'Manrope',
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                ),
-                              ],
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                            left: 8, right: 8, bottom: 0, top: 0),
+                        child: Container(
+                          alignment: Alignment.bottomCenter,
+                          decoration: ShapeDecoration(
+                            color: themeProvider.currentTheme.shadowColor,
+                            shape: RoundedRectangleBorder(
+                              side: BorderSide(
+                                  width: 0.50,
+                                  color:
+                                      themeProvider.currentTheme.shadowColor),
+                              borderRadius: BorderRadius.only(
+                                bottomLeft: Radius.circular(10),
+                                bottomRight: Radius.circular(10),
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 90),
-                          Container(
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Container(
-                                  width: 16,
-                                  height: 16,
-                                  clipBehavior: Clip.antiAlias,
-                                  decoration: BoxDecoration(),
-                                  child: Stack(
+                          child: Center(
+                            heightFactor: 0.5,
+                            child: Container(
+                              padding: EdgeInsets.only(left: 8, right: 8),
+                              child: Row(
+                                verticalDirection: VerticalDirection.down,
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisSize: MainAxisSize.max,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
                                     children: [
-                                      Image.asset('assets/images/people.png'),
-                                      Positioned(
-                                        left: 13,
-                                        top: 1,
-                                        child: Container(
-                                          width: 3,
-                                          height: 3,
-                                          decoration: ShapeDecoration(
-                                            color: Color(0xFFF5FBFF),
-                                            shape: OvalBorder(),
-                                          ),
+                                      Container(
+                                        width: 16,
+                                        height: 16,
+                                        clipBehavior: Clip.antiAlias,
+                                        decoration: BoxDecoration(),
+                                        child: Stack(children: [
+                                          Image.asset(
+                                              'assets/images/people.png'),
+                                        ]),
+                                      ),
+                                      const SizedBox(width: 2),
+                                      Text(
+                                        items[index].countPeople.toString(),
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: Color(0xFFF5FBFF),
+                                          fontSize: 12,
+                                          fontFamily: 'Manrope',
+                                          fontWeight: FontWeight.w400,
                                         ),
                                       ),
                                     ],
                                   ),
-                                ),
-                                const SizedBox(width: 2),
-                                Text(
-                                  '2',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: Color(0xFFF5FBFF),
-                                    fontSize: 12,
-                                    fontFamily: 'Manrope',
-                                    fontWeight: FontWeight.w400,
+                                  Expanded(
+                                    child: Container(width: double.infinity),
                                   ),
-                                ),
-                              ],
+                                  Container(
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Container(
+                                          width: 16,
+                                          height: 16,
+                                          clipBehavior: Clip.antiAlias,
+                                          decoration: BoxDecoration(),
+                                          child: Stack(
+                                            children: [
+                                              Image.asset(
+                                                  'assets/images/people.png'),
+                                              Positioned(
+                                                left: 13,
+                                                top: 1,
+                                                child: Container(
+                                                  width: 3,
+                                                  height: 3,
+                                                  decoration: ShapeDecoration(
+                                                    color: Color(0xFFF5FBFF),
+                                                    shape: OvalBorder(),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 2),
+                                        Text(
+                                          items[index].countOnline.toString(),
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            color: Color(0xFFF5FBFF),
+                                            fontSize: 12,
+                                            fontFamily: 'Manrope',
+                                            fontWeight: FontWeight.w400,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ],
