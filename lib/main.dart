@@ -1,14 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_vibrate/flutter_vibrate.dart';
+import 'package:provider/provider.dart';
 import 'menu.dart';
+import 'themes.dart';
+import 'themeProvider.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(
+      ChangeNotifierProvider(
+        create: (context) => ThemeProvider(),
+        child: MyApp(),
+      ),
+    );
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return MaterialApp(
+      theme: themeProvider.currentTheme,
       home: MyHomePage(),
     );
   }
@@ -28,100 +39,71 @@ class _MyHomePageState extends State<MyHomePage> {
     return MaterialApp(
       home: BlocProvider(
         create: (context) => MenuBloc(),
-        child: Scaffold(
-          appBar: AppBar(
-            backgroundColor: Color(0xFF0F1E28),
-            title: Row(
-              children: [
-                Image.asset('assets/images/logo.png'),
-                SizedBox(width: 10),
-                Container(
-                  width: 50,
+        child: Consumer<ThemeProvider>(
+          builder: (context, themeProvider, child) {
+            return Scaffold(
+              appBar: AppBar(
+                backgroundColor: themeProvider.currentTheme.primaryColorDark,
+                title: Container(
+                  width: 70,
                   height: 35,
-                  child: const Stack(
+                  child: Image(
+                    image: themeProvider.isLightMode
+                        ? AssetImage('assets/images/logo_light_tema.png')
+                        : AssetImage('assets/images/logo_dark_tema.png'),
+                  ),
+                ),
+                leading: MainDropdownMenu(),
+                actions: [
+                  Row(
                     children: [
-                      Positioned(
-                        left: 0,
-                        top: 0,
-                        child: SizedBox(
-                          width: 50,
-                          height: 23,
-                          child: Text(
-                            'Team',
-                            style: TextStyle(
-                              color: Color(0xFFF5FBFF),
-                              fontSize: 18,
-                              fontFamily: 'Helvetica Neue',
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
+                      GestureDetector(
+                        onTap: () {
+                          themeProvider.toggleTheme();
+                        },
+                        child: Image(
+                          image: themeProvider.isLightMode
+                              ? AssetImage('assets/images/toogle_light.png')
+                              : AssetImage('assets/images/toogle_dark.png'),
                         ),
                       ),
-                      Positioned(
-                        left: 1,
-                        top: 12,
-                        child: SizedBox(
-                          width: 50,
-                          height: 23,
-                          child: Text(
-                            'Chat',
-                            style: TextStyle(
-                              color: Color(0xFFF5FBFF),
-                              fontSize: 18,
-                              fontFamily: 'Helvetica Neue',
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.06,
-                            ),
-                          ),
+                      SizedBox(
+                        width: 16,
+                      ),
+                      GestureDetector(
+                        onTap: () {},
+                        child: Image(
+                          image: themeProvider.isLightMode
+                              ? AssetImage('assets/images/lang_en_light.png')
+                              : AssetImage('assets/images/lang_en_dark.png'),
                         ),
+                      ),
+                      SizedBox(
+                        width: 16,
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-            leading: MainDropdownMenu(),
-            actions: [
-              Row(
+                ],
+              ),
+              body: Column(
                 children: [
-                  Switch(
-                    inactiveThumbColor: Color(0xFF0F1E28),
-                    activeColor: Color(0xFFF5FBFF),
-                    splashRadius: 20,
-                    activeThumbImage:
-                        const AssetImage('assets/images/tema_dark.png'),
-                    inactiveThumbImage:
-                        const AssetImage('assets/images/tema_light.png'),
-                    value: _themeMode,
-                    onChanged: (bool newValue) {
-                      setState(() {
-                        _themeMode = newValue;
-                      });
-                      // TODO: Дії при зміні перемикача
-                    },
-                  ),
-                  Switch(
-                    value: _langMode,
-                    onChanged: (bool newValue) {
-                      setState(() {
-                        _langMode = newValue;
-                      });
-                      // TODO: Дії при зміні перемикача
+                  Consumer<ThemeProvider>(
+                    builder: (context, themeProvider, child) {
+                      return Expanded(
+                        child: Container(
+                          clipBehavior: Clip.antiAlias,
+                          decoration: BoxDecoration(
+                              color:
+                                  themeProvider.currentTheme.primaryColorDark),
+                          child: ChatListWidget(),
+                        ),
+                      );
                     },
                   ),
                 ],
               ),
-            ],
-          ),
-          body: Column(
-            children: [
-              Expanded(
-                  child: Container(
-                      clipBehavior: Clip.antiAlias,
-                      decoration: BoxDecoration(color: Color(0xFF0F1E28)),
-                      child: ChatListWidget())),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -145,7 +127,7 @@ class HeaderWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Padding(
-            padding: EdgeInsets.only(left: 20),
+            padding: EdgeInsets.only(left: 20, right: 20),
             child: Text(
               'Welcome every tourist to Teamchat',
               style: TextStyle(
@@ -158,7 +140,7 @@ class HeaderWidget extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: EdgeInsets.only(left: 20, bottom: 20, top: 10),
+            padding: EdgeInsets.only(left: 20, bottom: 20, top: 10, right: 20),
             child: Text(
               'Chat about a wide variety of tourist equipment. Communicate, get good advice and choose!',
               style: TextStyle(
@@ -185,20 +167,29 @@ class ChatListWidget extends StatelessWidget {
         SliverToBoxAdapter(
           child: SizedBox(height: 30),
         ),
-        const SliverToBoxAdapter(
-            child: SizedBox(
-          width: 361,
-          child: Text(
-            'Choose rooms for communication',
-            style: TextStyle(
-              color: Color(0xFFF5FBFF),
-              fontSize: 24,
-              fontFamily: 'Manrope',
-              fontWeight: FontWeight.w500,
-              height: 1.24,
-            ),
-          ),
-        )),
+        Consumer<ThemeProvider>(
+          builder: (context, themeProvider, child) {
+            return SliverToBoxAdapter(
+              child: SizedBox(
+                width: 361,
+                child: Padding(
+                  padding:
+                      const EdgeInsets.only(left: 20, bottom: 5, right: 20),
+                  child: Text(
+                    'Choose rooms for communication',
+                    style: TextStyle(
+                      color: themeProvider.currentTheme.primaryColor,
+                      fontSize: 24,
+                      fontFamily: 'Manrope',
+                      fontWeight: FontWeight.w500,
+                      height: 1.24,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
         scrollChatList(items),
       ],
     );
@@ -240,161 +231,168 @@ class ChatItemWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     if (index < items.length) {
       return Expanded(
-          child: GestureDetector(
-        onTap: () {
-          _playTapSound();
-        },
-        child: Container(
-          width: 171,
-          height: 207,
-          decoration: const BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: Color(0x660287DF),
-                blurRadius: 8,
-                offset: Offset(1, 1),
-                spreadRadius: 0,
-              )
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
+        child: GestureDetector(
+          onTap: () {
+            _playTapSound();
+          },
+          child: Consumer<ThemeProvider>(
+            builder: (context, themeProvider, child) {
+              return Container(
                 width: 171,
-                height: 171,
-                child: Stack(
-                  children: [
-                    Positioned(
-                      left: 0,
-                      top: 0,
-                      child: Container(
-                        width: 171,
-                        height: 171,
-                        decoration: ShapeDecoration(
-                          image: DecorationImage(
-                            image: AssetImage('assets/images/tent.png'),
-                            fit: BoxFit.cover,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            side: BorderSide(
-                                width: 0.50, color: Color(0xFF0186DF)),
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(10),
-                              topRight: Radius.circular(10),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      left: 27,
-                      top: 133,
-                      child: SizedBox(
-                        width: 117,
-                        child: Text(
-                          'Chat $index',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Color(0xFFF5FBFF),
-                            fontSize: 14,
-                            fontFamily: 'Manrope',
-                            fontWeight: FontWeight.w600,
-                            height: 1.30,
-                          ),
-                        ),
-                      ),
-                    ),
+                height: 207,
+                decoration: BoxDecoration(
+                  boxShadow: [
+                    BoxShadow(
+                      color: themeProvider.currentTheme.shadowColor,
+                      blurRadius: 8,
+                      offset: Offset(1, 1),
+                      spreadRadius: 0,
+                    )
                   ],
                 ),
-              ),
-              Container(
-                width: 171,
-                padding: const EdgeInsets.all(10),
-                decoration: ShapeDecoration(
-                  color: Color(0xFF0186DF),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(10),
-                      bottomRight: Radius.circular(10),
-                    ),
-                  ),
-                ),
-                child: Row(
+                child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Container(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
+                      width: 171,
+                      height: 171,
+                      child: Stack(
                         children: [
-                          Container(
-                            width: 16,
-                            height: 16,
-                            clipBehavior: Clip.antiAlias,
-                            decoration: BoxDecoration(),
-                            child: Stack(children: [
-                              Image.asset('assets/images/people.png'),
-                            ]),
+                          Positioned(
+                            left: 0,
+                            top: 0,
+                            child: Container(
+                              width: 171,
+                              height: 171,
+                              decoration: ShapeDecoration(
+                                image: DecorationImage(
+                                  image: AssetImage('assets/images/tent.png'),
+                                  fit: BoxFit.cover,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  side: BorderSide(
+                                      width: 0.50,
+                                      color: themeProvider
+                                          .currentTheme.highlightColor),
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(10),
+                                    topRight: Radius.circular(10),
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
-                          const SizedBox(width: 2),
-                          Text(
-                            '$index',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Color(0xFFF5FBFF),
-                              fontSize: 12,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w400,
+                          Positioned(
+                            left: 27,
+                            top: 133,
+                            child: SizedBox(
+                              width: 117,
+                              child: Text(
+                                'Chat $index',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Color(0xFFF5FBFF),
+                                  fontSize: 14,
+                                  fontFamily: 'Manrope',
+                                  fontWeight: FontWeight.w600,
+                                  height: 1.30,
+                                ),
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(width: 90),
                     Container(
+                      width: 171,
+                      padding: const EdgeInsets.all(10),
+                      decoration: ShapeDecoration(
+                        color: themeProvider.currentTheme.shadowColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(10),
+                            bottomRight: Radius.circular(10),
+                          ),
+                        ),
+                      ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            width: 16,
-                            height: 16,
-                            clipBehavior: Clip.antiAlias,
-                            decoration: BoxDecoration(),
-                            child: Stack(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Image.asset('assets/images/people.png'),
-                                Positioned(
-                                  left: 13,
-                                  top: 1,
-                                  child: Container(
-                                    width: 3,
-                                    height: 3,
-                                    decoration: ShapeDecoration(
-                                      color: Color(0xFFF5FBFF),
-                                      shape: OvalBorder(),
-                                    ),
+                                Container(
+                                  width: 16,
+                                  height: 16,
+                                  clipBehavior: Clip.antiAlias,
+                                  decoration: BoxDecoration(),
+                                  child: Stack(children: [
+                                    Image.asset('assets/images/people.png'),
+                                  ]),
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  '$index',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Color(0xFFF5FBFF),
+                                    fontSize: 12,
+                                    fontFamily: 'Manrope',
+                                    fontWeight: FontWeight.w400,
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(width: 2),
-                          Text(
-                            '2',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Color(0xFFF5FBFF),
-                              fontSize: 12,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w400,
+                          const SizedBox(width: 90),
+                          Container(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 16,
+                                  height: 16,
+                                  clipBehavior: Clip.antiAlias,
+                                  decoration: BoxDecoration(),
+                                  child: Stack(
+                                    children: [
+                                      Image.asset('assets/images/people.png'),
+                                      Positioned(
+                                        left: 13,
+                                        top: 1,
+                                        child: Container(
+                                          width: 3,
+                                          height: 3,
+                                          decoration: ShapeDecoration(
+                                            color: Color(0xFFF5FBFF),
+                                            shape: OvalBorder(),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  '2',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Color(0xFFF5FBFF),
+                                    fontSize: 12,
+                                    fontFamily: 'Manrope',
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -402,11 +400,11 @@ class ChatItemWidget extends StatelessWidget {
                     ),
                   ],
                 ),
-              ),
-            ],
+              );
+            },
           ),
         ),
-      ));
+      );
     } else {
       return Expanded(
         child: Card(),

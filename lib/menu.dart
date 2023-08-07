@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:provider/provider.dart';
+import 'themes.dart';
+import 'themeProvider.dart';
 
 enum MenuStatus { open, closed }
 
@@ -23,14 +26,14 @@ abstract class MenuEvent extends Equatable {
 class ToggleMenu extends MenuEvent {}
 
 class MenuBloc extends Bloc<MenuEvent, MenuState> {
-  MenuBloc() : super(MenuState(MenuStatus.closed));
+  MenuBloc() : super(const MenuState(MenuStatus.closed));
 
   @override
   Stream<MenuState> mapEventToState(MenuEvent event) async* {
     if (event is ToggleMenu) {
       yield state.status == MenuStatus.open
-          ? MenuState(MenuStatus.closed)
-          : MenuState(MenuStatus.open);
+          ? const MenuState(MenuStatus.closed)
+          : const MenuState(MenuStatus.open);
     }
   }
 }
@@ -40,49 +43,58 @@ class MainDropdownMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<MenuBloc, MenuState>(
       builder: (context, state) {
-        return PopupMenuButton<String>(
-          offset: Offset(0, kToolbarHeight),
-          onSelected: (value) {
-            // Handle menu item selection here
-            print("Selected: $value");
+        return Consumer<ThemeProvider>(
+          builder: (context, themeProvider, child) {
+            return PopupMenuButton<String>(
+              offset: const Offset(0, kToolbarHeight),
+              onSelected: (value) {
+                // Handle menu item selection here
+                print("Selected: $value");
+              },
+              icon: Icon(Icons.align_horizontal_left,
+                  color: themeProvider.currentTheme.primaryColor),
+              itemBuilder: (context) => [
+                PopupMenuItem<String>(
+                  value: 'item1',
+                  child: Text(
+                    'Chat rooms',
+                    style: TextStyle(
+                        color: themeProvider.currentTheme.primaryColor),
+                  ),
+                ),
+                PopupMenuItem<String>(
+                  value: 'item2',
+                  child: Text(
+                    'Personal chats',
+                    style: TextStyle(
+                        color: themeProvider.currentTheme.primaryColor),
+                  ),
+                ),
+                PopupMenuItem<String>(
+                  value: 'item3',
+                  child: Text(
+                    'Setting',
+                    style: TextStyle(
+                        color: themeProvider.currentTheme.primaryColor),
+                  ),
+                ),
+                PopupMenuItem<String>(
+                  value: 'item4',
+                  child: Text(
+                    'Rools of the chat',
+                    style: TextStyle(
+                        color: themeProvider.currentTheme.primaryColor),
+                  ),
+                ),
+              ],
+              //
+              color: themeProvider.currentTheme.primaryColorDark,
+              elevation: 8,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+            );
           },
-          icon: Icon(Icons.align_horizontal_left, color: Color(0xFFF5FBFF)),
-          itemBuilder: (context) => [
-            PopupMenuItem<String>(
-              value: 'item1',
-              child: Text(
-                'Chat rooms',
-                style: TextStyle(color: Color(0xFFF5FBFF)),
-              ),
-            ),
-            PopupMenuItem<String>(
-              value: 'item2',
-              child: Text(
-                'Personal chats',
-                style: TextStyle(color: Color(0xFFF5FBFF)),
-              ),
-            ),
-            PopupMenuItem<String>(
-              value: 'item3',
-              child: Text(
-                'Setting',
-                style: TextStyle(color: Color(0xFFF5FBFF)),
-              ),
-            ),
-            PopupMenuItem<String>(
-              value: 'item4',
-              child: Text(
-                'Rools of the chat',
-                style: TextStyle(color: Color(0xFFF5FBFF)),
-              ),
-            ),
-          ],
-          //
-          color: const Color(0xFF0F1E28),
-          elevation: 8,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.0),
-          ),
         );
       },
     );
