@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import 'formChatList.dart';
 import 'menu.dart';
@@ -63,7 +64,12 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class HeaderWidget extends StatelessWidget {
+class HeaderWidget extends StatefulWidget {
+  @override
+  State<HeaderWidget> createState() => _HeaderWidgetState();
+}
+
+class _HeaderWidgetState extends State<HeaderWidget> {
   @override
   Widget build(BuildContext context) {
     var screenWidth = MediaQuery.of(context).size.width;
@@ -84,6 +90,7 @@ class HeaderWidget extends StatelessWidget {
             padding: EdgeInsets.only(left: 20, right: 20),
             child: Text(
               'Welcome every\ntourist to Teamchat',
+              textScaleFactor: 0.97,
               style: TextStyle(
                 color: Color(0xFFF5FBFF),
                 fontSize: screenWidth * 0.095,
@@ -97,6 +104,7 @@ class HeaderWidget extends StatelessWidget {
             padding: EdgeInsets.only(left: 20, bottom: 20, top: 10, right: 20),
             child: Text(
               'Chat about a wide variety of tourist equipment.\nCommunicate, get good advice and choose!',
+              textScaleFactor: 0.97,
               style: TextStyle(
                 color: Color(0xFFF5FBFF),
                 fontSize: screenWidth * 0.042,
@@ -115,7 +123,6 @@ class _ChatListWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     List<ChatItem> items = formChatList();
-    ChatItem addNewItem = addItem;
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(child: HeaderWidget()),
@@ -132,6 +139,7 @@ class _ChatListWidget extends StatelessWidget {
                       const EdgeInsets.only(left: 20, bottom: 5, right: 20),
                   child: Text(
                     'Choose rooms for\ncommunication',
+                    textScaleFactor: 0.97,
                     style: TextStyle(
                       color: themeProvider.currentTheme.primaryColor,
                       fontSize: 24,
@@ -196,14 +204,16 @@ class _ChatItemWidget extends StatelessWidget {
       return Expanded(
         child: GestureDetector(
           onTap: () {
-            _showPopup(context);
-            /*Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => CommonChatScreen(
+            items[index].id == 999
+                ? _showPopup(context)
+                : Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CommonChatScreen(
                         topicName: items[index].name,
-                      )),
-            );*/
+                      ),
+                    ),
+                  );
           },
           child: Consumer<ThemeProvider>(
             builder: (context, themeProvider, child) {
@@ -236,11 +246,11 @@ class _ChatItemWidget extends StatelessWidget {
                           decoration: ShapeDecoration(
                             image: DecorationImage(
                               image: items[index].id != 999
-                                  ? AssetImage(items[index].image)
+                                  ? items[index].image
                                   : themeProvider.isLightMode
-                                      ? AssetImage(
+                                      ? const AssetImage(
                                           'assets/images/add_room_light.jpg')
-                                      : AssetImage(
+                                      : const AssetImage(
                                           'assets/images/add_room_dark.jpg'),
                               fit: BoxFit.cover,
                             ),
@@ -429,17 +439,28 @@ class _ChatItemWidget extends StatelessWidget {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Popup'),
-          content: Text('You tap on\n$nameItem'),
-          actions: <Widget>[
-            FloatingActionButton(
-              child: const Text('Close'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
+        return Consumer<ThemeProvider>(
+          builder: (context, themeProvider, child) {
+            return AlertDialog(
+              title: Text('Attention!'),
+              content: Text('You are create a new room'),
+              actions: <Widget>[
+                FloatingActionButton(
+                  backgroundColor: themeProvider.currentTheme.shadowColor,
+                  child: const Text('OK'),
+                  shape: RoundedRectangleBorder(
+                    side: BorderSide(
+                        width: 0.50,
+                        color: themeProvider.currentTheme.shadowColor),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
         );
       },
     );

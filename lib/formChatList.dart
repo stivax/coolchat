@@ -1,3 +1,6 @@
+import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+
 import 'themeProvider.dart';
 
 class FormChatList {
@@ -13,7 +16,7 @@ class FormChatList {
 class ChatItem {
   int id;
   String name;
-  String image;
+  ImageProvider image;
   int countPeople;
   int countOnline;
 
@@ -31,31 +34,31 @@ List<ChatItem> formChatList() {
   list.add(ChatItem(
       id: 0,
       name: 'Tents, awnings, canopies',
-      image: 'assets/images/room1.png',
+      image: AssetImage('assets/images/room1.png'),
       countPeople: 9,
       countOnline: 3));
   list.add(ChatItem(
       id: 1,
       name: 'Backpacks, clothes, shoes',
-      image: 'assets/images/room2.png',
+      image: AssetImage('assets/images/room2.png'),
       countPeople: 7,
       countOnline: 2));
   list.add(ChatItem(
       id: 2,
       name: 'Bicycles and all for them',
-      image: 'assets/images/room3.png',
+      image: AssetImage('assets/images/room3.png'),
       countPeople: 6,
       countOnline: 4));
   list.add(ChatItem(
       id: 3,
       name: 'Everything for fishing',
-      image: 'assets/images/room4.png',
+      image: AssetImage('assets/images/room4.png'),
       countPeople: 6,
       countOnline: 4));
   list.add(ChatItem(
       id: 4,
       name: 'Tourist furniture and tableware',
-      image: 'assets/images/room5.png',
+      image: AssetImage('assets/images/room5.png'),
       countPeople: 6,
       countOnline: 4));
   list.add(addItem);
@@ -66,6 +69,6 @@ List<ChatItem> formChatList() {
 ChatItem addItem = ChatItem(
     id: 999,
     name: 'Add room',
-    image: 'assets/images/add_room_dark.jpg',
+    image: AssetImage('assets/images/add_room_dark.jpg'),
     countPeople: 0,
     countOnline: 0);
