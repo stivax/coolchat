@@ -51,7 +51,7 @@ class MainDropdownMenu extends StatelessWidget {
                 // Handle menu item selection here
                 print("Selected: $value");
               },
-              icon: Icon(Icons.align_horizontal_left,
+              icon: Icon(Icons.menu_rounded,
                   color: themeProvider.currentTheme.primaryColor),
               itemBuilder: (context) => [
                 PopupMenuItem<String>(
@@ -91,7 +91,9 @@ class MainDropdownMenu extends StatelessWidget {
               color: themeProvider.currentTheme.primaryColorDark,
               elevation: 8,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.0),
+                borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(8),
+                    bottomRight: Radius.circular(8)),
               ),
             );
           },

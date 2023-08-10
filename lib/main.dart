@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'package:provider/provider.dart';
-import 'menu.dart';
-import 'themes.dart';
-import 'themeProvider.dart';
+
 import 'formChatList.dart';
+import 'menu.dart';
+import 'my_appbar.dart';
+import 'themeProvider.dart';
+import 'common_chat.dart';
 
 void main() => runApp(
       ChangeNotifierProvider(
@@ -40,63 +42,16 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Consumer<ThemeProvider>(
           builder: (context, themeProvider, child) {
             return Scaffold(
-              appBar: AppBar(
-                backgroundColor: themeProvider.currentTheme.primaryColorDark,
-                title: Container(
-                  width: 70,
-                  height: 35,
-                  child: Image(
-                    image: themeProvider.isLightMode
-                        ? AssetImage('assets/images/logo_light_tema.png')
-                        : AssetImage('assets/images/logo_dark_tema.png'),
-                  ),
-                ),
-                leading: MainDropdownMenu(),
-                actions: [
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          themeProvider.toggleTheme();
-                        },
-                        child: Image(
-                          image: themeProvider.isLightMode
-                              ? AssetImage('assets/images/toogle_light.png')
-                              : AssetImage('assets/images/toogle_dark.png'),
-                        ),
-                      ),
-                      const SizedBox(
-                        width: 16,
-                      ),
-                      GestureDetector(
-                        onTap: () {},
-                        child: Image(
-                          image: themeProvider.isLightMode
-                              ? AssetImage('assets/images/lang_en_light.png')
-                              : AssetImage('assets/images/lang_en_dark.png'),
-                        ),
-                      ),
-                      const SizedBox(
-                        width: 16,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+              appBar: MyAppBar(),
               body: Column(
                 children: [
-                  Consumer<ThemeProvider>(
-                    builder: (context, themeProvider, child) {
-                      return Expanded(
-                        child: Container(
-                          clipBehavior: Clip.antiAlias,
-                          decoration: BoxDecoration(
-                              color:
-                                  themeProvider.currentTheme.primaryColorDark),
-                          child: ChatListWidget(),
-                        ),
-                      );
-                    },
+                  Expanded(
+                    child: Container(
+                      clipBehavior: Clip.antiAlias,
+                      decoration: BoxDecoration(
+                          color: themeProvider.currentTheme.primaryColorDark),
+                      child: _ChatListWidget(),
+                    ),
                   ),
                 ],
               ),
@@ -111,6 +66,7 @@ class _MyHomePageState extends State<MyHomePage> {
 class HeaderWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    var screenWidth = MediaQuery.of(context).size.width;
     return Container(
       width: 393,
       height: 428,
@@ -120,17 +76,17 @@ class HeaderWidget extends StatelessWidget {
           fit: BoxFit.cover,
         ),
       ),
-      child: const Column(
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
             padding: EdgeInsets.only(left: 20, right: 20),
             child: Text(
-              'Welcome every tourist to Teamchat',
+              'Welcome every\ntourist to Teamchat',
               style: TextStyle(
                 color: Color(0xFFF5FBFF),
-                fontSize: 36,
+                fontSize: screenWidth * 0.095,
                 fontFamily: 'Manrope',
                 fontWeight: FontWeight.w700,
                 height: 1.16,
@@ -140,10 +96,10 @@ class HeaderWidget extends StatelessWidget {
           Padding(
             padding: EdgeInsets.only(left: 20, bottom: 20, top: 10, right: 20),
             child: Text(
-              'Chat about a wide variety of tourist equipment. Communicate, get good advice and choose!',
+              'Chat about a wide variety of tourist equipment.\nCommunicate, get good advice and choose!',
               style: TextStyle(
                 color: Color(0xFFF5FBFF),
-                fontSize: 16,
+                fontSize: screenWidth * 0.042,
                 fontFamily: 'Manrope',
                 fontWeight: FontWeight.w400,
               ),
@@ -155,10 +111,9 @@ class HeaderWidget extends StatelessWidget {
   }
 }
 
-class ChatListWidget extends StatelessWidget {
+class _ChatListWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    //   final List<String> items = List<String>.generate(9, (i) => 'Chat $i');
     List<ChatItem> items = formChatList();
     ChatItem addNewItem = addItem;
     return CustomScrollView(
@@ -171,12 +126,12 @@ class ChatListWidget extends StatelessWidget {
           builder: (context, themeProvider, child) {
             return SliverToBoxAdapter(
               child: SizedBox(
-                width: 361,
+                width: double.infinity,
                 child: Padding(
                   padding:
                       const EdgeInsets.only(left: 20, bottom: 5, right: 20),
                   child: Text(
-                    'Choose rooms for communication',
+                    'Choose rooms for\ncommunication',
                     style: TextStyle(
                       color: themeProvider.currentTheme.primaryColor,
                       fontSize: 24,
@@ -191,6 +146,7 @@ class ChatListWidget extends StatelessWidget {
           },
         ),
         scrollChatList(items),
+        SliverToBoxAdapter(child: SizedBox(height: 8, width: double.infinity)),
       ],
     );
   }
@@ -205,9 +161,9 @@ class ChatListWidget extends StatelessWidget {
                 Row(
                   children: [
                     const SizedBox(width: 8),
-                    ChatItemWidget(
+                    _ChatItemWidget(
                         items: items, index: index * 2, id: items[index].id),
-                    ChatItemWidget(
+                    _ChatItemWidget(
                         items: items,
                         index: index * 2 + 1,
                         id: items[index].id),
@@ -227,12 +183,12 @@ class ChatListWidget extends StatelessWidget {
   }
 }
 
-class ChatItemWidget extends StatelessWidget {
+class _ChatItemWidget extends StatelessWidget {
   final List<ChatItem> items;
   final int index;
   final int id;
 
-  ChatItemWidget({required this.items, required this.index, required this.id});
+  _ChatItemWidget({required this.items, required this.index, required this.id});
 
   @override
   Widget build(BuildContext context) {
@@ -240,7 +196,14 @@ class ChatItemWidget extends StatelessWidget {
       return Expanded(
         child: GestureDetector(
           onTap: () {
-            _playTapSound();
+            _showPopup(context);
+            /*Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => CommonChatScreen(
+                        topicName: items[index].name,
+                      )),
+            );*/
           },
           child: Consumer<ThemeProvider>(
             builder: (context, themeProvider, child) {
@@ -286,22 +249,40 @@ class ChatItemWidget extends StatelessWidget {
                                   width: 0.50,
                                   color:
                                       themeProvider.currentTheme.shadowColor),
-                              borderRadius: BorderRadius.only(
+                              borderRadius: const BorderRadius.only(
                                 topLeft: Radius.circular(10),
                                 topRight: Radius.circular(10),
                               ),
                             ),
                           ),
-                          child: Text(
-                            items[index].name,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Color(0xFFF5FBFF),
-                              fontSize: 14,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w600,
-                              height: 1.30,
-                            ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Container(
+                                child: items[index].id == 999
+                                    ? Image(
+                                        image: themeProvider.isLightMode
+                                            ? AssetImage(
+                                                'assets/images/add_light.png')
+                                            : AssetImage(
+                                                'assets/images/add_dark.png'),
+                                      )
+                                    : Container(),
+                              ),
+                              Text(
+                                items[index].name,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: items[index].id == 999
+                                      ? themeProvider.currentTheme.primaryColor
+                                      : Color(0xFFF5FBFF),
+                                  fontSize: 14,
+                                  fontFamily: 'Manrope',
+                                  fontWeight: FontWeight.w600,
+                                  height: 1.30,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -320,7 +301,7 @@ class ChatItemWidget extends StatelessWidget {
                                   width: 0.50,
                                   color:
                                       themeProvider.currentTheme.shadowColor),
-                              borderRadius: BorderRadius.only(
+                              borderRadius: const BorderRadius.only(
                                 bottomLeft: Radius.circular(10),
                                 bottomRight: Radius.circular(10),
                               ),
@@ -356,7 +337,7 @@ class ChatItemWidget extends StatelessWidget {
                                       Text(
                                         items[index].countPeople.toString(),
                                         textAlign: TextAlign.center,
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           color: Color(0xFFF5FBFF),
                                           fontSize: 12,
                                           fontFamily: 'Manrope',
@@ -391,7 +372,8 @@ class ChatItemWidget extends StatelessWidget {
                                                 child: Container(
                                                   width: 3,
                                                   height: 3,
-                                                  decoration: ShapeDecoration(
+                                                  decoration:
+                                                      const ShapeDecoration(
                                                     color: Color(0xFFF5FBFF),
                                                     shape: OvalBorder(),
                                                   ),
@@ -404,7 +386,7 @@ class ChatItemWidget extends StatelessWidget {
                                         Text(
                                           items[index].countOnline.toString(),
                                           textAlign: TextAlign.center,
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                             color: Color(0xFFF5FBFF),
                                             fontSize: 12,
                                             fontFamily: 'Manrope',
@@ -440,5 +422,26 @@ class ChatItemWidget extends StatelessWidget {
       // Відтворюємо стандартний звук тапу
       Vibrate.vibrate();
     }
+  }
+
+  void _showPopup(BuildContext context) {
+    var nameItem = items[index].name;
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Popup'),
+          content: Text('You tap on\n$nameItem'),
+          actions: <Widget>[
+            FloatingActionButton(
+              child: const Text('Close'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 }

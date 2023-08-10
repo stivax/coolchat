@@ -14,7 +14,7 @@ class AppColors {
 }
 
 final lightTheme = ThemeData(
-  primaryColorDark: AppColors.backgroundLight1,
+  primaryColorDark: AppColors.backgroundLight2,
   primaryColorLight: AppColors.backgroundLight2,
   shadowColor: AppColors.decorElementBlue,
   highlightColor: AppColors.decorElementLight,
