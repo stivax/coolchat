@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/animation.dart';
 
 import 'formChatList.dart';
 import 'menu.dart';
 import 'my_appbar.dart';
 import 'themeProvider.dart';
 import 'common_chat.dart';
+import 'splashScreen.dart';
 
 void main() => runApp(
       ChangeNotifierProvider(
@@ -24,7 +25,20 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       theme: themeProvider.currentTheme,
-      home: MyHomePage(),
+      home: FutureBuilder(
+        future: Future.delayed(Duration(seconds: 5)),
+        builder: (context, snapshot) {
+          if (themeProvider.isThemeChange &&
+              snapshot.connectionState == ConnectionState.waiting) {
+            return AnimatedSwitcher(
+              duration: Duration(milliseconds: 100),
+              child: SplashScreen(),
+            );
+          } else {
+            return MyHomePage();
+          }
+        },
+      ),
     );
   }
 }

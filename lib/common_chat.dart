@@ -11,6 +11,7 @@ import 'formChatList.dart';
 import 'menu.dart';
 import 'my_appbar.dart';
 import 'themeProvider.dart';
+import 'splashScreen.dart';
 
 class CommonChatScreen extends StatefulWidget {
   String topicName;
@@ -188,7 +189,29 @@ class BlockMasseges extends StatefulWidget {
   _BlockMassegesState createState() => _BlockMassegesState();
 }
 
-class _BlockMassegesState extends State<BlockMasseges> {
+class _BlockMassegesState extends State<BlockMasseges>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(seconds: 2),
+    );
+
+    _controller.forward();
+    setState(() {}); // Оновити віджет після початку анімації
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
