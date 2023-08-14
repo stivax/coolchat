@@ -78,12 +78,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class HeaderWidget extends StatefulWidget {
-  @override
-  State<HeaderWidget> createState() => _HeaderWidgetState();
-}
-
-class _HeaderWidgetState extends State<HeaderWidget> {
+class HeaderWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var screenWidth = MediaQuery.of(context).size.width;
@@ -92,7 +87,7 @@ class _HeaderWidgetState extends State<HeaderWidget> {
       height: 428,
       decoration: const BoxDecoration(
         image: DecorationImage(
-          image: AssetImage('assets/images/main.png'),
+          image: AssetImage('assets/images/main.jpg'),
           fit: BoxFit.cover,
         ),
       ),

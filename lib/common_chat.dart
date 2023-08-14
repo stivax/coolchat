@@ -1,30 +1,20 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_vibrate/flutter_vibrate.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter/animation.dart';
 import 'package:marquee/marquee.dart';
+import 'package:provider/provider.dart';
 
 import 'formChatList.dart';
 import 'menu.dart';
 import 'my_appbar.dart';
 import 'themeProvider.dart';
-import 'splashScreen.dart';
 
-class CommonChatScreen extends StatefulWidget {
+class CommonChatScreen extends StatelessWidget {
   String topicName;
   CommonChatScreen({required this.topicName});
 
-  @override
-  _CommonChatScreenState createState() =>
-      _CommonChatScreenState(topicName: topicName);
-}
-
-class _CommonChatScreenState extends State<CommonChatScreen> {
-  String topicName;
-  _CommonChatScreenState({required this.topicName});
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -36,7 +26,7 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
               appBar: MyAppBar(),
               body: Container(
                 padding: const EdgeInsets.only(
-                    left: 16, right: 16, top: 16, bottom: 16),
+                    left: 16, right: 16, top: 8, bottom: 16),
                 clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
                     color: themeProvider.currentTheme.primaryColorDark),
@@ -44,8 +34,8 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Expanded(
-                          flex: 61, child: TopicName(topicName: topicName)),
-                      Expanded(flex: 204, child: ChatMembers()),
+                          flex: 40, child: TopicName(topicName: topicName)),
+                      Expanded(flex: 224, child: ChatMembers()),
                       Expanded(flex: 640, child: BlockMasseges()),
                       Expanded(flex: 94, child: _textAndSend()),
                     ]),
@@ -88,7 +78,7 @@ class _TopicNameState extends State<TopicName> {
   double calculateTextWidth() {
     final TextPainter textPainter = TextPainter(
       text: TextSpan(
-        text: widget.topicName,
+        text: 'Topic: ' + widget.topicName,
         style: const TextStyle(
           fontSize: 24,
           fontFamily: 'Manrope',
@@ -104,6 +94,7 @@ class _TopicNameState extends State<TopicName> {
 
   @override
   Widget build(BuildContext context) {
+    var screenWidth = MediaQuery.of(context).size.width;
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return Container(
@@ -117,11 +108,11 @@ class _TopicNameState extends State<TopicName> {
                     BoxConstraints(maxWidth: MediaQuery.of(context).size.width),
                 child: shouldAnimate
                     ? Marquee(
-                        text: widget.topicName,
+                        text: 'Topic: ' + widget.topicName,
                         textScaleFactor: 0.97,
                         style: TextStyle(
                           color: themeProvider.currentTheme.primaryColor,
-                          fontSize: 24,
+                          fontSize: screenWidth * 0.05,
                           fontFamily: 'Manrope',
                           fontWeight: FontWeight.w500,
                           height: 1.24,
@@ -129,10 +120,11 @@ class _TopicNameState extends State<TopicName> {
                         blankSpace: MediaQuery.of(context).size.width,
                       )
                     : Text(
-                        widget.topicName,
+                        'Topic: ' + widget.topicName,
+                        textScaleFactor: 0.97,
                         style: TextStyle(
                           color: themeProvider.currentTheme.primaryColor,
-                          fontSize: 24,
+                          fontSize: screenWidth * 0.05,
                           fontFamily: 'Manrope',
                           fontWeight: FontWeight.w500,
                           height: 1.24,
@@ -155,12 +147,14 @@ class ChatMembers extends StatefulWidget {
 class _ChatMembersState extends State<ChatMembers> {
   @override
   Widget build(BuildContext context) {
+    var screenWidth = MediaQuery.of(context).size.width;
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return Padding(
           padding: const EdgeInsets.only(top: 8, bottom: 8),
           child: Container(
-            padding: EdgeInsets.all(10),
+            width: double.infinity,
+            padding: EdgeInsets.only(right: 8, left: 8, top: 1, bottom: 8),
             decoration: ShapeDecoration(
               color: themeProvider.currentTheme.primaryColorDark,
               shape: RoundedRectangleBorder(
@@ -177,6 +171,185 @@ class _ChatMembersState extends State<ChatMembers> {
                 )
               ],
             ),
+            child: Column(
+              children: [
+                Expanded(
+                  flex: 1,
+                  child: Padding(
+                    padding: const EdgeInsets.only(
+                        right: 16, bottom: 4, top: 4, left: 8),
+                    child: Container(
+                      width: double.infinity,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Chat members',
+                        textScaleFactor: 0.99,
+                        style: TextStyle(
+                          color: themeProvider.currentTheme.primaryColor,
+                          fontSize: screenWidth * 0.038,
+                          fontFamily: 'Manrope',
+                          fontWeight: FontWeight.w600,
+                          height: 1.30,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 3,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.max,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TypeAvatar(
+                            avatar: AssetImage('assets/images/ava1girl.png'),
+                            name: 'Irina',
+                            isOnline: true,
+                          ),
+                          TypeAvatar(
+                            avatar: AssetImage('assets/images/ava2girl.png'),
+                            name: 'Anna',
+                            isOnline: true,
+                          ),
+                          TypeAvatar(
+                            avatar: AssetImage('assets/images/ava3girl.png'),
+                            name: 'Yuliia',
+                            isOnline: true,
+                          ),
+                          TypeAvatar(
+                            avatar: AssetImage('assets/images/ava4girl.png'),
+                            name: 'Anna',
+                            isOnline: true,
+                          ),
+                          TypeAvatar(
+                            avatar: AssetImage('assets/images/ava1boy.png'),
+                            name: 'Dmytro',
+                            isOnline: true,
+                          ),
+                          TypeAvatar(
+                            avatar: AssetImage('assets/images/ava2boy.png'),
+                            name: 'Ivan',
+                            isOnline: true,
+                          ),
+                          TypeAvatar(
+                            avatar: AssetImage('assets/images/ava3boy.png'),
+                            name: 'Sergii',
+                            isOnline: true,
+                          ),
+                        ]),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class TypeAvatar extends StatefulWidget {
+  ImageProvider avatar;
+  String name;
+  bool isOnline = true;
+  TypeAvatar({
+    required this.avatar,
+    required this.name,
+    required this.isOnline,
+  });
+  @override
+  _TypeAvatarState createState() => _TypeAvatarState();
+}
+
+class _TypeAvatarState extends State<TypeAvatar> {
+  @override
+  Widget build(BuildContext context) {
+    var screenWidth = MediaQuery.of(context).size.width;
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return Padding(
+          padding: const EdgeInsets.only(right: 5, left: 5),
+          child: Container(
+            width: screenWidth * 0.137,
+            child: Column(
+                mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    flex: 5,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      clipBehavior: Clip.hardEdge,
+                      children: [
+                        Positioned(
+                            top: 5,
+                            right: 5,
+                            left: 5,
+                            bottom: 0,
+                            child: Container(
+                              decoration: ShapeDecoration(
+                                color:
+                                    themeProvider.currentTheme.primaryColorDark,
+                                shape: RoundedRectangleBorder(
+                                  side: BorderSide(
+                                      width: 0.50,
+                                      color: themeProvider
+                                          .currentTheme.shadowColor),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                shadows: const [
+                                  BoxShadow(
+                                    color: Color(0x4C024A7A),
+                                    blurRadius: 8,
+                                    offset: Offset(2, 2),
+                                    spreadRadius: 0,
+                                  )
+                                ],
+                              ),
+                            )),
+                        Positioned(
+                          top: 1,
+                          right: 1,
+                          left: 1,
+                          bottom: 0,
+                          child: Image(
+                            image: widget.avatar,
+                            fit: BoxFit.fitHeight,
+                          ),
+                        ),
+                        Positioned(
+                          top: 1,
+                          right: 10,
+                          child: Container(
+                            width: 12,
+                            height: 12,
+                            decoration: ShapeDecoration(
+                              color: themeProvider.currentTheme.shadowColor,
+                              shape: OvalBorder(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: Text(
+                      widget.name,
+                      textScaleFactor: 0.99,
+                      style: TextStyle(
+                        color: themeProvider.currentTheme.primaryColor,
+                        fontSize: screenWidth * 0.0333,
+                        fontFamily: 'Manrope',
+                        fontWeight: FontWeight.w400,
+                        height: 1.30,
+                      ),
+                    ),
+                  ),
+                ]),
           ),
         );
       },
@@ -202,7 +375,7 @@ class _BlockMassegesState extends State<BlockMasseges>
     );
 
     _controller.forward();
-    setState(() {}); // Оновити віджет після початку анімації
+    setState(() {});
   }
 
   @override
