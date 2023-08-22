@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       theme: themeProvider.currentTheme,
       home: FutureBuilder(
-        future: Future.delayed(Duration(seconds: 5)),
+        future: Future.delayed(Duration(seconds: 3)),
         builder: (context, snapshot) {
           if (themeProvider.isThemeChange &&
               snapshot.connectionState == ConnectionState.waiting) {

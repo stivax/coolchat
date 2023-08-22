@@ -1,15 +1,18 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marquee/marquee.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
 
 import 'formChatList.dart';
 import 'menu.dart';
 import 'my_appbar.dart';
 import 'themeProvider.dart';
+import 'members.dart';
+import 'messeges.dart';
 
 class CommonChatScreen extends StatelessWidget {
   String topicName;
@@ -17,6 +20,10 @@ class CommonChatScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var paddingTop = MediaQuery.of(context).padding.top;
+    var screenWidth = MediaQuery.of(context).size.width;
+    var screenHeight = MediaQuery.of(context).size.height - 56 - paddingTop;
+
     return MaterialApp(
       home: BlocProvider(
         create: (context) => MenuBloc(),
@@ -25,20 +32,25 @@ class CommonChatScreen extends StatelessWidget {
             return Scaffold(
               appBar: MyAppBar(),
               body: Container(
+                height: screenHeight,
                 padding: const EdgeInsets.only(
                     left: 16, right: 16, top: 8, bottom: 16),
                 clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
                     color: themeProvider.currentTheme.primaryColorDark),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                          flex: 40, child: TopicName(topicName: topicName)),
-                      Expanded(flex: 224, child: ChatMembers()),
-                      Expanded(flex: 640, child: BlockMasseges()),
-                      Expanded(flex: 94, child: _textAndSend()),
-                    ]),
+                child: SingleChildScrollView(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                            height: 27, child: TopicName(topicName: topicName)),
+                        Container(height: 140, child: ChatMembers()),
+                        Container(
+                            height: (screenHeight - 248) * 1,
+                            child: BlockMasseges()),
+                        _textAndSend(),
+                      ]),
+                ),
               ),
             );
           },
@@ -71,16 +83,16 @@ class _TopicNameState extends State<TopicName> {
 
   bool _shouldAnimate() {
     double screenWidth = MediaQuery.of(context).size.width;
-    double textWidth = calculateTextWidth() + 32;
+    double textWidth = _calculateTextWidth() + 32;
     return textWidth > screenWidth;
   }
 
-  double calculateTextWidth() {
+  double _calculateTextWidth() {
     final TextPainter textPainter = TextPainter(
       text: TextSpan(
         text: 'Topic: ' + widget.topicName,
         style: const TextStyle(
-          fontSize: 24,
+          fontSize: 20,
           fontFamily: 'Manrope',
           fontWeight: FontWeight.w500,
           height: 1.24,
@@ -109,10 +121,10 @@ class _TopicNameState extends State<TopicName> {
                 child: shouldAnimate
                     ? Marquee(
                         text: 'Topic: ' + widget.topicName,
-                        textScaleFactor: 0.97,
+                        textScaleFactor: 1,
                         style: TextStyle(
                           color: themeProvider.currentTheme.primaryColor,
-                          fontSize: screenWidth * 0.05,
+                          fontSize: 20,
                           fontFamily: 'Manrope',
                           fontWeight: FontWeight.w500,
                           height: 1.24,
@@ -121,10 +133,10 @@ class _TopicNameState extends State<TopicName> {
                       )
                     : Text(
                         'Topic: ' + widget.topicName,
-                        textScaleFactor: 0.97,
+                        textScaleFactor: 1,
                         style: TextStyle(
                           color: themeProvider.currentTheme.primaryColor,
-                          fontSize: screenWidth * 0.05,
+                          fontSize: 20,
                           fontFamily: 'Manrope',
                           fontWeight: FontWeight.w500,
                           height: 1.24,
@@ -162,9 +174,9 @@ class _ChatMembersState extends State<ChatMembers> {
                     width: 0.50, color: themeProvider.currentTheme.shadowColor),
                 borderRadius: BorderRadius.circular(10),
               ),
-              shadows: const [
+              shadows: [
                 BoxShadow(
-                  color: Color(0x4C024A7A),
+                  color: themeProvider.currentTheme.cardColor,
                   blurRadius: 8,
                   offset: Offset(2, 2),
                   spreadRadius: 0,
@@ -173,8 +185,8 @@ class _ChatMembersState extends State<ChatMembers> {
             ),
             child: Column(
               children: [
-                Expanded(
-                  flex: 1,
+                Container(
+                  height: screenWidth * 0.07,
                   child: Padding(
                     padding: const EdgeInsets.only(
                         right: 16, bottom: 4, top: 4, left: 8),
@@ -200,156 +212,15 @@ class _ChatMembersState extends State<ChatMembers> {
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.max,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          TypeAvatar(
-                            avatar: AssetImage('assets/images/ava1girl.png'),
-                            name: 'Irina',
-                            isOnline: true,
-                          ),
-                          TypeAvatar(
-                            avatar: AssetImage('assets/images/ava2girl.png'),
-                            name: 'Anna',
-                            isOnline: true,
-                          ),
-                          TypeAvatar(
-                            avatar: AssetImage('assets/images/ava3girl.png'),
-                            name: 'Yuliia',
-                            isOnline: true,
-                          ),
-                          TypeAvatar(
-                            avatar: AssetImage('assets/images/ava4girl.png'),
-                            name: 'Anna',
-                            isOnline: true,
-                          ),
-                          TypeAvatar(
-                            avatar: AssetImage('assets/images/ava1boy.png'),
-                            name: 'Dmytro',
-                            isOnline: true,
-                          ),
-                          TypeAvatar(
-                            avatar: AssetImage('assets/images/ava2boy.png'),
-                            name: 'Ivan',
-                            isOnline: true,
-                          ),
-                          TypeAvatar(
-                            avatar: AssetImage('assets/images/ava3boy.png'),
-                            name: 'Sergii',
-                            isOnline: true,
-                          ),
-                        ]),
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.max,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: formMembersMap().values.toList(),
+                    ),
                   ),
                 ),
               ],
             ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class TypeAvatar extends StatefulWidget {
-  ImageProvider avatar;
-  String name;
-  bool isOnline = true;
-  TypeAvatar({
-    required this.avatar,
-    required this.name,
-    required this.isOnline,
-  });
-  @override
-  _TypeAvatarState createState() => _TypeAvatarState();
-}
-
-class _TypeAvatarState extends State<TypeAvatar> {
-  @override
-  Widget build(BuildContext context) {
-    var screenWidth = MediaQuery.of(context).size.width;
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
-        return Padding(
-          padding: const EdgeInsets.only(right: 5, left: 5),
-          child: Container(
-            width: screenWidth * 0.137,
-            child: Column(
-                mainAxisSize: MainAxisSize.max,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    flex: 5,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      clipBehavior: Clip.hardEdge,
-                      children: [
-                        Positioned(
-                            top: 5,
-                            right: 5,
-                            left: 5,
-                            bottom: 0,
-                            child: Container(
-                              decoration: ShapeDecoration(
-                                color:
-                                    themeProvider.currentTheme.primaryColorDark,
-                                shape: RoundedRectangleBorder(
-                                  side: BorderSide(
-                                      width: 0.50,
-                                      color: themeProvider
-                                          .currentTheme.shadowColor),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                shadows: const [
-                                  BoxShadow(
-                                    color: Color(0x4C024A7A),
-                                    blurRadius: 8,
-                                    offset: Offset(2, 2),
-                                    spreadRadius: 0,
-                                  )
-                                ],
-                              ),
-                            )),
-                        Positioned(
-                          top: 1,
-                          right: 1,
-                          left: 1,
-                          bottom: 0,
-                          child: Image(
-                            image: widget.avatar,
-                            fit: BoxFit.fitHeight,
-                          ),
-                        ),
-                        Positioned(
-                          top: 1,
-                          right: 10,
-                          child: Container(
-                            width: 12,
-                            height: 12,
-                            decoration: ShapeDecoration(
-                              color: themeProvider.currentTheme.shadowColor,
-                              shape: OvalBorder(),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    flex: 1,
-                    child: Text(
-                      widget.name,
-                      textScaleFactor: 0.99,
-                      style: TextStyle(
-                        color: themeProvider.currentTheme.primaryColor,
-                        fontSize: screenWidth * 0.0333,
-                        fontFamily: 'Manrope',
-                        fontWeight: FontWeight.w400,
-                        height: 1.30,
-                      ),
-                    ),
-                  ),
-                ]),
           ),
         );
       },
@@ -364,25 +235,32 @@ class BlockMasseges extends StatefulWidget {
 
 class _BlockMassegesState extends State<BlockMasseges>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+  List<Messeges> messageList = [];
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: Duration(seconds: 2),
-    );
-
-    _controller.forward();
+    fetchData();
     setState(() {});
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-
-    super.dispose();
+  Future<void> fetchData() async {
+    try {
+      http.Response response = await getData();
+      if (response.statusCode == 200) {
+        String responseBody = utf8.decode(response.bodyBytes);
+        List<dynamic> jsonList = jsonDecode(responseBody);
+        List<Messeges> messages =
+            Messeges.fromJsonList(jsonList).reversed.toList();
+        setState(() {
+          messageList = messages;
+        });
+      } else {
+        print('Error: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error: $error');
+    }
   }
 
   @override
@@ -392,7 +270,7 @@ class _BlockMassegesState extends State<BlockMasseges>
         return Padding(
           padding: const EdgeInsets.only(top: 8, bottom: 8),
           child: Container(
-            padding: EdgeInsets.all(10),
+            padding: EdgeInsets.only(right: 10, left: 10),
             decoration: ShapeDecoration(
               color: themeProvider.currentTheme.primaryColorDark,
               shape: RoundedRectangleBorder(
@@ -400,14 +278,22 @@ class _BlockMassegesState extends State<BlockMasseges>
                     width: 0.50, color: themeProvider.currentTheme.shadowColor),
                 borderRadius: BorderRadius.circular(10),
               ),
-              shadows: const [
+              shadows: [
                 BoxShadow(
-                  color: Color(0x4C024A7A),
+                  color: themeProvider.currentTheme.cardColor,
                   blurRadius: 8,
                   offset: Offset(2, 2),
                   spreadRadius: 0,
                 )
               ],
+            ),
+            child: ListView.builder(
+              reverse: true, // Scroll to the bottom by default
+              itemCount: messageList.length,
+              itemBuilder: (context, index) {
+                final List<Widget> chatWidgets = messageList;
+                return chatWidgets[index];
+              },
             ),
           ),
         );
@@ -424,10 +310,13 @@ class _textAndSend extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.only(top: 8),
           child: Row(
+            mainAxisSize: MainAxisSize.max,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Expanded(
-                flex: 225,
+                flex: 4,
                 child: Container(
+                  padding: EdgeInsets.only(right: 8, left: 8),
                   decoration: ShapeDecoration(
                     color: themeProvider.currentTheme.primaryColorDark,
                     shape: RoundedRectangleBorder(
@@ -436,33 +325,67 @@ class _textAndSend extends StatelessWidget {
                           color: themeProvider.currentTheme.shadowColor),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    shadows: const [
+                    shadows: [
                       BoxShadow(
-                        color: Color(0x4C024A7A),
+                        color: themeProvider.currentTheme.cardColor,
                         blurRadius: 8,
                         offset: Offset(2, 2),
                         spreadRadius: 0,
                       ),
                     ],
                   ),
+                  child: TextFormField(
+                    style: TextStyle(
+                      color: themeProvider.currentTheme.primaryColor,
+                      fontSize: 16,
+                      fontFamily: 'Manrope',
+                      fontWeight: FontWeight.w400,
+                    ),
+                    focusNode: FocusNode(),
+                    decoration: InputDecoration(
+                      hintText: 'Write message...',
+                      hintStyle: TextStyle(
+                        color: themeProvider.currentTheme.primaryColor
+                            .withOpacity(0.5),
+                        fontSize: 16,
+                        fontFamily: 'Manrope',
+                        fontWeight: FontWeight.w400,
+                      ),
+                      border: InputBorder.none,
+                    ),
+                    maxLines: null,
+                    onTap: () {
+                      FocusScope.of(context).requestFocus(null);
+                    },
+                  ),
                 ),
               ),
               SizedBox(width: 16),
               Expanded(
-                flex: 120,
+                flex: 1,
                 child: Container(
+                  padding: EdgeInsets.only(top: 14, bottom: 14),
                   alignment: Alignment.center,
                   decoration: ShapeDecoration(
                     color: themeProvider.currentTheme.shadowColor,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
+                    shadows: [
+                      BoxShadow(
+                        color: themeProvider.currentTheme.cardColor,
+                        blurRadius: 8,
+                        offset: Offset(2, 2),
+                        spreadRadius: 0,
+                      ),
+                    ],
                   ),
                   child: const Text(
                     'Send',
+                    textScaleFactor: 1,
                     style: TextStyle(
                       color: Color(0xFFF5FBFF),
-                      fontSize: 24,
+                      fontSize: 16,
                       fontFamily: 'Manrope',
                       fontWeight: FontWeight.w500,
                       height: 1.24,

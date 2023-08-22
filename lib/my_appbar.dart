@@ -12,6 +12,7 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return AppBar(
+          toolbarHeight: 56,
           backgroundColor: themeProvider.currentTheme.primaryColorDark,
           title: Container(
             width: 70,
