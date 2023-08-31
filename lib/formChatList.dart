@@ -32,31 +32,31 @@ class ChatItem {
 List<ChatItem> formChatList() {
   List<ChatItem> list = [];
   list.add(ChatItem(
-      id: 0,
+      id: 1,
       name: 'Tents, awnings, canopies',
       image: AssetImage('assets/images/room1.png'),
       countPeople: 9,
       countOnline: 3));
   list.add(ChatItem(
-      id: 1,
+      id: 2,
       name: 'Backpacks, clothes, shoes',
       image: AssetImage('assets/images/room2.png'),
       countPeople: 7,
       countOnline: 2));
   list.add(ChatItem(
-      id: 2,
+      id: 3,
       name: 'Bicycles and all for them',
       image: AssetImage('assets/images/room3.png'),
       countPeople: 6,
       countOnline: 4));
   list.add(ChatItem(
-      id: 3,
+      id: 4,
       name: 'Everything for fishing',
       image: AssetImage('assets/images/room4.png'),
       countPeople: 6,
       countOnline: 4));
   list.add(ChatItem(
-      id: 4,
+      id: 5,
       name: 'Tourist furniture and tableware',
       image: AssetImage('assets/images/room5.png'),
       countPeople: 6,

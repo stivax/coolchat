@@ -10,6 +10,7 @@ import 'my_appbar.dart';
 import 'themeProvider.dart';
 import 'common_chat.dart';
 import 'splashScreen.dart';
+import 'popup.dart';
 
 void main() => runApp(
       ChangeNotifierProvider(
@@ -214,12 +215,13 @@ class _ChatItemWidget extends StatelessWidget {
         child: GestureDetector(
           onTap: () {
             items[index].id == 999
-                ? _showPopup(context)
+                ? showPopupDialog(context)
                 : Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => CommonChatScreen(
                         topicName: items[index].name,
+                        id: items[index].id,
                       ),
                     ),
                   );
@@ -474,4 +476,13 @@ class _ChatItemWidget extends StatelessWidget {
       },
     );
   }
+}
+
+void showPopupDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return MyPopupDialog();
+    },
+  );
 }

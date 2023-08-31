@@ -170,6 +170,7 @@ class TheirMessege extends StatelessWidget {
                           children: [
                             Expanded(
                               child: Container(
+                                padding: EdgeInsets.only(bottom: 5),
                                 alignment: Alignment.centerLeft,
                                 child: Text(
                                   name,
@@ -186,6 +187,7 @@ class TheirMessege extends StatelessWidget {
                             ),
                             Expanded(
                               child: Container(
+                                padding: EdgeInsets.only(bottom: 5),
                                 alignment: Alignment.centerRight,
                                 child: Opacity(
                                   opacity: 0.50,
@@ -328,6 +330,7 @@ class MyMessege extends StatelessWidget {
                           ],
                         ),
                         Container(
+                          alignment: Alignment.topLeft,
                           padding: const EdgeInsets.all(10.0),
                           decoration: ShapeDecoration(
                             color: themeProvider.currentTheme.hoverColor,
@@ -357,7 +360,7 @@ class MyMessege extends StatelessWidget {
                               height: 1.30,
                             ),
                           ),
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -423,53 +426,3 @@ class MyMessege extends StatelessWidget {
     );
   }
 }
-
-Future<http.Response> getData() async {
-  const url = 'http://34.88.15.189:8000/posts/';
-  return await http.get(Uri.parse(url));
-}
-
-
-
-/*Map<String, Messeges> formChatMap() {
-  return {
-    '01x000001': Messeges(
-        messege:
-            'That\'s great. Thanks for the advice and recommendations. The choice has been made - tomorrow we are buying ourselves a new house in nature.',
-        created_at: '12:00',
-        id: '00001',
-        isMy: false),
-    '01x000002': Messeges(
-        messege:
-            'That\'s great. Thanks for the advice and recommendations. The choice has been made - tomorrow we are buying ourselves a new house in nature.',
-        created_at: '12:00',
-        id: '00005',
-        isMy: true),
-    '01x000003': Messeges(
-        messege:
-            'That\'s great. Thanks for the advice and recommendations. The choice has been made - tomorrow we are buying ourselves a new house in nature.',
-        created_at: '12:00',
-        id: '00001',
-        isMy: false),
-    '01x000004': Messeges(
-        messege:
-            'That\'s great. Thanks for the advice and recommendations. The choice has been made - tomorrow we are buying ourselves a new house in nature.',
-        created_at: '12:00',
-        id: '00005',
-        isMy: true),
-    '01x000005': Messeges(
-        messege:
-            'That\'s great. Thanks for the advice and recommendations. The choice has been made - tomorrow we are buying ourselves a new house in nature.',
-        created_at: '12:00',
-        id: '00001',
-        isMy: false),
-    '01x000006': Messeges(
-        messege:
-            'That\'s great. Thanks for the advice and recommendations. The choice has been made - tomorrow we are buying ourselves a new house in nature.',
-        created_at: '12:00',
-        id: '00001',
-        isMy: false),
-  };
-}*/
-
-
