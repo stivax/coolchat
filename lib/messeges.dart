@@ -7,29 +7,46 @@ import 'package:provider/provider.dart';
 
 import 'members.dart';
 import 'themeProvider.dart';
+import 'account.dart';
 
 class Messeges extends StatelessWidget {
-  String messege;
-  String created_at;
-  String id;
   String name;
+  String messege;
   bool published;
+  int memberID;
+  String avatar;
+  bool isPrivate;
+  int receiver;
+  int id;
+  String created_at;
 
-  Messeges(
-      {required this.messege,
-      required this.created_at,
-      required this.id,
-      required this.name,
-      required this.published});
+  Account _account = Account(name: '', avatar: '');
+  late Future<Account> _accountFuture;
+
+  Messeges({
+    required this.name,
+    required this.messege,
+    required this.published,
+    required this.memberID,
+    required this.avatar,
+    required this.isPrivate,
+    required this.receiver,
+    required this.id,
+    required this.created_at,
+  });
 
   static List<Messeges> fromJsonList(List<dynamic> jsonList) {
     return jsonList.map((json) {
       return Messeges(
-        messege: json['message'],
-        created_at: formatTime(json['created_at']),
-        id: json['id'].toString(),
         name: json['name'],
+        messege: json['message'],
         published: json['published'],
+        memberID: json['member_id'],
+        avatar: json['avatar'],
+        isPrivate: json['is_privat'],
+        receiver: json['receiver'],
+        id: json['id'],
+        created_at: formatTime(json['created_at']),
       );
     }).toList();
   }
@@ -52,45 +69,78 @@ class Messeges extends StatelessWidget {
     }
   }
 
+  void _readDataFromFile() {
+    final data = readAccountFuture();
+    _accountFuture = data;
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_account.name == '') {
+      _readDataFromFile();
+    }
     var screenWidth = MediaQuery.of(context).size.width;
-    return !published
-        ? MyMessege(
-            screenWidth: screenWidth,
-            name: name,
-            id: id,
-            created_at: created_at,
-            messege: messege,
-            published: true,
-          )
-        : TheirMessege(
-            screenWidth: screenWidth,
-            name: name,
-            id: id,
-            created_at: created_at,
-            messege: messege,
-            published: true,
-          );
+    return FutureBuilder<Account>(
+      future: _accountFuture,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          _account = snapshot.data!;
+        }
+        return _account.id == this.memberID
+            ? MyMessege(
+                screenWidth: screenWidth,
+                name: name,
+                messege: messege,
+                published: true,
+                memberID: memberID,
+                avatar: avatar,
+                isPrivate: isPrivate,
+                receiver: receiver,
+                id: id,
+                created_at: created_at,
+              )
+            : TheirMessege(
+                screenWidth: screenWidth,
+                name: name,
+                messege: messege,
+                published: true,
+                memberID: memberID,
+                avatar: avatar,
+                isPrivate: isPrivate,
+                receiver: receiver,
+                id: id,
+                created_at: created_at,
+              );
+      },
+    );
   }
 }
 
 class TheirMessege extends StatelessWidget {
   final double screenWidth;
-  String messege;
-  String created_at;
-  String id;
   String name;
+  String messege;
   bool published;
+  int memberID;
+  String avatar;
+  bool isPrivate;
+  int receiver;
+  int id;
+  String created_at;
 
-  TheirMessege(
-      {super.key,
-      required this.screenWidth,
-      required this.messege,
-      required this.created_at,
-      required this.id,
-      required this.name,
-      required this.published});
+  TheirMessege({
+    super.key,
+    required this.screenWidth,
+    required this.name,
+    required this.messege,
+    required this.published,
+    required this.memberID,
+    required this.avatar,
+    required this.isPrivate,
+    required this.receiver,
+    required this.id,
+    required this.created_at,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -185,22 +235,20 @@ class TheirMessege extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            Expanded(
-                              child: Container(
-                                padding: EdgeInsets.only(bottom: 5),
-                                alignment: Alignment.centerRight,
-                                child: Opacity(
-                                  opacity: 0.50,
-                                  child: Text(
-                                    created_at,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: themeProvider
-                                          .currentTheme.primaryColor,
-                                      fontSize: 12,
-                                      fontFamily: 'Manrope',
-                                      fontWeight: FontWeight.w400,
-                                    ),
+                            Container(
+                              padding: EdgeInsets.only(bottom: 5),
+                              alignment: Alignment.centerRight,
+                              child: Opacity(
+                                opacity: 0.50,
+                                child: Text(
+                                  created_at,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color:
+                                        themeProvider.currentTheme.primaryColor,
+                                    fontSize: 12,
+                                    fontFamily: 'Manrope',
+                                    fontWeight: FontWeight.w400,
                                   ),
                                 ),
                               ),
@@ -255,20 +303,29 @@ class TheirMessege extends StatelessWidget {
 
 class MyMessege extends StatelessWidget {
   final double screenWidth;
-  String messege;
-  String created_at;
-  String id;
   String name;
+  String messege;
   bool published;
+  int memberID;
+  String avatar;
+  bool isPrivate;
+  int receiver;
+  int id;
+  String created_at;
 
-  MyMessege(
-      {super.key,
-      required this.screenWidth,
-      required this.messege,
-      required this.created_at,
-      required this.id,
-      required this.name,
-      required this.published});
+  MyMessege({
+    super.key,
+    required this.screenWidth,
+    required this.name,
+    required this.messege,
+    required this.published,
+    required this.memberID,
+    required this.avatar,
+    required this.isPrivate,
+    required this.receiver,
+    required this.id,
+    required this.created_at,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -291,28 +348,29 @@ class MyMessege extends StatelessWidget {
                     child: Column(
                       children: [
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Expanded(
-                              child: Container(
-                                alignment: Alignment.centerLeft,
-                                child: Opacity(
-                                  opacity: 0.50,
-                                  child: Text(
-                                    created_at,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: themeProvider
-                                          .currentTheme.primaryColor,
-                                      fontSize: 12,
-                                      fontFamily: 'Manrope',
-                                      fontWeight: FontWeight.w400,
-                                    ),
+                            Container(
+                              padding: EdgeInsets.only(bottom: 5),
+                              alignment: Alignment.centerLeft,
+                              child: Opacity(
+                                opacity: 0.50,
+                                child: Text(
+                                  created_at,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color:
+                                        themeProvider.currentTheme.primaryColor,
+                                    fontSize: 12,
+                                    fontFamily: 'Manrope',
+                                    fontWeight: FontWeight.w400,
                                   ),
                                 ),
                               ),
                             ),
                             Expanded(
                               child: Container(
+                                padding: EdgeInsets.only(bottom: 5),
                                 alignment: Alignment.centerRight,
                                 child: Text(
                                   name,

@@ -47,6 +47,6 @@ Future<Account> readAccountFuture() async {
     Account account = Account.fromJson(jsonData);
     return account;
   } else {
-    return Account(name: "Default Name", avatar: "Default Avatar");
+    return Account(name: '', avatar: '');
   }
 }

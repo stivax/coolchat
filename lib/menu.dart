@@ -161,42 +161,96 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
         return Consumer<ThemeProvider>(
           builder: (context, themeProvider, child) {
             return AlertDialog(
-              backgroundColor: themeProvider.currentTheme.primaryColorLight,
-              title: Text(
-                'Attention!',
-                style:
-                    TextStyle(color: themeProvider.currentTheme.primaryColor),
-              ),
-              content: Text(
-                'You are logout from account ${acc.name}',
-                style:
-                    TextStyle(color: themeProvider.currentTheme.primaryColor),
-              ),
-              actions: <Widget>[
-                Center(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                      backgroundColor: themeProvider.currentTheme.shadowColor,
-                      shape: RoundedRectangleBorder(
-                        side: BorderSide(
-                            width: 0.50,
-                            color: themeProvider.currentTheme.shadowColor),
-                        borderRadius: BorderRadius.circular(10),
+              contentPadding: EdgeInsets.all(0),
+              backgroundColor: themeProvider.currentTheme.primaryColorDark,
+              content: Container(
+                height: 250,
+                width: 260,
+                clipBehavior: Clip.none,
+                child: Stack(children: [
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    child: Container(
+                      height: 250,
+                      width: 260,
+                      alignment: Alignment.bottomLeft,
+                      child: Image(
+                        image: AssetImage('assets/images/sova.png'),
+                        fit: BoxFit.fitHeight,
                       ),
                     ),
-                    child: const Text('LogOut'),
-                    onPressed: () {
-                      writeAccount(Account(name: '', avatar: ''));
-                      setState(() {
-                        _account = acc;
-                      });
-                      Navigator.of(context).pop();
-                    },
                   ),
-                ),
-              ],
+                  Positioned(
+                    left: 170,
+                    top: 50,
+                    child: Text(
+                      'UHOO!',
+                      textScaleFactor: 1,
+                      style: TextStyle(
+                        color: themeProvider.currentTheme.primaryColor,
+                        fontSize: 20,
+                        fontFamily: 'Manrope',
+                        fontWeight: FontWeight.w500,
+                        height: 1.24,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: 170,
+                    top: 75,
+                    child: Container(
+                      width: 70,
+                      child: Text(
+                        'Are you sure you want to leave the TeamChat?',
+                        textScaleFactor: 1,
+                        style: TextStyle(
+                          color: themeProvider.currentTheme.primaryColor,
+                          fontSize: 12,
+                          fontFamily: 'Manrope',
+                          fontWeight: FontWeight.w400,
+                          height: 1.24,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: 20,
+                    bottom: 20,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                        backgroundColor: themeProvider.currentTheme.shadowColor,
+                        shape: RoundedRectangleBorder(
+                          side: BorderSide(
+                              width: 0.50,
+                              color: themeProvider.currentTheme.shadowColor),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text(
+                        'Log out',
+                        textScaleFactor: 1,
+                        style: TextStyle(
+                          color: Color(0xFFF5FBFF),
+                          fontSize: 20,
+                          fontFamily: 'Manrope',
+                          fontWeight: FontWeight.w500,
+                          height: 1.24,
+                        ),
+                      ),
+                      onPressed: () {
+                        writeAccount(Account(name: '', avatar: ''));
+                        setState(() {
+                          _account = acc;
+                        });
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  )
+                ]),
+              ),
             );
           },
         );

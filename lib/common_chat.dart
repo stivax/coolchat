@@ -1,89 +1,76 @@
 import 'dart:convert';
-import 'dart:math';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:marquee/marquee.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 
-import 'formChatList.dart';
 import 'menu.dart';
 import 'my_appbar.dart';
 import 'themeProvider.dart';
 import 'members.dart';
 import 'messeges.dart';
 import 'account.dart';
+import 'popup.dart';
 
 class CommonChatScreen extends StatelessWidget {
-  String topicName;
-  int id;
-  CommonChatScreen({required this.topicName, required this.id});
+  // ignore: prefer_typing_uninitialized_variables
+  final topicName;
+  // ignore: prefer_typing_uninitialized_variables
+  final id;
+  const CommonChatScreen(
+      {super.key, required this.topicName, required this.id});
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Account>(
-      future: readAccountFuture(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator();
-        } else if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
-        } else {
-          Account account = snapshot.data!;
-          var paddingTop = MediaQuery.of(context).padding.top;
-          var screenWidth = MediaQuery.of(context).size.width;
-          var screenHeight =
-              MediaQuery.of(context).size.height - 56 - paddingTop;
+    var paddingTop = MediaQuery.of(context).padding.top;
+    var screenWidth = MediaQuery.of(context).size.width;
+    var screenHeight = MediaQuery.of(context).size.height - 56 - paddingTop;
 
-          return MaterialApp(
-            home: BlocProvider(
-              create: (context) => MenuBloc(),
-              child: Consumer<ThemeProvider>(
-                builder: (context, themeProvider, child) {
-                  return Scaffold(
-                    appBar: MyAppBar(),
-                    body: Container(
-                      height: screenHeight,
-                      padding: const EdgeInsets.only(
-                          left: 16, right: 16, top: 8, bottom: 16),
-                      clipBehavior: Clip.antiAlias,
-                      decoration: BoxDecoration(
-                          color: themeProvider.currentTheme.primaryColorDark),
-                      child: SingleChildScrollView(
-                        child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Container(
-                                  height: 27,
-                                  child: TopicName(topicName: topicName)),
-                              Container(height: 140, child: ChatMembers()),
-                              Container(
-                                  height: (screenHeight - 248) * 1,
-                                  child: BlockMasseges(topicID: id.toString())),
-                              TextAndSend(
-                                account: account,
-                                topicID: id.toString(),
-                              ),
-                            ]),
-                      ),
-                    ),
-                  );
-                },
+    return MaterialApp(
+      home: BlocProvider(
+        create: (context) => MenuBloc(),
+        child: Consumer<ThemeProvider>(
+          builder: (context, themeProvider, child) {
+            return Scaffold(
+              appBar: MyAppBar(),
+              body: Container(
+                height: screenHeight,
+                padding: const EdgeInsets.only(
+                    left: 16, right: 16, top: 8, bottom: 16),
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                    color: themeProvider.currentTheme.primaryColorDark),
+                child: SingleChildScrollView(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                            height: 27, child: TopicName(topicName: topicName)),
+                        SizedBox(height: 140, child: ChatMembers()),
+                        SizedBox(
+                            height: (screenHeight - 248) * 1,
+                            child: BlockMasseges(topicID: id.toString())),
+                        TextAndSend(
+                          topicID: id.toString(),
+                        ),
+                      ]),
+                ),
               ),
-            ),
-          );
-        }
-      },
+            );
+          },
+        ),
+      ),
     );
   }
 }
 
 class TopicName extends StatefulWidget {
-  String topicName;
-  TopicName({super.key, required this.topicName});
+  // ignore: prefer_typing_uninitialized_variables
+  final topicName;
+  const TopicName({super.key, required this.topicName});
 
   @override
   State<TopicName> createState() => _TopicNameState();
@@ -95,7 +82,7 @@ class _TopicNameState extends State<TopicName> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() {
         shouldAnimate = _shouldAnimate();
       });
@@ -111,7 +98,7 @@ class _TopicNameState extends State<TopicName> {
   double _calculateTextWidth() {
     final TextPainter textPainter = TextPainter(
       text: TextSpan(
-        text: 'Topic: ' + widget.topicName,
+        text: 'Topic: ${widget.topicName}',
         style: const TextStyle(
           fontSize: 20,
           fontFamily: 'Manrope',
@@ -131,7 +118,7 @@ class _TopicNameState extends State<TopicName> {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return Container(
-          padding: EdgeInsets.all(1),
+          padding: const EdgeInsets.all(1),
           alignment: Alignment.topLeft,
           child: Center(
             child: Align(
@@ -141,7 +128,7 @@ class _TopicNameState extends State<TopicName> {
                     BoxConstraints(maxWidth: MediaQuery.of(context).size.width),
                 child: shouldAnimate
                     ? Marquee(
-                        text: 'Topic: ' + widget.topicName,
+                        text: 'Topic: ${widget.topicName}',
                         textScaleFactor: 1,
                         style: TextStyle(
                           color: themeProvider.currentTheme.primaryColor,
@@ -153,7 +140,7 @@ class _TopicNameState extends State<TopicName> {
                         blankSpace: MediaQuery.of(context).size.width,
                       )
                     : Text(
-                        'Topic: ' + widget.topicName,
+                        'Topic: ${widget.topicName}',
                         textScaleFactor: 1,
                         style: TextStyle(
                           color: themeProvider.currentTheme.primaryColor,
@@ -173,6 +160,8 @@ class _TopicNameState extends State<TopicName> {
 }
 
 class ChatMembers extends StatefulWidget {
+  const ChatMembers({super.key});
+
   @override
   _ChatMembersState createState() => _ChatMembersState();
 }
@@ -187,7 +176,7 @@ class _ChatMembersState extends State<ChatMembers> {
           padding: const EdgeInsets.only(top: 8, bottom: 8),
           child: Container(
             width: double.infinity,
-            padding: EdgeInsets.only(top: 1, bottom: 8),
+            padding: const EdgeInsets.only(top: 1, bottom: 8),
             decoration: ShapeDecoration(
               color: themeProvider.currentTheme.primaryColorDark,
               shape: RoundedRectangleBorder(
@@ -199,7 +188,7 @@ class _ChatMembersState extends State<ChatMembers> {
                 BoxShadow(
                   color: themeProvider.currentTheme.cardColor,
                   blurRadius: 8,
-                  offset: Offset(2, 2),
+                  offset: const Offset(2, 2),
                   spreadRadius: 0,
                 )
               ],
@@ -250,9 +239,10 @@ class _ChatMembersState extends State<ChatMembers> {
 }
 
 class BlockMasseges extends StatefulWidget {
+  // ignore: prefer_typing_uninitialized_variables
   final topicID;
 
-  BlockMasseges({super.key, required this.topicID});
+  const BlockMasseges({super.key, required this.topicID});
 
   @override
   _BlockMassegesState createState() => _BlockMassegesState();
@@ -271,7 +261,7 @@ class _BlockMassegesState extends State<BlockMasseges>
   }
 
   void _startTimer() {
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
       fetchData();
     });
   }
@@ -300,12 +290,9 @@ class _BlockMassegesState extends State<BlockMasseges>
             messageList = messages;
           });
         }
-      } else {
-        print('Error: ${response.statusCode}');
-      }
-    } catch (error) {
-      print('Error: $error');
-    }
+      } else {}
+      // ignore: empty_catches
+    } catch (error) {}
   }
 
   @override
@@ -315,7 +302,7 @@ class _BlockMassegesState extends State<BlockMasseges>
         return Padding(
           padding: const EdgeInsets.only(top: 8, bottom: 8),
           child: Container(
-            padding: EdgeInsets.only(right: 10, left: 10),
+            padding: const EdgeInsets.only(right: 10, left: 10),
             decoration: ShapeDecoration(
               color: themeProvider.currentTheme.primaryColorDark,
               shape: RoundedRectangleBorder(
@@ -327,7 +314,7 @@ class _BlockMassegesState extends State<BlockMasseges>
                 BoxShadow(
                   color: themeProvider.currentTheme.cardColor,
                   blurRadius: 8,
-                  offset: Offset(2, 2),
+                  offset: const Offset(2, 2),
                   spreadRadius: 0,
                 )
               ],
@@ -348,10 +335,9 @@ class _BlockMassegesState extends State<BlockMasseges>
 }
 
 class TextAndSend extends StatefulWidget {
-  String topicID;
-  Account account;
-
-  TextAndSend({super.key, required this.topicID, required this.account});
+  // ignore: prefer_typing_uninitialized_variables
+  final topicID;
+  const TextAndSend({super.key, required this.topicID});
 
   @override
   _TextAndSendState createState() => _TextAndSendState();
@@ -359,16 +345,27 @@ class TextAndSend extends StatefulWidget {
 
 class _TextAndSendState extends State<TextAndSend> {
   final TextEditingController messageController = TextEditingController();
+  Account account = Account(name: '', avatar: '');
+
+  @override
+  void initState() {
+    super.initState();
+    readAccountFuture().then((value) => {
+          setState(() {
+            account = value;
+          })
+        });
+  }
 
   void _sendMessage(String message) async {
     final url = Uri.parse('http://35.228.45.65:8000/room_${widget.topicID}/');
 
     final jsonBody = {
-      'name': widget.account.name,
+      'name': account.name,
       'message': message,
       "published": true,
-      "member_id": widget.account.id,
-      "avatar": widget.account.avatar,
+      "member_id": account.id,
+      "avatar": account.avatar,
       "is_privat": false,
       "receiver": 0
     };
@@ -382,11 +379,7 @@ class _TextAndSendState extends State<TextAndSend> {
     );
 
     if (response.statusCode == 201) {
-      print('Post request successful');
-      // Оновлення списку повідомлень або інша логіка, яку ви хочете виконати
-    } else {
-      print('Post request failed');
-    }
+    } else {}
   }
 
   @override
@@ -402,7 +395,7 @@ class _TextAndSendState extends State<TextAndSend> {
               Expanded(
                 flex: 4,
                 child: Container(
-                  padding: EdgeInsets.only(right: 8, left: 8),
+                  padding: const EdgeInsets.only(right: 8, left: 8),
                   decoration: ShapeDecoration(
                     color: themeProvider.currentTheme.primaryColorDark,
                     shape: RoundedRectangleBorder(
@@ -415,13 +408,14 @@ class _TextAndSendState extends State<TextAndSend> {
                       BoxShadow(
                         color: themeProvider.currentTheme.cardColor,
                         blurRadius: 8,
-                        offset: Offset(2, 2),
+                        offset: const Offset(2, 2),
                         spreadRadius: 0,
                       ),
                     ],
                   ),
                   child: TextFormField(
                     controller: messageController,
+                    textCapitalization: TextCapitalization.sentences,
                     style: TextStyle(
                       color: themeProvider.currentTheme.primaryColor,
                       fontSize: 16,
@@ -441,20 +435,28 @@ class _TextAndSendState extends State<TextAndSend> {
                       border: InputBorder.none,
                     ),
                     maxLines: null,
-                    onTap: () {
-                      FocusScope.of(context).requestFocus(null);
+                    onTap: () async {
+                      if (account.name == '') {
+                        account = await showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return MyPopupDialog();
+                          },
+                        );
+                      } else {
+                        FocusScope.of(context).requestFocus(null);
+                      }
                     },
                   ),
                 ),
               ),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               Expanded(
                 flex: 1,
                 child: GestureDetector(
                   onTap: () {
                     final message = messageController.text;
-
-                    if (message.isNotEmpty) {
+                    if (message.isNotEmpty && account.name.isNotEmpty) {
                       _sendMessage(message);
                       messageController.clear();
 
@@ -467,7 +469,7 @@ class _TextAndSendState extends State<TextAndSend> {
                     }
                   },
                   child: Container(
-                    padding: EdgeInsets.only(top: 14, bottom: 14),
+                    padding: const EdgeInsets.only(top: 14, bottom: 14),
                     alignment: Alignment.center,
                     decoration: ShapeDecoration(
                       color: themeProvider.currentTheme.shadowColor,
@@ -478,7 +480,7 @@ class _TextAndSendState extends State<TextAndSend> {
                         BoxShadow(
                           color: themeProvider.currentTheme.cardColor,
                           blurRadius: 8,
-                          offset: Offset(2, 2),
+                          offset: const Offset(2, 2),
                           spreadRadius: 0,
                         ),
                       ],

@@ -13,6 +13,7 @@ class _MyPopupDialogState extends State<MyPopupDialog> {
   TextEditingController _textFieldController = TextEditingController();
   String _textInput = '';
   String _selectedItems = '';
+  FocusNode _textFieldFocusNode = FocusNode();
 
   void _addToSelectedItems(String item) {
     setState(() {
@@ -24,7 +25,7 @@ class _MyPopupDialogState extends State<MyPopupDialog> {
     if (_textInput != '' && _selectedItems != '') {
       final acc = Account(name: _textInput, avatar: _selectedItems);
       writeAccount(acc);
-      Navigator.of(context).pop();
+      Navigator.pop(context, acc);
     } else if (_selectedItems == '' && _textInput != '') {
       _showPopupErrorInput('Choise your avatar', context);
     } else if (_textInput == '' && _selectedItems != '') {
@@ -37,78 +38,103 @@ class _MyPopupDialogState extends State<MyPopupDialog> {
   @override
   Widget build(BuildContext context) {
     final avatar = avatars();
+    final screenSize = MediaQuery.of(context).size;
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return AlertDialog(
           backgroundColor: themeProvider.currentTheme.primaryColorDark,
           scrollable: true,
-          content: Form(
+          content: SizedBox(
+            width: screenSize.width * 0.8,
+            height: screenSize.height * 0.65,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'To send a message, write your name and choose an avatar',
-                  style: TextStyle(
-                      fontSize: 20,
-                      color: themeProvider.currentTheme.primaryColor),
-                  textScaleFactor: 1,
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 5, bottom: 5),
-                  child: Text(
-                    'Write your name',
-                    style: TextStyle(
-                      color: themeProvider.currentTheme.primaryColor,
-                      fontSize: 16,
-                      fontFamily: 'Manrope',
-                      fontWeight: FontWeight.w400,
+                SizedBox(
+                  width: screenSize.width * 0.8,
+                  height: screenSize.height * 0.33,
+                  child: Form(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'To send a message, write your name and choose an avatar',
+                          style: TextStyle(
+                            color: themeProvider.currentTheme.primaryColor,
+                            fontSize: 20,
+                            fontFamily: 'Manrope',
+                            fontWeight: FontWeight.w500,
+                            height: 1.24,
+                          ),
+                          textScaleFactor: 1,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 15, bottom: 5),
+                          child: Text(
+                            'Write your name',
+                            style: TextStyle(
+                              color: themeProvider.currentTheme.primaryColor
+                                  .withOpacity(0.9),
+                              fontSize: 16,
+                              fontFamily: 'Manrope',
+                              fontWeight: FontWeight.w400,
+                            ),
+                            textScaleFactor: 1,
+                          ),
+                        ),
+                        TextFormField(
+                          focusNode: _textFieldFocusNode,
+                          maxLength: 25,
+                          controller: _textFieldController,
+                          onChanged: (value) {
+                            setState(() {
+                              _textInput = value;
+                            });
+                          },
+                          onTap: () {
+                            FocusScope.of(context)
+                                .requestFocus(_textFieldFocusNode);
+                          },
+                          style: TextStyle(
+                            color: themeProvider.currentTheme.primaryColor,
+                            fontSize: 16,
+                            fontFamily: 'Manrope',
+                            fontWeight: FontWeight.w400,
+                          ),
+                          decoration: InputDecoration(
+                            counterStyle: TextStyle(
+                                color: themeProvider.currentTheme.primaryColor
+                                    .withOpacity(0.5)),
+                            border: InputBorder.none,
+                            hintText: 'Name *',
+                            hintStyle: TextStyle(
+                                color: themeProvider.currentTheme.primaryColor
+                                    .withOpacity(0.6)),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(10.0)),
+                              borderSide: BorderSide(
+                                  width: 0.50,
+                                  color:
+                                      themeProvider.currentTheme.shadowColor),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(10.0)),
+                              borderSide: BorderSide(
+                                  width: 0.50,
+                                  color:
+                                      themeProvider.currentTheme.shadowColor),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                TextFormField(
-                  maxLength: 25,
-                  controller: _textFieldController,
-                  onChanged: (value) {
-                    setState(() {
-                      _textInput = value;
-                    });
-                  },
-                  style: TextStyle(
-                    color: themeProvider.currentTheme.primaryColor,
-                    fontSize: 16,
-                    fontFamily: 'Manrope',
-                    fontWeight: FontWeight.w400,
-                  ),
-                  decoration: InputDecoration(
-                    counterStyle: TextStyle(
-                        color: themeProvider.currentTheme.primaryColor
-                            .withOpacity(0.5)),
-                    border: InputBorder.none,
-                    hintText: 'Name *',
-                    hintStyle: TextStyle(
-                        color: themeProvider.currentTheme.primaryColor
-                            .withOpacity(0.6)),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                      borderSide: BorderSide(
-                          width: 0.50,
-                          color: themeProvider.currentTheme.shadowColor),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                      borderSide: BorderSide(
-                          width: 0.50,
-                          color: themeProvider.currentTheme.shadowColor),
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 15,
                 ),
                 Center(
-                  child: Container(
-                    height: 250,
-                    width: 250,
+                  child: SizedBox(
+                    width: screenSize.width * 0.8,
+                    height: screenSize.height * 0.32,
                     child: GridView.count(
                       crossAxisCount: 3,
                       crossAxisSpacing: 6.0,
@@ -136,25 +162,30 @@ class _MyPopupDialogState extends State<MyPopupDialog> {
             ),
           ),
           actions: [
-            Center(
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                  backgroundColor: themeProvider.currentTheme.shadowColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+            Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              width: screenSize.width * 0.8, // 80% ширини екрану
+              height: screenSize.height * 0.09,
+              child: Center(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                    backgroundColor: themeProvider.currentTheme.shadowColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
-                ),
-                onPressed: _saveDataAndClosePopup,
-                child: Text(
-                  'Approve',
-                  textScaleFactor: 1,
-                  style: TextStyle(
-                    color: Color(0xFFF5FBFF),
-                    fontSize: 16,
-                    fontFamily: 'Manrope',
-                    fontWeight: FontWeight.w500,
-                    height: 1.24,
+                  onPressed: _saveDataAndClosePopup,
+                  child: Text(
+                    'Approve',
+                    textScaleFactor: 1,
+                    style: TextStyle(
+                      color: Color(0xFFF5FBFF),
+                      fontSize: 24,
+                      fontFamily: 'Manrope',
+                      fontWeight: FontWeight.w500,
+                      height: 1.24,
+                    ),
                   ),
                 ),
               ),
@@ -232,7 +263,7 @@ void _showPopupErrorInput(String text, BuildContext context) {
       return Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
           return AlertDialog(
-            backgroundColor: themeProvider.currentTheme.primaryColorLight,
+            backgroundColor: themeProvider.currentTheme.primaryColorDark,
             title: Text(
               'Attention!',
               style: TextStyle(color: themeProvider.currentTheme.primaryColor),
