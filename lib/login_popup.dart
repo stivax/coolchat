@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'main.dart';
 import 'themeProvider.dart';
 import 'account.dart';
 
@@ -26,6 +27,7 @@ class _MyPopupDialogState extends State<MyPopupDialog> {
       final acc = Account(name: _textInput, avatar: _selectedItems);
       writeAccount(acc);
       Navigator.pop(context, acc);
+      _showPopupWelcome(acc, context);
     } else if (_selectedItems == '' && _textInput != '') {
       _showPopupErrorInput('Choise your avatar', context);
     } else if (_textInput == '' && _selectedItems != '') {
@@ -35,6 +37,10 @@ class _MyPopupDialogState extends State<MyPopupDialog> {
     }
   }
 
+  void handlePopupOpen() {
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+
   @override
   Widget build(BuildContext context) {
     final avatar = avatars();
@@ -42,99 +48,108 @@ class _MyPopupDialogState extends State<MyPopupDialog> {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
           backgroundColor: themeProvider.currentTheme.primaryColorDark,
-          scrollable: true,
-          content: SizedBox(
-            width: screenSize.width * 0.8,
-            height: screenSize.height * 0.65,
-            child: Column(
-              children: [
-                SizedBox(
-                  width: screenSize.width * 0.8,
-                  height: screenSize.height * 0.33,
-                  child: Form(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'To send a message, write your name and choose an avatar',
-                          style: TextStyle(
-                            color: themeProvider.currentTheme.primaryColor,
-                            fontSize: 20,
-                            fontFamily: 'Manrope',
-                            fontWeight: FontWeight.w500,
-                            height: 1.24,
-                          ),
-                          textScaleFactor: 1,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 15, bottom: 5),
-                          child: Text(
-                            'Write your name',
+          scrollable: false,
+          content: Container(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: screenSize.width * 0.8,
+                    child: Form(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'To send a message, write your name and choose an avatar',
                             style: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor
-                                  .withOpacity(0.9),
-                              fontSize: 16,
+                              color: themeProvider.currentTheme.primaryColor,
+                              fontSize: 20,
                               fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w400,
+                              fontWeight: FontWeight.w500,
+                              height: 1.24,
                             ),
                             textScaleFactor: 1,
                           ),
-                        ),
-                        TextFormField(
-                          focusNode: _textFieldFocusNode,
-                          maxLength: 25,
-                          controller: _textFieldController,
-                          onChanged: (value) {
-                            setState(() {
-                              _textInput = value;
-                            });
-                          },
-                          onTap: () {
-                            FocusScope.of(context)
-                                .requestFocus(_textFieldFocusNode);
-                          },
-                          style: TextStyle(
-                            color: themeProvider.currentTheme.primaryColor,
-                            fontSize: 16,
-                            fontFamily: 'Manrope',
-                            fontWeight: FontWeight.w400,
-                          ),
-                          decoration: InputDecoration(
-                            counterStyle: TextStyle(
+                          Padding(
+                            padding: const EdgeInsets.only(top: 15, bottom: 5),
+                            child: Text(
+                              'Write your name',
+                              style: TextStyle(
                                 color: themeProvider.currentTheme.primaryColor
-                                    .withOpacity(0.5)),
-                            border: InputBorder.none,
-                            hintText: 'Name *',
-                            hintStyle: TextStyle(
-                                color: themeProvider.currentTheme.primaryColor
-                                    .withOpacity(0.6)),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(10.0)),
-                              borderSide: BorderSide(
-                                  width: 0.50,
-                                  color:
-                                      themeProvider.currentTheme.shadowColor),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(10.0)),
-                              borderSide: BorderSide(
-                                  width: 0.50,
-                                  color:
-                                      themeProvider.currentTheme.shadowColor),
+                                    .withOpacity(0.9),
+                                fontSize: 16,
+                                fontFamily: 'Manrope',
+                                fontWeight: FontWeight.w400,
+                              ),
+                              textScaleFactor: 1,
                             ),
                           ),
-                        ),
-                      ],
+                          Container(
+                            padding: EdgeInsets.only(bottom: 16),
+                            child: TextFormField(
+                              textCapitalization: TextCapitalization.words,
+                              focusNode: _textFieldFocusNode,
+                              maxLength: 25,
+                              controller: _textFieldController,
+                              onChanged: (value) {
+                                setState(() {
+                                  _textInput = value;
+                                });
+                              },
+                              onTap: () {
+                                FocusScope.of(context)
+                                    .requestFocus(_textFieldFocusNode);
+                              },
+                              style: TextStyle(
+                                color: themeProvider.currentTheme.primaryColor,
+                                fontSize: 16,
+                                fontFamily: 'Manrope',
+                                fontWeight: FontWeight.w400,
+                              ),
+                              decoration: InputDecoration(
+                                counterStyle: TextStyle(
+                                    color: themeProvider
+                                        .currentTheme.primaryColor
+                                        .withOpacity(0.5)),
+                                border: InputBorder.none,
+                                hintText: 'Name *',
+                                hintStyle: TextStyle(
+                                    color: themeProvider
+                                        .currentTheme.primaryColor
+                                        .withOpacity(0.6)),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: const BorderRadius.all(
+                                      Radius.circular(10.0)),
+                                  borderSide: BorderSide(
+                                      width: 0.50,
+                                      color: themeProvider
+                                          .currentTheme.shadowColor),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: const BorderRadius.all(
+                                      Radius.circular(10.0)),
+                                  borderSide: BorderSide(
+                                      width: 0.50,
+                                      color: themeProvider
+                                          .currentTheme.shadowColor),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                Center(
-                  child: SizedBox(
+                  Container(
                     width: screenSize.width * 0.8,
-                    height: screenSize.height * 0.32,
+                    height: screenSize.height * 0.4,
                     child: GridView.count(
                       crossAxisCount: 3,
                       crossAxisSpacing: 6.0,
@@ -157,8 +172,8 @@ class _MyPopupDialogState extends State<MyPopupDialog> {
                       }),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           actions: [
@@ -169,14 +184,18 @@ class _MyPopupDialogState extends State<MyPopupDialog> {
               child: Center(
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 30, vertical: 10),
                     backgroundColor: themeProvider.currentTheme.shadowColor,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  onPressed: _saveDataAndClosePopup,
-                  child: Text(
+                  onPressed: () {
+                    handlePopupOpen();
+                    _saveDataAndClosePopup();
+                  },
+                  child: const Text(
                     'Approve',
                     textScaleFactor: 1,
                     style: TextStyle(
@@ -191,6 +210,199 @@ class _MyPopupDialogState extends State<MyPopupDialog> {
               ),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  void _showPopupErrorInput(String text, BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Consumer<ThemeProvider>(
+          builder: (context, themeProvider, child) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20.0),
+              ),
+              backgroundColor: themeProvider.currentTheme.primaryColorDark,
+              scrollable: true,
+              content: SizedBox(
+                width: 250,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    SizedBox(
+                      height: 120,
+                      width: 105,
+                      child: Image.asset('assets/images/fire.png'),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: Text(
+                        'Fire!',
+                        style: TextStyle(
+                          color: themeProvider.currentTheme.primaryColor,
+                          fontSize: 20,
+                          fontFamily: 'Manrope',
+                          fontWeight: FontWeight.w500,
+                          height: 1.24,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16, top: 8),
+                      child: Text(
+                        text,
+                        style: TextStyle(
+                          color: themeProvider.currentTheme.primaryColor,
+                          fontSize: 16,
+                          fontFamily: 'Manrope',
+                          fontWeight: FontWeight.w400,
+                          height: 1.24,
+                        ),
+                      ),
+                    ),
+                    Center(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 30, vertical: 10),
+                          backgroundColor:
+                              themeProvider.currentTheme.shadowColor,
+                          shape: RoundedRectangleBorder(
+                            side: BorderSide(
+                                width: 0.50,
+                                color: themeProvider.currentTheme.shadowColor),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: const Text(
+                          'OK',
+                          textScaleFactor: 1,
+                          style: TextStyle(
+                            color: Color(0xFFF5FBFF),
+                            fontSize: 24,
+                            fontFamily: 'Manrope',
+                            fontWeight: FontWeight.w500,
+                            height: 1.24,
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showPopupWelcome(Account account, BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Consumer<ThemeProvider>(
+          builder: (context, themeProvider, child) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20.0),
+              ),
+              backgroundColor: themeProvider.currentTheme.primaryColorDark,
+              scrollable: true,
+              content: SizedBox(
+                width: 250,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 80,
+                      height: 100,
+                      child: Avatar(
+                          image: NetworkImage(account.avatar), isChoise: false),
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: 'Hello, ',
+                            style: TextStyle(
+                              color: themeProvider.currentTheme.primaryColor,
+                              fontSize: 24,
+                              fontFamily: 'Manrope',
+                              fontWeight: FontWeight.w500,
+                              height: 1.24,
+                            ),
+                          ),
+                          TextSpan(
+                            text: account.name,
+                            style: TextStyle(
+                              color: themeProvider.currentTheme.shadowColor,
+                              fontSize: 24,
+                              fontFamily: 'Manrope',
+                              fontWeight: FontWeight.w500,
+                              height: 1.24,
+                            ),
+                          ),
+                          TextSpan(
+                            text: '!',
+                            style: TextStyle(
+                              color: themeProvider.currentTheme.primaryColor,
+                              fontSize: 24,
+                              fontFamily: 'Manrope',
+                              fontWeight: FontWeight.w500,
+                              height: 1.24,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    Center(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 30, vertical: 10),
+                          backgroundColor:
+                              themeProvider.currentTheme.shadowColor,
+                          shape: RoundedRectangleBorder(
+                            side: BorderSide(
+                                width: 0.50,
+                                color: themeProvider.currentTheme.shadowColor),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: const Text(
+                          'Chat',
+                          textScaleFactor: 1,
+                          style: TextStyle(
+                            color: Color(0xFFF5FBFF),
+                            fontSize: 24,
+                            fontFamily: 'Manrope',
+                            fontWeight: FontWeight.w500,
+                            height: 1.24,
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         );
       },
     );
@@ -254,49 +466,6 @@ class Avatar extends StatelessWidget {
       },
     );
   }
-}
-
-void _showPopupErrorInput(String text, BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return Consumer<ThemeProvider>(
-        builder: (context, themeProvider, child) {
-          return AlertDialog(
-            backgroundColor: themeProvider.currentTheme.primaryColorDark,
-            title: Text(
-              'Attention!',
-              style: TextStyle(color: themeProvider.currentTheme.primaryColor),
-            ),
-            content: Text(
-              text,
-              style: TextStyle(color: themeProvider.currentTheme.primaryColor),
-            ),
-            actions: <Widget>[
-              Center(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                    backgroundColor: themeProvider.currentTheme.shadowColor,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                          width: 0.50,
-                          color: themeProvider.currentTheme.shadowColor),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text('OK'),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ),
-            ],
-          );
-        },
-      );
-    },
-  );
 }
 
 List<String> avatars() {

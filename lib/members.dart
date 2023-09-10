@@ -4,17 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'themeProvider.dart';
+import 'messeges.dart';
 
 class Member extends StatefulWidget {
   ImageProvider avatar;
   String name;
-  int? id;
+  int? memberID;
   bool isOnline = true;
   Member(
       {required this.avatar,
       required this.name,
       required this.isOnline,
-      this.id});
+      this.memberID});
   @override
   _MemberState createState() => _MemberState();
 }
@@ -78,20 +79,23 @@ class _MemberState extends State<Member> {
                         Positioned(
                           top: 1,
                           right: 10,
-                          child: Container(
-                            width: 12,
-                            height: 12,
-                            decoration: ShapeDecoration(
-                              color: themeProvider.currentTheme.shadowColor,
-                              shape: OvalBorder(),
-                            ),
-                          ),
+                          child: widget.isOnline
+                              ? Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: ShapeDecoration(
+                                    color:
+                                        themeProvider.currentTheme.shadowColor,
+                                    shape: const OvalBorder(),
+                                  ),
+                                )
+                              : Container(),
                         ),
                       ],
                     ),
                   ),
                   Container(
-                    padding: EdgeInsets.only(top: 2),
+                    padding: const EdgeInsets.only(top: 2),
                     height: screenWidth * 0.04,
                     child: Text(
                       widget.name,
@@ -111,6 +115,51 @@ class _MemberState extends State<Member> {
       },
     );
   }
+}
+
+List<Member> getLastHourMembers(List<Messeges> messages) {
+  final List<Member> members = [];
+
+  final DateTime now = DateTime.now();
+  final DateTime lastHour = now.subtract(Duration(hours: 1));
+
+  for (final message in messages) {
+    final DateTime messageDate = DateTime.parse(message.created_at);
+    if (messageDate.isAfter(lastHour)) {
+      final Member member = Member(
+        avatar: NetworkImage(message.avatar),
+        name: message.name,
+        memberID: message.memberID,
+        isOnline: true,
+      );
+      members.add(member);
+    }
+  }
+
+  return members;
+}
+
+List<Member> getLastWeekMembers(List<Messeges> messages) {
+  final List<Member> members = [];
+
+  final DateTime now = DateTime.now();
+  final DateTime lastHour = now.subtract(Duration(hours: 1));
+  final DateTime lastWeek = now.subtract(Duration(days: 7));
+
+  for (final message in messages) {
+    final DateTime messageDate = DateTime.parse(message.created_at);
+    if (messageDate.isAfter(lastWeek) && messageDate.isBefore(lastHour)) {
+      final Member member = Member(
+        avatar: NetworkImage(message.avatar),
+        name: message.name,
+        memberID: message.memberID,
+        isOnline: false,
+      );
+      members.add(member);
+    }
+  }
+
+  return members;
 }
 
 Map<String, Member> formMembersMap() {

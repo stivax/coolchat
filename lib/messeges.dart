@@ -46,7 +46,7 @@ class Messeges extends StatelessWidget {
         isPrivate: json['is_privat'],
         receiver: json['receiver'],
         id: json['id'],
-        created_at: formatTime(json['created_at']),
+        created_at: json['created_at'],
       );
     }).toList();
   }
@@ -63,7 +63,7 @@ class Messeges extends StatelessWidget {
     } else if (dateTime.year == yesterday.year &&
         dateTime.month == yesterday.month &&
         dateTime.day == yesterday.day) {
-      return 'yesterday ' + DateFormat('HH:mm').format(dateTime);
+      return 'yesterday ${DateFormat('HH:mm').format(dateTime)}';
     } else {
       return DateFormat('dd MMM HH:mm').format(dateTime);
     }
@@ -97,7 +97,7 @@ class Messeges extends StatelessWidget {
                 isPrivate: isPrivate,
                 receiver: receiver,
                 id: id,
-                created_at: created_at,
+                created_at: formatTime(created_at),
               )
             : TheirMessege(
                 screenWidth: screenWidth,
@@ -109,7 +109,7 @@ class Messeges extends StatelessWidget {
                 isPrivate: isPrivate,
                 receiver: receiver,
                 id: id,
-                created_at: created_at,
+                created_at: formatTime(created_at),
               );
       },
     );
@@ -203,7 +203,7 @@ class TheirMessege extends StatelessWidget {
                             width: 24,
                             height: 32,
                             child: Image(
-                              image: AssetImage('assets/images/ava2girl.png'),
+                              image: NetworkImage(avatar),
                               fit: BoxFit.fitHeight,
                             ),
                           ),
@@ -465,11 +465,11 @@ class MyMessege extends StatelessWidget {
                           right: 1,
                           left: 1,
                           bottom: 0,
-                          child: Container(
+                          child: SizedBox(
                             width: 24,
                             height: 32,
                             child: Image(
-                              image: AssetImage('assets/images/ava2girl.png'),
+                              image: NetworkImage(avatar),
                               fit: BoxFit.fitHeight,
                             ),
                           ),

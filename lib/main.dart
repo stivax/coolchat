@@ -10,7 +10,7 @@ import 'my_appbar.dart';
 import 'themeProvider.dart';
 import 'common_chat.dart';
 import 'splashScreen.dart';
-import 'popup.dart';
+import 'login_popup.dart';
 
 void main() => runApp(
       ChangeNotifierProvider(

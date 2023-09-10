@@ -6,6 +6,7 @@ import 'account.dart';
 import 'main.dart';
 import 'themeProvider.dart';
 import 'dart:async';
+import 'login_popup.dart';
 
 enum MenuStatus { open, closed }
 
@@ -51,7 +52,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
   @override
   void initState() {
     super.initState();
-    _readDataFromFile(); // Зчитати дані з файлу при ініціалізації
+    _readDataFromFile();
   }
 
   void _readDataFromFile() async {
@@ -83,6 +84,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
             return PopupMenuButton<String>(
               offset: const Offset(0, kToolbarHeight),
               onSelected: (value) {
+                FocusScope.of(context).unfocus();
                 if (value == 'item5') {
                   handleLogIn(_account, context);
                 } else {
@@ -161,6 +163,9 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
         return Consumer<ThemeProvider>(
           builder: (context, themeProvider, child) {
             return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20.0),
+              ),
               contentPadding: EdgeInsets.all(0),
               backgroundColor: themeProvider.currentTheme.primaryColorDark,
               content: Container(
@@ -200,9 +205,8 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                     left: 170,
                     top: 75,
                     child: Container(
-                      width: 70,
                       child: Text(
-                        'Are you sure you want to leave the TeamChat?',
+                        'Are you sure\nyou want to leave\nthe TeamChat?',
                         textScaleFactor: 1,
                         style: TextStyle(
                           color: themeProvider.currentTheme.primaryColor,
@@ -241,11 +245,14 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                         ),
                       ),
                       onPressed: () {
+                        FocusManager.instance.primaryFocus?.unfocus();
                         writeAccount(Account(name: '', avatar: ''));
                         setState(() {
                           _account = acc;
                         });
-                        Navigator.of(context).pop();
+                        Navigator.of(context).pushReplacement(MaterialPageRoute(
+                          builder: (context) => MyHomePage(),
+                        ));
                       },
                     ),
                   )

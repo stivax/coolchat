@@ -13,7 +13,7 @@ import 'themeProvider.dart';
 import 'members.dart';
 import 'messeges.dart';
 import 'account.dart';
-import 'popup.dart';
+import 'login_popup.dart';
 
 class CommonChatScreen extends StatelessWidget {
   // ignore: prefer_typing_uninitialized_variables
@@ -49,7 +49,9 @@ class CommonChatScreen extends StatelessWidget {
                       children: [
                         SizedBox(
                             height: 27, child: TopicName(topicName: topicName)),
-                        SizedBox(height: 140, child: ChatMembers()),
+                        SizedBox(
+                            height: 140,
+                            child: ChatMembers(topicID: id.toString())),
                         SizedBox(
                             height: (screenHeight - 248) * 1,
                             child: BlockMasseges(topicID: id.toString())),
@@ -160,13 +162,70 @@ class _TopicNameState extends State<TopicName> {
 }
 
 class ChatMembers extends StatefulWidget {
-  const ChatMembers({super.key});
+  final topicID;
+
+  const ChatMembers({super.key, required this.topicID});
 
   @override
   _ChatMembersState createState() => _ChatMembersState();
 }
 
 class _ChatMembersState extends State<ChatMembers> {
+  List<Member> members = [];
+  List<Messeges> messageList = [];
+  late Timer _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+    formMembersList();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      fetchData();
+      formMembersList();
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  Future<http.Response> _getData() async {
+    var url = 'http://35.228.45.65:8000/room_${widget.topicID}';
+    return await http.get(Uri.parse(url));
+  }
+
+  Future<void> fetchData() async {
+    try {
+      http.Response response = await _getData();
+      if (response.statusCode == 200) {
+        String responseBody = utf8.decode(response.bodyBytes);
+        List<dynamic> jsonList = jsonDecode(responseBody);
+        List<Messeges> messages =
+            Messeges.fromJsonList(jsonList).reversed.toList();
+        if (mounted) {
+          setState(() {
+            messageList = messages;
+          });
+        }
+      } else {}
+      // ignore: empty_catches
+    } catch (error) {}
+  }
+
+  List<Member> formMembersList() {
+    List<Member> result = [];
+    result.addAll(getLastHourMembers(messageList));
+    result.addAll(getLastWeekMembers(messageList));
+    return result;
+  }
+
   @override
   Widget build(BuildContext context) {
     var screenWidth = MediaQuery.of(context).size.width;
@@ -225,7 +284,7 @@ class _ChatMembersState extends State<ChatMembers> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       mainAxisSize: MainAxisSize.max,
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: formMembersMap().values.toList(),
+                      children: formMembersList(),
                     ),
                   ),
                 ),
@@ -350,6 +409,10 @@ class _TextAndSendState extends State<TextAndSend> {
   @override
   void initState() {
     super.initState();
+    _readAccount();
+  }
+
+  void _readAccount() {
     readAccountFuture().then((value) => {
           setState(() {
             account = value;
@@ -380,6 +443,14 @@ class _TextAndSendState extends State<TextAndSend> {
 
     if (response.statusCode == 201) {
     } else {}
+  }
+
+  void _onTapOutside(BuildContext context) {
+    GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus();
+      },
+    );
   }
 
   @override
@@ -416,13 +487,13 @@ class _TextAndSendState extends State<TextAndSend> {
                   child: TextFormField(
                     controller: messageController,
                     textCapitalization: TextCapitalization.sentences,
+                    focusNode: FocusNode(),
                     style: TextStyle(
                       color: themeProvider.currentTheme.primaryColor,
                       fontSize: 16,
                       fontFamily: 'Manrope',
                       fontWeight: FontWeight.w400,
                     ),
-                    focusNode: FocusNode(),
                     decoration: InputDecoration(
                       hintText: 'Write message...',
                       hintStyle: TextStyle(
@@ -446,6 +517,9 @@ class _TextAndSendState extends State<TextAndSend> {
                       } else {
                         FocusScope.of(context).requestFocus(null);
                       }
+                    },
+                    onTapOutside: (PointerDownEvent event) {
+                      FocusScope.of(context).unfocus();
                     },
                   ),
                 ),
