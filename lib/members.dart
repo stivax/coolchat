@@ -9,13 +9,13 @@ import 'messeges.dart';
 class Member extends StatefulWidget {
   ImageProvider avatar;
   String name;
-  int? memberID;
+  int memberID;
   bool isOnline = true;
   Member(
       {required this.avatar,
       required this.name,
       required this.isOnline,
-      this.memberID});
+      required this.memberID});
   @override
   _MemberState createState() => _MemberState();
 }
@@ -117,30 +117,9 @@ class _MemberState extends State<Member> {
   }
 }
 
-List<Member> getLastHourMembers(List<Messeges> messages) {
-  final List<Member> members = [];
-
-  final DateTime now = DateTime.now();
-  final DateTime lastHour = now.subtract(Duration(hours: 1));
-
-  for (final message in messages) {
-    final DateTime messageDate = DateTime.parse(message.created_at);
-    if (messageDate.isAfter(lastHour)) {
-      final Member member = Member(
-        avatar: NetworkImage(message.avatar),
-        name: message.name,
-        memberID: message.memberID,
-        isOnline: true,
-      );
-      members.add(member);
-    }
-  }
-
-  return members;
-}
-
-List<Member> getLastWeekMembers(List<Messeges> messages) {
-  final List<Member> members = [];
+List<Member> getLastHourAndWeekMembers(List<Messeges> messages) {
+  final Map<int, Member> membersMap =
+      {}; // Використовуємо Map для унікальних значень
 
   final DateTime now = DateTime.now();
   final DateTime lastHour = now.subtract(Duration(hours: 1));
@@ -153,46 +132,14 @@ List<Member> getLastWeekMembers(List<Messeges> messages) {
         avatar: NetworkImage(message.avatar),
         name: message.name,
         memberID: message.memberID,
-        isOnline: false,
+        isOnline: messageDate
+            .isAfter(lastHour), // Определяємо isOnline відповідно до умови
       );
-      members.add(member);
+      membersMap[member.memberID] =
+          member; // Додаємо або оновлюємо значення в Map
     }
   }
 
-  return members;
-}
-
-Map<String, Member> formMembersMap() {
-  return {
-    '00001': Member(
-      avatar: AssetImage('assets/images/ava2girl.png'),
-      name: 'Anna',
-      isOnline: true,
-    ),
-    '00002': Member(
-      avatar: AssetImage('assets/images/ava3girl.png'),
-      name: 'Yuliia',
-      isOnline: true,
-    ),
-    '00003': Member(
-      avatar: AssetImage('assets/images/ava4girl.png'),
-      name: 'Anna',
-      isOnline: true,
-    ),
-    '00004': Member(
-      avatar: AssetImage('assets/images/ava1boy.png'),
-      name: 'Dmytro',
-      isOnline: true,
-    ),
-    '00005': Member(
-      avatar: AssetImage('assets/images/ava2boy.png'),
-      name: 'Ivan',
-      isOnline: true,
-    ),
-    '00006': Member(
-      avatar: AssetImage('assets/images/ava3boy.png'),
-      name: 'Sergii',
-      isOnline: true,
-    ),
-  };
+  return membersMap.values
+      .toList(); // Повертаємо список унікальних об'єктів Member
 }

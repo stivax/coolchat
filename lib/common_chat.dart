@@ -221,8 +221,7 @@ class _ChatMembersState extends State<ChatMembers> {
 
   List<Member> formMembersList() {
     List<Member> result = [];
-    result.addAll(getLastHourMembers(messageList));
-    result.addAll(getLastWeekMembers(messageList));
+    result.addAll(getLastHourAndWeekMembers(messageList));
     return result;
   }
 
@@ -405,11 +404,25 @@ class TextAndSend extends StatefulWidget {
 class _TextAndSendState extends State<TextAndSend> {
   final TextEditingController messageController = TextEditingController();
   Account account = Account(name: '', avatar: '');
+  late Timer _timer;
 
   @override
   void initState() {
     super.initState();
     _readAccount();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      _readAccount();
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
   }
 
   void _readAccount() {
