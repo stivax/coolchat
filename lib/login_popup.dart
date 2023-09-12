@@ -29,11 +29,14 @@ class _MyPopupDialogState extends State<MyPopupDialog> {
       Navigator.pop(context, acc);
       _showPopupWelcome(acc, context);
     } else if (_selectedItems == '' && _textInput != '') {
-      _showPopupErrorInput('Choise your avatar', context);
+      _showPopupErrorInput(
+          'It seems that you have not selected your avatar', context);
     } else if (_textInput == '' && _selectedItems != '') {
-      _showPopupErrorInput('Choise your name', context);
+      _showPopupErrorInput(
+          'It seems that you have not selected your name', context);
     } else {
-      _showPopupErrorInput('Choise your name and avatar', context);
+      _showPopupErrorInput(
+          'It seems that you have not selected your name and avatar', context);
     }
   }
 
@@ -231,6 +234,7 @@ class _MyPopupDialogState extends State<MyPopupDialog> {
                 width: 250,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     SizedBox(
                       height: 120,
@@ -254,6 +258,7 @@ class _MyPopupDialogState extends State<MyPopupDialog> {
                       padding: const EdgeInsets.only(bottom: 16, top: 8),
                       child: Text(
                         text,
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                           color: themeProvider.currentTheme.primaryColor,
                           fontSize: 16,
@@ -330,6 +335,7 @@ class _MyPopupDialogState extends State<MyPopupDialog> {
                       height: 10,
                     ),
                     Text.rich(
+                      textAlign: TextAlign.center,
                       TextSpan(
                         children: [
                           TextSpan(
@@ -367,6 +373,21 @@ class _MyPopupDialogState extends State<MyPopupDialog> {
                     ),
                     const SizedBox(
                       height: 10,
+                    ),
+                    Text(
+                      'Welcome \nto the TeamChat',
+                      textAlign: TextAlign.center,
+                      textScaleFactor: 1,
+                      style: TextStyle(
+                        color: themeProvider.currentTheme.primaryColor,
+                        fontSize: 16,
+                        fontFamily: 'Manrope',
+                        fontWeight: FontWeight.w400,
+                        height: 1.24,
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 20,
                     ),
                     Center(
                       child: ElevatedButton(

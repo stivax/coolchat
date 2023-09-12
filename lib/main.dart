@@ -215,7 +215,7 @@ class _ChatItemWidget extends StatelessWidget {
         child: GestureDetector(
           onTap: () {
             items[index].id == 999
-                ? showPopupDialog(context)
+                ? {}
                 : Navigator.push(
                     context,
                     MaterialPageRoute(

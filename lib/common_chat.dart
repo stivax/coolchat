@@ -221,8 +221,7 @@ class _ChatMembersState extends State<ChatMembers> {
 
   List<Member> formMembersList() {
     List<Member> result = [];
-    result.addAll(getLastHourMembers(messageList));
-    result.addAll(getLastWeekMembers(messageList));
+    result.addAll(getLastHourAndWeekMembers(messageList).toList());
     return result;
   }
 

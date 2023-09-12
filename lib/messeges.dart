@@ -16,6 +16,7 @@ class Messeges extends StatelessWidget {
   int memberID;
   String avatar;
   bool isPrivate;
+  bool isPreviousSameMember;
   int receiver;
   int id;
   String created_at;
@@ -30,13 +31,17 @@ class Messeges extends StatelessWidget {
     required this.memberID,
     required this.avatar,
     required this.isPrivate,
+    required this.isPreviousSameMember,
     required this.receiver,
     required this.id,
     required this.created_at,
   });
 
   static List<Messeges> fromJsonList(List<dynamic> jsonList) {
+    int previousMemberID = 0;
     return jsonList.map((json) {
+      bool isSameMember = json['member_id'] == previousMemberID;
+      previousMemberID = json['member_id'];
       return Messeges(
         name: json['name'],
         messege: json['message'],
@@ -44,6 +49,7 @@ class Messeges extends StatelessWidget {
         memberID: json['member_id'],
         avatar: json['avatar'],
         isPrivate: json['is_privat'],
+        isPreviousSameMember: isSameMember,
         receiver: json['receiver'],
         id: json['id'],
         created_at: json['created_at'],
@@ -95,6 +101,7 @@ class Messeges extends StatelessWidget {
                 memberID: memberID,
                 avatar: avatar,
                 isPrivate: isPrivate,
+                isPreviousSameMember: isPreviousSameMember,
                 receiver: receiver,
                 id: id,
                 created_at: formatTime(created_at),
@@ -107,6 +114,7 @@ class Messeges extends StatelessWidget {
                 memberID: memberID,
                 avatar: avatar,
                 isPrivate: isPrivate,
+                isPreviousSameMember: isPreviousSameMember,
                 receiver: receiver,
                 id: id,
                 created_at: formatTime(created_at),
@@ -124,6 +132,7 @@ class TheirMessege extends StatelessWidget {
   int memberID;
   String avatar;
   bool isPrivate;
+  bool isPreviousSameMember;
   int receiver;
   int id;
   String created_at;
@@ -137,6 +146,7 @@ class TheirMessege extends StatelessWidget {
     required this.memberID,
     required this.avatar,
     required this.isPrivate,
+    required this.isPreviousSameMember,
     required this.receiver,
     required this.id,
     required this.created_at,
@@ -160,56 +170,58 @@ class TheirMessege extends StatelessWidget {
                     alignment: Alignment.topCenter,
                     width: screenWidth * 0.09,
                     height: 32,
-                    child: Stack(
-                      alignment: Alignment.topCenter,
-                      fit: StackFit.expand,
-                      clipBehavior: Clip.hardEdge,
-                      children: [
-                        Positioned(
-                          top: 2,
-                          right: 2,
-                          left: 2,
-                          bottom: 0,
-                          child: Container(
-                            width: 24,
-                            height: 32,
-                            decoration: ShapeDecoration(
-                              color:
-                                  themeProvider.currentTheme.primaryColorDark,
-                              shape: RoundedRectangleBorder(
-                                side: BorderSide(
-                                    width: 0.50,
-                                    color:
-                                        themeProvider.currentTheme.shadowColor),
-                                borderRadius: BorderRadius.circular(6),
+                    child: isPreviousSameMember
+                        ? Container()
+                        : Stack(
+                            alignment: Alignment.topCenter,
+                            fit: StackFit.expand,
+                            clipBehavior: Clip.hardEdge,
+                            children: [
+                              Positioned(
+                                top: 2,
+                                right: 2,
+                                left: 2,
+                                bottom: 0,
+                                child: Container(
+                                  width: 24,
+                                  height: 32,
+                                  decoration: ShapeDecoration(
+                                    color: themeProvider
+                                        .currentTheme.primaryColorDark,
+                                    shape: RoundedRectangleBorder(
+                                      side: BorderSide(
+                                          width: 0.50,
+                                          color: themeProvider
+                                              .currentTheme.shadowColor),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    shadows: const [
+                                      BoxShadow(
+                                        color: Color(0x4C024A7A),
+                                        blurRadius: 8,
+                                        offset: Offset(2, 2),
+                                        spreadRadius: 0,
+                                      )
+                                    ],
+                                  ),
+                                ),
                               ),
-                              shadows: const [
-                                BoxShadow(
-                                  color: Color(0x4C024A7A),
-                                  blurRadius: 8,
-                                  offset: Offset(2, 2),
-                                  spreadRadius: 0,
-                                )
-                              ],
-                            ),
+                              Positioned(
+                                top: 1,
+                                right: 1,
+                                left: 1,
+                                bottom: 0,
+                                child: Container(
+                                  width: 24,
+                                  height: 32,
+                                  child: Image(
+                                    image: NetworkImage(avatar),
+                                    fit: BoxFit.fitHeight,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                        Positioned(
-                          top: 1,
-                          right: 1,
-                          left: 1,
-                          bottom: 0,
-                          child: Container(
-                            width: 24,
-                            height: 32,
-                            child: Image(
-                              image: NetworkImage(avatar),
-                              fit: BoxFit.fitHeight,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
                   Expanded(
                     flex: 12,
@@ -222,17 +234,19 @@ class TheirMessege extends StatelessWidget {
                               child: Container(
                                 padding: EdgeInsets.only(bottom: 5),
                                 alignment: Alignment.centerLeft,
-                                child: Text(
-                                  name,
-                                  style: TextStyle(
-                                    color:
-                                        themeProvider.currentTheme.primaryColor,
-                                    fontSize: 14,
-                                    fontFamily: 'Manrope',
-                                    fontWeight: FontWeight.w600,
-                                    height: 1.30,
-                                  ),
-                                ),
+                                child: isPreviousSameMember
+                                    ? Container()
+                                    : Text(
+                                        name,
+                                        style: TextStyle(
+                                          color: themeProvider
+                                              .currentTheme.primaryColor,
+                                          fontSize: 14,
+                                          fontFamily: 'Manrope',
+                                          fontWeight: FontWeight.w600,
+                                          height: 1.30,
+                                        ),
+                                      ),
                               ),
                             ),
                             Container(
@@ -309,6 +323,7 @@ class MyMessege extends StatelessWidget {
   int memberID;
   String avatar;
   bool isPrivate;
+  bool isPreviousSameMember;
   int receiver;
   int id;
   String created_at;
@@ -322,6 +337,7 @@ class MyMessege extends StatelessWidget {
     required this.memberID,
     required this.avatar,
     required this.isPrivate,
+    required this.isPreviousSameMember,
     required this.receiver,
     required this.id,
     required this.created_at,
