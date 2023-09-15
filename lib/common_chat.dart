@@ -184,7 +184,7 @@ class _ChatMembersState extends State<ChatMembers> {
   }
 
   void _startTimer() {
-    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
       fetchData();
       formMembersList();
     });

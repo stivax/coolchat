@@ -29,11 +29,14 @@ class _MyPopupDialogState extends State<MyPopupDialog> {
       Navigator.pop(context, acc);
       _showPopupWelcome(acc, context);
     } else if (_selectedItems == '' && _textInput != '') {
-      _showPopupErrorInput('Choise your avatar', context);
+      _showPopupErrorInput(
+          'It seems that you have not selected your avatar', context);
     } else if (_textInput == '' && _selectedItems != '') {
-      _showPopupErrorInput('Choise your name', context);
+      _showPopupErrorInput(
+          'It seems that you have not selected your name', context);
     } else {
-      _showPopupErrorInput('Choise your name and avatar', context);
+      _showPopupErrorInput(
+          'It seems that you have not selected your name and avatar', context);
     }
   }
 
@@ -106,6 +109,9 @@ class _MyPopupDialogState extends State<MyPopupDialog> {
                               onTap: () {
                                 FocusScope.of(context)
                                     .requestFocus(_textFieldFocusNode);
+                              },
+                              onTapOutside: (_) {
+                                FocusScope.of(context).unfocus();
                               },
                               style: TextStyle(
                                 color: themeProvider.currentTheme.primaryColor,
@@ -252,14 +258,18 @@ class _MyPopupDialogState extends State<MyPopupDialog> {
                     ),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16, top: 8),
-                      child: Text(
-                        text,
-                        style: TextStyle(
-                          color: themeProvider.currentTheme.primaryColor,
-                          fontSize: 16,
-                          fontFamily: 'Manrope',
-                          fontWeight: FontWeight.w400,
-                          height: 1.24,
+                      child: Container(
+                        alignment: Alignment.center,
+                        child: Text(
+                          text,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: themeProvider.currentTheme.primaryColor,
+                            fontSize: 16,
+                            fontFamily: 'Manrope',
+                            fontWeight: FontWeight.w400,
+                            height: 1.24,
+                          ),
                         ),
                       ),
                     ),
@@ -319,6 +329,7 @@ class _MyPopupDialogState extends State<MyPopupDialog> {
                 width: 250,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     SizedBox(
                       width: 80,
@@ -367,6 +378,20 @@ class _MyPopupDialogState extends State<MyPopupDialog> {
                     ),
                     const SizedBox(
                       height: 10,
+                    ),
+                    Text(
+                      'Welcome \nto the TeamChat',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: themeProvider.currentTheme.primaryColor,
+                        fontSize: 16,
+                        fontFamily: 'Manrope',
+                        fontWeight: FontWeight.w400,
+                        height: 1.24,
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 16,
                     ),
                     Center(
                       child: ElevatedButton(

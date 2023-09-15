@@ -125,9 +125,9 @@ List<Member> getLastHourAndWeekMembers(List<Messeges> messages) {
   final DateTime lastHour = now.subtract(Duration(hours: 1));
   final DateTime lastWeek = now.subtract(Duration(days: 7));
 
-  for (final message in messages) {
+  for (final message in messages.reversed) {
     final DateTime messageDate = DateTime.parse(message.created_at);
-    if (messageDate.isAfter(lastWeek) && messageDate.isBefore(lastHour)) {
+    if (messageDate.isAfter(lastWeek)) {
       final Member member = Member(
         avatar: NetworkImage(message.avatar),
         name: message.name,
@@ -140,6 +140,19 @@ List<Member> getLastHourAndWeekMembers(List<Messeges> messages) {
     }
   }
 
-  return membersMap.values
-      .toList(); // Повертаємо список унікальних об'єктів Member
+  // Перетворюємо Map в список
+  var membersList = membersMap.values.toList().reversed.toList();
+
+  // Сортуємо список за параметром isOnline (спершу онлайн, потім офлайн)
+  membersList.sort((a, b) {
+    if (a.isOnline && !b.isOnline) {
+      return -1;
+    } else if (!a.isOnline && b.isOnline) {
+      return 1;
+    } else {
+      return 0;
+    }
+  });
+
+  return membersList;
 }

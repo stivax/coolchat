@@ -385,21 +385,23 @@ class MyMessege extends StatelessWidget {
                               ),
                             ),
                             Expanded(
-                              child: Container(
-                                padding: EdgeInsets.only(bottom: 5),
-                                alignment: Alignment.centerRight,
-                                child: Text(
-                                  name,
-                                  style: TextStyle(
-                                    color:
-                                        themeProvider.currentTheme.primaryColor,
-                                    fontSize: 14,
-                                    fontFamily: 'Manrope',
-                                    fontWeight: FontWeight.w600,
-                                    height: 1.30,
-                                  ),
-                                ),
-                              ),
+                              child: isPreviousSameMember
+                                  ? Container()
+                                  : Container(
+                                      padding: EdgeInsets.only(bottom: 5),
+                                      alignment: Alignment.centerRight,
+                                      child: Text(
+                                        name,
+                                        style: TextStyle(
+                                          color: themeProvider
+                                              .currentTheme.primaryColor,
+                                          fontSize: 14,
+                                          fontFamily: 'Manrope',
+                                          fontWeight: FontWeight.w600,
+                                          height: 1.30,
+                                        ),
+                                      ),
+                                    ),
                             ),
                           ],
                         ),
@@ -443,55 +445,58 @@ class MyMessege extends StatelessWidget {
                     alignment: Alignment.topCenter,
                     width: screenWidth * 0.09,
                     height: 32,
-                    child: Stack(
-                      alignment: Alignment.topCenter,
-                      fit: StackFit.expand,
-                      clipBehavior: Clip.hardEdge,
-                      children: [
-                        Positioned(
-                            top: 2,
-                            right: 2,
-                            left: 2,
-                            bottom: 0,
-                            child: Container(
-                              width: 24,
-                              height: 32,
-                              decoration: ShapeDecoration(
-                                color:
-                                    themeProvider.currentTheme.primaryColorDark,
-                                shape: RoundedRectangleBorder(
-                                  side: BorderSide(
-                                      width: 0.50,
+                    child: isPreviousSameMember
+                        ? Container()
+                        : Stack(
+                            alignment: Alignment.topCenter,
+                            fit: StackFit.expand,
+                            clipBehavior: Clip.hardEdge,
+                            children: [
+                              Positioned(
+                                  top: 2,
+                                  right: 2,
+                                  left: 2,
+                                  bottom: 0,
+                                  child: Container(
+                                    width: 24,
+                                    height: 32,
+                                    decoration: ShapeDecoration(
                                       color: themeProvider
-                                          .currentTheme.shadowColor),
-                                  borderRadius: BorderRadius.circular(6),
+                                          .currentTheme.primaryColorDark,
+                                      shape: RoundedRectangleBorder(
+                                        side: BorderSide(
+                                            width: 0.50,
+                                            color: themeProvider
+                                                .currentTheme.shadowColor),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      shadows: [
+                                        BoxShadow(
+                                          color: themeProvider
+                                              .currentTheme.cardColor,
+                                          blurRadius: 8,
+                                          offset: Offset(2, 2),
+                                          spreadRadius: 0,
+                                        )
+                                      ],
+                                    ),
+                                  )),
+                              Positioned(
+                                top: 1,
+                                right: 1,
+                                left: 1,
+                                bottom: 0,
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 32,
+                                  child: Image(
+                                    image: NetworkImage(avatar),
+                                    fit: BoxFit.fitHeight,
+                                  ),
                                 ),
-                                shadows: [
-                                  BoxShadow(
-                                    color: themeProvider.currentTheme.cardColor,
-                                    blurRadius: 8,
-                                    offset: Offset(2, 2),
-                                    spreadRadius: 0,
-                                  )
-                                ],
                               ),
-                            )),
-                        Positioned(
-                          top: 1,
-                          right: 1,
-                          left: 1,
-                          bottom: 0,
-                          child: SizedBox(
-                            width: 24,
-                            height: 32,
-                            child: Image(
-                              image: NetworkImage(avatar),
-                              fit: BoxFit.fitHeight,
-                            ),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
                   ),
                 ]),
           ),
