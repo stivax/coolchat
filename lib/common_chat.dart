@@ -498,6 +498,8 @@ class _TextAndSendState extends State<TextAndSend> {
                     ],
                   ),
                   child: TextFormField(
+                    showCursor: true,
+                    cursorColor: themeProvider.currentTheme.shadowColor,
                     controller: messageController,
                     textCapitalization: TextCapitalization.sentences,
                     focusNode: FocusNode(),
