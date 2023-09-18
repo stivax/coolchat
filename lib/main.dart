@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/animation.dart';
+import 'package:http/http.dart' as http;
 
 import 'formChatList.dart';
 import 'menu.dart';
@@ -11,6 +14,7 @@ import 'themeProvider.dart';
 import 'common_chat.dart';
 import 'splashScreen.dart';
 import 'login_popup.dart';
+import 'rooms.dart';
 
 void main() => runApp(
       ChangeNotifierProvider(
@@ -163,7 +167,8 @@ class _ChatListWidget extends StatelessWidget {
             );
           },
         ),
-        scrollChatList(items),
+        ScrollRoomsList(),
+        //scrollChatList(items),
         SliverToBoxAdapter(child: SizedBox(height: 8, width: double.infinity)),
       ],
     );
@@ -196,6 +201,62 @@ class _ChatListWidget extends StatelessWidget {
           }
         },
         childCount: (items.length ~/ 2) + 2,
+      ),
+    );
+  }
+}
+
+class ScrollRoomsList extends StatefulWidget {
+  @override
+  State<ScrollRoomsList> createState() => _ScrollRoomsListState();
+}
+
+class _ScrollRoomsListState extends State<ScrollRoomsList> {
+  List<Room> roomsList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+  }
+
+  Future<http.Response> _getData() async {
+    var url = 'http://35.228.45.65:8000/rooms/';
+    return await http.get(Uri.parse(url));
+  }
+
+  Future<void> fetchData() async {
+    try {
+      http.Response response = await _getData();
+      if (response.statusCode == 200) {
+        String responseBody = utf8.decode(response.bodyBytes);
+        List<dynamic> jsonList = jsonDecode(responseBody);
+        List<Room> rooms = Room.fromJsonList(jsonList).toList();
+        if (mounted) {
+          setState(() {
+            roomsList = rooms;
+          });
+        }
+      } else {}
+      // ignore: empty_catches
+    } catch (error) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverPadding(
+      padding: const EdgeInsets.all(16.0),
+      sliver: SliverGrid(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) => roomsList[index],
+          childCount: roomsList.length,
+        ),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 16.0,
+          mainAxisSpacing: 16.0,
+          childAspectRatio: 0.826,
+        ),
       ),
     );
   }
@@ -435,13 +496,6 @@ class _ChatItemWidget extends StatelessWidget {
       return Expanded(
         child: Card(),
       );
-    }
-  }
-
-  void _playTapSound() async {
-    if (await Vibrate.canVibrate) {
-      // Відтворюємо стандартний звук тапу
-      Vibrate.vibrate();
     }
   }
 

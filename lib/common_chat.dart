@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marquee/marquee.dart';
@@ -51,12 +52,12 @@ class CommonChatScreen extends StatelessWidget {
                             height: 27, child: TopicName(topicName: topicName)),
                         SizedBox(
                             height: 140,
-                            child: ChatMembers(topicID: id.toString())),
+                            child: ChatMembers(topicName: topicName)),
                         SizedBox(
                             height: (screenHeight - 248) * 1,
-                            child: BlockMasseges(topicID: id.toString())),
+                            child: BlockMasseges(topicName: topicName)),
                         TextAndSend(
-                          topicID: id.toString(),
+                          topicName: topicName,
                         ),
                       ]),
                 ),
@@ -162,9 +163,9 @@ class _TopicNameState extends State<TopicName> {
 }
 
 class ChatMembers extends StatefulWidget {
-  final topicID;
+  final topicName;
 
-  const ChatMembers({super.key, required this.topicID});
+  const ChatMembers({super.key, required this.topicName});
 
   @override
   _ChatMembersState createState() => _ChatMembersState();
@@ -197,7 +198,7 @@ class _ChatMembersState extends State<ChatMembers> {
   }
 
   Future<http.Response> _getData() async {
-    var url = 'http://35.228.45.65:8000/room_${widget.topicID}';
+    var url = 'http://35.228.45.65:8000/messages/${widget.topicName}';
     return await http.get(Uri.parse(url));
   }
 
@@ -252,6 +253,7 @@ class _ChatMembersState extends State<ChatMembers> {
               ],
             ),
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Container(
                   height: screenWidth * 0.07,
@@ -276,14 +278,17 @@ class _ChatMembersState extends State<ChatMembers> {
                   ),
                 ),
                 Expanded(
-                  flex: 3,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.max,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: formMembersList(),
+                  child: Container(
+                    width: double.infinity,
+                    alignment: Alignment.centerLeft,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: formMembersList(),
+                      ),
                     ),
                   ),
                 ),
@@ -298,9 +303,9 @@ class _ChatMembersState extends State<ChatMembers> {
 
 class BlockMasseges extends StatefulWidget {
   // ignore: prefer_typing_uninitialized_variables
-  final topicID;
+  final topicName;
 
-  const BlockMasseges({super.key, required this.topicID});
+  const BlockMasseges({super.key, required this.topicName});
 
   @override
   _BlockMassegesState createState() => _BlockMassegesState();
@@ -331,7 +336,7 @@ class _BlockMassegesState extends State<BlockMasseges>
   }
 
   Future<http.Response> _getData() async {
-    var url = 'http://35.228.45.65:8000/room_${widget.topicID}';
+    var url = 'http://35.228.45.65:8000/messages/${widget.topicName}';
     return await http.get(Uri.parse(url));
   }
 
@@ -394,8 +399,8 @@ class _BlockMassegesState extends State<BlockMasseges>
 
 class TextAndSend extends StatefulWidget {
   // ignore: prefer_typing_uninitialized_variables
-  final topicID;
-  const TextAndSend({super.key, required this.topicID});
+  final topicName;
+  const TextAndSend({super.key, required this.topicName});
 
   @override
   _TextAndSendState createState() => _TextAndSendState();
@@ -434,7 +439,7 @@ class _TextAndSendState extends State<TextAndSend> {
   }
 
   void _sendMessage(String message) async {
-    final url = Uri.parse('http://35.228.45.65:8000/room_${widget.topicID}/');
+    final url = Uri.parse('http://35.228.45.65:8000/messages/');
 
     final jsonBody = {
       'name': account.name,
@@ -443,7 +448,8 @@ class _TextAndSendState extends State<TextAndSend> {
       "member_id": account.id,
       "avatar": account.avatar,
       "is_privat": false,
-      "receiver": 0
+      "receiver": 0,
+      "rooms": widget.topicName
     };
 
     final response = await http.post(
