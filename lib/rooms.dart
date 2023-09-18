@@ -31,7 +31,15 @@ class Room extends StatelessWidget {
         countPeople: 10,
         countOnline: 5,
       );
-    }).toList();
+    }).toList()
+      ..add(Room(
+        id: 999,
+        name: 'Add room',
+        image: AssetImage('assets/images/add_room_dark.jpg'),
+        countPeople: 0,
+        countOnline: 0,
+        createdAt: '',
+      ));
   }
 
   @override
