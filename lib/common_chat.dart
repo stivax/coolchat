@@ -410,6 +410,7 @@ class _TextAndSendState extends State<TextAndSend> {
   final TextEditingController messageController = TextEditingController();
   Account account = Account(name: '', avatar: '');
   late Timer _timer;
+  FocusNode _textFieldFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -508,7 +509,7 @@ class _TextAndSendState extends State<TextAndSend> {
                     cursorColor: themeProvider.currentTheme.shadowColor,
                     controller: messageController,
                     textCapitalization: TextCapitalization.sentences,
-                    focusNode: FocusNode(),
+                    focusNode: _textFieldFocusNode,
                     style: TextStyle(
                       color: themeProvider.currentTheme.primaryColor,
                       fontSize: 16,
@@ -529,6 +530,7 @@ class _TextAndSendState extends State<TextAndSend> {
                     maxLines: null,
                     onTap: () async {
                       if (account.name == '') {
+                        FocusScope.of(context).unfocus();
                         account = await showDialog(
                           context: context,
                           builder: (BuildContext context) {
@@ -536,11 +538,9 @@ class _TextAndSendState extends State<TextAndSend> {
                           },
                         );
                       } else {
-                        FocusScope.of(context).requestFocus(null);
+                        FocusScope.of(context)
+                            .requestFocus(_textFieldFocusNode);
                       }
-                    },
-                    onTapOutside: (PointerDownEvent event) {
-                      FocusScope.of(context).unfocus();
                     },
                   ),
                 ),

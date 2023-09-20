@@ -97,6 +97,7 @@ class _MyPopupDialogState extends State<MyPopupDialog> {
                           Container(
                             padding: EdgeInsets.only(bottom: 16),
                             child: TextFormField(
+                              autofocus: true,
                               textCapitalization: TextCapitalization.words,
                               focusNode: _textFieldFocusNode,
                               maxLength: 25,
