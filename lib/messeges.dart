@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 import 'members.dart';
 import 'themeProvider.dart';
@@ -298,8 +301,12 @@ class TheirMessege extends StatelessWidget {
                               )
                             ],
                           ),
-                          child: Text(
-                            messege,
+                          child: Linkify(
+                            onOpen: (url) async {
+                              await launchUrlString(url.url,
+                                  mode: LaunchMode.externalApplication);
+                            },
+                            text: messege, // Текст повідомлення
                             style: TextStyle(
                               color: themeProvider.currentTheme.primaryColor,
                               fontSize: 14,
@@ -308,7 +315,7 @@ class TheirMessege extends StatelessWidget {
                               height: 1.30,
                             ),
                           ),
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -434,8 +441,12 @@ class MyMessege extends StatelessWidget {
                               )
                             ],
                           ),
-                          child: Text(
-                            messege,
+                          child: Linkify(
+                            onOpen: (url) async {
+                              await launchUrlString(url.url,
+                                  mode: LaunchMode.externalApplication);
+                            },
+                            text: messege, // Текст повідомлення
                             style: TextStyle(
                               color: themeProvider.currentTheme.primaryColor,
                               fontSize: 14,
