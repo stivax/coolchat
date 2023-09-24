@@ -2,16 +2,14 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter/animation.dart';
 import 'package:http/http.dart' as http;
+import 'package:permission_handler/permission_handler.dart';
 
 import 'formChatList.dart';
 import 'menu.dart';
 import 'my_appbar.dart';
 import 'themeProvider.dart';
-import 'common_chat.dart';
 import 'splashScreen.dart';
 import 'login_popup.dart';
 import 'rooms.dart';
@@ -54,6 +52,23 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  @override
+  void initState() {
+    super.initState();
+    requestPermissions();
+  }
+
+  Future<void> requestPermissions() async {
+    // Запит дозволу на доступ до файлової системи (запис)
+    final storagePermission = await Permission.storage.request();
+
+    if (storagePermission.isGranted) {
+      // Дозвіл отримано, ви можете виконувати дії, які потребують цього дозволу
+    } else {
+      // Ви не отримали необхідний дозвіл, обробіть це відповідно
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

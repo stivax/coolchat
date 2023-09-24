@@ -314,6 +314,7 @@ class BlockMasseges extends StatefulWidget {
 class _BlockMassegesState extends State<BlockMasseges>
     with SingleTickerProviderStateMixin {
   List<Messeges> messageList = [];
+  String localResponseBody = '';
   late Timer _timer;
 
   @override
@@ -324,7 +325,7 @@ class _BlockMassegesState extends State<BlockMasseges>
   }
 
   void _startTimer() {
-    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       fetchData();
     });
   }
@@ -345,16 +346,18 @@ class _BlockMassegesState extends State<BlockMasseges>
       http.Response response = await _getData();
       if (response.statusCode == 200) {
         String responseBody = utf8.decode(response.bodyBytes);
-        List<dynamic> jsonList = jsonDecode(responseBody);
-        List<Messeges> messages =
-            Messeges.fromJsonList(jsonList).reversed.toList();
-        if (mounted) {
-          setState(() {
-            messageList = messages;
-          });
+        if (responseBody != localResponseBody) {
+          localResponseBody = responseBody;
+          List<dynamic> jsonList = jsonDecode(responseBody);
+          List<Messeges> messages =
+              Messeges.fromJsonList(jsonList).reversed.toList();
+          if (mounted) {
+            setState(() {
+              messageList = messages;
+            });
+          }
         }
-      } else {}
-      // ignore: empty_catches
+      }
     } catch (error) {}
   }
 
@@ -383,7 +386,7 @@ class _BlockMassegesState extends State<BlockMasseges>
               ],
             ),
             child: ListView.builder(
-              reverse: true, // Scroll to the bottom by default
+              reverse: true,
               itemCount: messageList.length,
               itemBuilder: (context, index) {
                 final List<Widget> chatWidgets = messageList;
