@@ -101,7 +101,6 @@ class _MyHomePageState extends State<MyHomePage> {
 class ChatListWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    List<ChatItem> items = formChatList();
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(child: HeaderWidget()),

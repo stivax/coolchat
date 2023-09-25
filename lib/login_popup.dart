@@ -46,7 +46,6 @@ class _MyPopupDialogState extends State<MyPopupDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final avatar = avatars();
     final screenSize = MediaQuery.of(context).size;
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
@@ -55,133 +54,113 @@ class _MyPopupDialogState extends State<MyPopupDialog> {
             borderRadius: BorderRadius.circular(20.0),
           ),
           backgroundColor: themeProvider.currentTheme.primaryColorDark,
-          scrollable: false,
-          content: Container(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: screenSize.width * 0.8,
-                    child: Form(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'To send a message, write your name and choose an avatar',
-                            style: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor,
-                              fontSize: 20,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w500,
-                              height: 1.24,
-                            ),
-                            textScaleFactor: 1,
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 15, bottom: 5),
-                            child: Text(
-                              'Write your name',
-                              style: TextStyle(
-                                color: themeProvider.currentTheme.primaryColor
-                                    .withOpacity(0.9),
-                                fontSize: 16,
-                                fontFamily: 'Manrope',
-                                fontWeight: FontWeight.w400,
-                              ),
-                              textScaleFactor: 1,
-                            ),
-                          ),
-                          Container(
-                            padding: EdgeInsets.only(bottom: 16),
-                            child: TextFormField(
-                              autofocus: true,
-                              textCapitalization: TextCapitalization.words,
-                              focusNode: _textFieldFocusNode,
-                              maxLength: 25,
-                              controller: _textFieldController,
-                              onChanged: (value) {
-                                setState(() {
-                                  _textInput = value;
-                                });
-                              },
-                              onTap: () {
-                                FocusScope.of(context)
-                                    .requestFocus(_textFieldFocusNode);
-                              },
-                              onTapOutside: (_) {
-                                FocusScope.of(context).unfocus();
-                              },
-                              style: TextStyle(
-                                color: themeProvider.currentTheme.primaryColor,
-                                fontSize: 16,
-                                fontFamily: 'Manrope',
-                                fontWeight: FontWeight.w400,
-                              ),
-                              decoration: InputDecoration(
-                                counterStyle: TextStyle(
-                                    color: themeProvider
-                                        .currentTheme.primaryColor
-                                        .withOpacity(0.5)),
-                                border: InputBorder.none,
-                                hintText: 'Name *',
-                                hintStyle: TextStyle(
-                                    color: themeProvider
-                                        .currentTheme.primaryColor
-                                        .withOpacity(0.6)),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: const BorderRadius.all(
-                                      Radius.circular(10.0)),
-                                  borderSide: BorderSide(
-                                      width: 0.50,
-                                      color: themeProvider
-                                          .currentTheme.shadowColor),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: const BorderRadius.all(
-                                      Radius.circular(10.0)),
-                                  borderSide: BorderSide(
-                                      width: 0.50,
-                                      color: themeProvider
-                                          .currentTheme.shadowColor),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+          content: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Form(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'To send a message, write your name and choose an avatar',
+                        style: TextStyle(
+                          color: themeProvider.currentTheme.primaryColor,
+                          fontSize: 20,
+                          fontFamily: 'Manrope',
+                          fontWeight: FontWeight.w500,
+                          height: 1.24,
+                        ),
+                        textScaleFactor: 1,
                       ),
-                    ),
-                  ),
-                  Container(
-                    width: screenSize.width * 0.8,
-                    height: screenSize.height * 0.4,
-                    child: GridView.count(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 6.0,
-                      mainAxisSpacing: 6.0,
-                      children: List.generate(avatar.length, (index) {
-                        return GestureDetector(
-                          onTap: () {
-                            _addToSelectedItems(avatar[index]);
+                      Padding(
+                        padding: const EdgeInsets.only(top: 15, bottom: 5),
+                        child: Text(
+                          'Write your name',
+                          style: TextStyle(
+                            color: themeProvider.currentTheme.primaryColor
+                                .withOpacity(0.9),
+                            fontSize: 16,
+                            fontFamily: 'Manrope',
+                            fontWeight: FontWeight.w400,
+                          ),
+                          textScaleFactor: 1,
+                        ),
+                      ),
+                      Container(
+                        padding: EdgeInsets.only(bottom: 16),
+                        child: TextFormField(
+                          autofocus: true,
+                          textCapitalization: TextCapitalization.words,
+                          focusNode: _textFieldFocusNode,
+                          maxLength: 25,
+                          controller: _textFieldController,
+                          onChanged: (value) {
+                            setState(() {
+                              _textInput = value;
+                            });
                           },
-                          child: _selectedItems == avatar[index]
-                              ? Avatar(
-                                  image: NetworkImage(avatar[index]),
-                                  isChoise: true,
-                                )
-                              : Avatar(
-                                  image: NetworkImage(avatar[index]),
-                                  isChoise: false,
-                                ),
-                        );
-                      }),
-                    ),
+                          onTap: () {
+                            FocusScope.of(context)
+                                .requestFocus(_textFieldFocusNode);
+                          },
+                          onTapOutside: (_) {
+                            FocusScope.of(context).unfocus();
+                          },
+                          style: TextStyle(
+                            color: themeProvider.currentTheme.primaryColor,
+                            fontSize: 16,
+                            fontFamily: 'Manrope',
+                            fontWeight: FontWeight.w400,
+                          ),
+                          decoration: InputDecoration(
+                            counterStyle: TextStyle(
+                                color: themeProvider.currentTheme.primaryColor
+                                    .withOpacity(0.5)),
+                            border: InputBorder.none,
+                            hintText: 'Name *',
+                            hintStyle: TextStyle(
+                                color: themeProvider.currentTheme.primaryColor
+                                    .withOpacity(0.6)),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius:
+                                  const BorderRadius.all(Radius.circular(10.0)),
+                              borderSide: BorderSide(
+                                  width: 0.50,
+                                  color:
+                                      themeProvider.currentTheme.shadowColor),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius:
+                                  const BorderRadius.all(Radius.circular(10.0)),
+                              borderSide: BorderSide(
+                                  width: 0.50,
+                                  color:
+                                      themeProvider.currentTheme.shadowColor),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
+              SliverPadding(
+                padding: const EdgeInsets.all(0.0),
+                sliver: SliverGrid(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => generateListAvatars()[index],
+                    childCount: generateListAvatars().length,
+                  ),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 4.0,
+                    mainAxisSpacing: 8.0,
+                    childAspectRatio: 0.84,
+                  ),
+                ),
+              )
+            ],
           ),
           actions: [
             Container(
@@ -220,6 +199,25 @@ class _MyPopupDialogState extends State<MyPopupDialog> {
         );
       },
     );
+  }
+
+  List<Widget> generateListAvatars() {
+    return List.generate(avatars().length, (index) {
+      return GestureDetector(
+        onTap: () {
+          _addToSelectedItems(avatars()[index]);
+        },
+        child: _selectedItems == avatars()[index]
+            ? Avatar(
+                image: NetworkImage(avatars()[index]),
+                isChoise: true,
+              )
+            : Avatar(
+                image: NetworkImage(avatars()[index]),
+                isChoise: false,
+              ),
+      );
+    });
   }
 
   void _showPopupErrorInput(String text, BuildContext context) {
