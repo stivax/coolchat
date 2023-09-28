@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'login_popup.dart';
+import 'register_popup.dart';
 import 'common_chat.dart';
 import 'themeProvider.dart';
 
@@ -261,7 +261,7 @@ void showPopupDialog(BuildContext context) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
-      return MyPopupDialog();
+      return RegisterDialog();
     },
   );
 }

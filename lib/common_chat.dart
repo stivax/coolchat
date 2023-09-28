@@ -14,7 +14,7 @@ import 'themeProvider.dart';
 import 'members.dart';
 import 'messeges.dart';
 import 'account.dart';
-import 'login_popup.dart';
+import 'register_popup.dart';
 
 class CommonChatScreen extends StatelessWidget {
   // ignore: prefer_typing_uninitialized_variables
@@ -411,7 +411,7 @@ class TextAndSend extends StatefulWidget {
 
 class _TextAndSendState extends State<TextAndSend> {
   final TextEditingController messageController = TextEditingController();
-  Account account = Account(name: '', avatar: '');
+  Account account = Account(email: '', userName: '', password: '', avatar: '');
   late Timer _timer;
   FocusNode _textFieldFocusNode = FocusNode();
 
@@ -446,7 +446,7 @@ class _TextAndSendState extends State<TextAndSend> {
     final url = Uri.parse('http://35.228.45.65:8000/messages/');
 
     final jsonBody = {
-      'name': account.name,
+      'name': account.userName,
       'message': message,
       "published": true,
       "member_id": account.id,
@@ -532,12 +532,12 @@ class _TextAndSendState extends State<TextAndSend> {
                     ),
                     maxLines: null,
                     onTap: () async {
-                      if (account.name == '') {
+                      if (account.userName == '') {
                         FocusScope.of(context).unfocus();
                         account = await showDialog(
                           context: context,
                           builder: (BuildContext context) {
-                            return MyPopupDialog();
+                            return RegisterDialog();
                           },
                         );
                       } else {
@@ -554,7 +554,7 @@ class _TextAndSendState extends State<TextAndSend> {
                 child: GestureDetector(
                   onTap: () {
                     final message = messageController.text;
-                    if (message.isNotEmpty && account.name.isNotEmpty) {
+                    if (message.isNotEmpty && account.userName.isNotEmpty) {
                       _sendMessage(message);
                       messageController.clear();
 

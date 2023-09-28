@@ -19,7 +19,7 @@ class Messeges extends StatelessWidget {
   int id;
   String created_at;
 
-  Account _account = Account(name: '', avatar: '');
+  Account _account = Account(email: '', userName: '', password: '', avatar: '');
   late Future<Account> _accountFuture;
 
   Messeges({
@@ -88,7 +88,7 @@ class Messeges extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (_account.name == '') {
+    if (_account.userName == '') {
       _readDataFromFile();
     }
     var screenWidth = MediaQuery.of(context).size.width;

@@ -6,7 +6,7 @@ import 'account.dart';
 import 'main.dart';
 import 'themeProvider.dart';
 import 'dart:async';
-import 'login_popup.dart';
+import 'register_popup.dart';
 
 enum MenuStatus { open, closed }
 
@@ -64,7 +64,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
   }
 
   void handleLogIn(Account acc, BuildContext context) {
-    if (acc.name == '') {
+    if (acc.userName == '') {
       showPopupDialog(context);
       setState(() {
         _account = acc;
@@ -128,9 +128,9 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                 ),
                 PopupMenuItem<String>(
                   value: 'item5',
-                  child: _account.name != ''
+                  child: _account.userName != ''
                       ? Text(
-                          'Log out: ' + _account.name,
+                          'Log out: ' + _account.userName,
                           style: TextStyle(
                               color: themeProvider.currentTheme.primaryColor),
                         )
@@ -246,7 +246,8 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                       ),
                       onPressed: () {
                         FocusManager.instance.primaryFocus?.unfocus();
-                        writeAccount(Account(name: '', avatar: ''));
+                        writeAccount(Account(
+                            email: '', userName: '', password: '', avatar: ''));
                         setState(() {
                           _account = acc;
                         });

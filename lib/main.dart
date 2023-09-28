@@ -11,7 +11,7 @@ import 'menu.dart';
 import 'my_appbar.dart';
 import 'themeProvider.dart';
 import 'splashScreen.dart';
-import 'login_popup.dart';
+import 'register_popup.dart';
 import 'rooms.dart';
 
 void main() => runApp(
@@ -248,7 +248,7 @@ void showPopupDialog(BuildContext context) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
-      return MyPopupDialog();
+      return RegisterDialog();
     },
   );
 }
