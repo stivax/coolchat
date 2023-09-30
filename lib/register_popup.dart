@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -54,7 +56,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
     });
   }
 
-  void _saveDataAndClosePopup() async {
+  Future<void> _saveDataAndClosePopup() async {
     if (_formKey.currentState!.validate() && _selectedItems != '') {
       Account acc = Account(
           email: _emailController.text,
@@ -62,8 +64,8 @@ class _RegisterDialogState extends State<RegisterDialog> {
           password: _passwordController.text,
           avatar: _selectedItems);
       sendUser(acc, context);
+      await _registerSuccesfulDialog(context);
       Navigator.pop(context);
-      LoginDialog();
     } else if (_formKey.currentState!.validate() && _selectedItems == '') {
       _showPopupErrorInput(
           'It seems that you have not selected your avatar', context);
@@ -499,7 +501,15 @@ class _RegisterDialogState extends State<RegisterDialog> {
                       ),
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.pop(context);
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return LoginDialog();
+                          },
+                        );
+                      },
                       child: Text(
                         'Already registered',
                         style: TextStyle(
@@ -750,6 +760,22 @@ class _RegisterDialogState extends State<RegisterDialog> {
         );
       },
     );
+  }
+
+  Future<void> _registerSuccesfulDialog(BuildContext context) async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Text('Register succesful'),
+        );
+      },
+    ).then((value) {
+      // Чекаємо 3 секунди і закриваємо AlertDialog
+      Timer(Duration(seconds: 3), () {
+        Navigator.of(context).pop();
+      });
+    });
   }
 
   String? _nameValidate(String? value) {

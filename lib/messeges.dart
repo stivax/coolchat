@@ -549,3 +549,26 @@ class MyMessege extends StatelessWidget {
     );
   }
 }
+
+class User {
+  final int id;
+  final String userName;
+  final String avatar;
+  final DateTime createdAt;
+
+  User({
+    required this.id,
+    required this.userName,
+    required this.avatar,
+    required this.createdAt,
+  });
+
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: json['id'],
+      userName: json['user_name'],
+      avatar: json['avatar'],
+      createdAt: DateTime.parse(json['created_at']),
+    );
+  }
+}

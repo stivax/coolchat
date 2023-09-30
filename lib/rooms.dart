@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'register_popup.dart';
 import 'common_chat.dart';
+import 'login_popup.dart';
+import 'register_popup.dart';
 import 'themeProvider.dart';
+import 'account.dart';
 
 class Room extends StatelessWidget {
   String name;
@@ -24,10 +26,10 @@ class Room extends StatelessWidget {
   static List<Room> fromJsonList(List<dynamic> jsonList) {
     return jsonList.map((json) {
       return Room(
-        name: json['name_room'],
-        id: json['id'],
-        createdAt: json['created_at'],
-        image: AssetImage('assets/images/room1.png'),
+        name: json["name_room"],
+        id: json["id"],
+        createdAt: json["created_at"],
+        image: NetworkImage(json["image_room"]),
         countPeople: 10,
         countOnline: 5,
       );
@@ -47,7 +49,7 @@ class Room extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         id == 999
-            ? showPopupDialog(context)
+            ? addRoomDialog(context)
             : Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -257,11 +259,16 @@ class Room extends StatelessWidget {
   }
 }
 
-void showPopupDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return RegisterDialog();
-    },
-  );
+void addRoomDialog(BuildContext context) async {
+  final acc = await readAccountFuture();
+  if (acc.userName == '') {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return LoginDialog();
+      },
+    );
+  } else {
+    final token = await loginProcess(acc.email, acc.password);
+  }
 }

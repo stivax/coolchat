@@ -203,7 +203,7 @@ class _ScrollRoomsListState extends State<ScrollRoomsList> {
   }
 
   Future<http.Response> _getData() async {
-    var url = 'http://35.228.45.65:8000/rooms/';
+    var url = 'http://35.228.45.65:8800/rooms/';
     return await http.get(Uri.parse(url));
   }
 
@@ -212,8 +212,11 @@ class _ScrollRoomsListState extends State<ScrollRoomsList> {
       http.Response response = await _getData();
       if (response.statusCode == 200) {
         String responseBody = utf8.decode(response.bodyBytes);
+        print(responseBody);
         List<dynamic> jsonList = jsonDecode(responseBody);
+        print(jsonList);
         List<Room> rooms = Room.fromJsonList(jsonList).toList();
+        print(rooms.length);
         if (mounted) {
           setState(() {
             roomsList = rooms;
@@ -242,13 +245,4 @@ class _ScrollRoomsListState extends State<ScrollRoomsList> {
       ),
     );
   }
-}
-
-void showPopupDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return RegisterDialog();
-    },
-  );
 }

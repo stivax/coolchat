@@ -3,8 +3,13 @@ import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+
+import 'main.dart';
+import 'themeProvider.dart';
 
 class Account {
   String email;
@@ -47,6 +52,15 @@ class Account {
       avatar: json["avatar"],
       id: json["id"],
     );
+  }
+
+  static Map<String, String> fromJsonToken(Map<String, dynamic> json) {
+    final token = <String, String>{};
+
+    token['access_token'] = json['access_token'];
+    token['token_type'] = json['token_type'];
+
+    return token;
   }
 
   static int idFromJson(Map<String, dynamic> json) {
@@ -93,7 +107,13 @@ void sendUser(Account account, BuildContext context) async {
     // ignore: use_build_context_synchronously
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Registration successful'),
+        content: Text(
+          'Registration successful',
+          style: TextStyle(
+            color: Colors.red,
+            fontSize: 24,
+          ),
+        ),
         duration: Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
         margin: EdgeInsets.only(top: 50),
@@ -139,28 +159,137 @@ Future<Account> readAccountFromServer(String emailUser) async {
 
 Future<Map<String, dynamic>> loginProcess(
     String emailUser, String passwordUser) async {
-  final url = Uri.parse('http://35.228.45.65:8800/login/');
+  String email = Uri.encodeComponent(emailUser);
+  String password = Uri.encodeComponent(passwordUser);
 
-  final jsonBody = {
-    "email": emailUser,
-    "password": passwordUser,
-  };
+  String body = 'username=$email&password=$password';
 
-  final response = await http.post(
-    url,
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: jsonBody,
-  );
-  final responseData = json.decode(response.body);
+  try {
+    final response = await http.post(
+      Uri.parse('http://35.228.45.65:8800/login'),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: body,
+    );
 
-  if (response.statusCode == 200) {
-    return {
-      "access_token": responseData['access_token'],
-      "token_type": responseData['token_type']
-    };
-  } else {
-    return {"access_token": '', "token_type": ''};
+    if (response.statusCode == 200) {
+      final responseData = json.decode(response.body);
+
+      return Account.fromJsonToken(responseData);
+    } else {
+      print('Помилка: ${response.statusCode}');
+      return {"access_token": "", "token_type": ""};
+    }
+  } catch (error) {
+    print('Помилка: ${error}');
+    return {"access_token": "", "token_type": ""};
   }
+}
+
+void showPopupLogOut(Account acc, BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20.0),
+            ),
+            contentPadding: EdgeInsets.all(0),
+            backgroundColor: themeProvider.currentTheme.primaryColorDark,
+            content: Container(
+              height: 250,
+              width: 260,
+              clipBehavior: Clip.none,
+              child: Stack(children: [
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  child: Container(
+                    height: 250,
+                    width: 260,
+                    alignment: Alignment.bottomLeft,
+                    child: Image(
+                      image: AssetImage('assets/images/sova.png'),
+                      fit: BoxFit.fitHeight,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 170,
+                  top: 50,
+                  child: Text(
+                    'UHOO!',
+                    textScaleFactor: 1,
+                    style: TextStyle(
+                      color: themeProvider.currentTheme.primaryColor,
+                      fontSize: 20,
+                      fontFamily: 'Manrope',
+                      fontWeight: FontWeight.w500,
+                      height: 1.24,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 170,
+                  top: 75,
+                  child: Container(
+                    child: Text(
+                      'Are you sure\nyou want to leave\nthe TeamChat?',
+                      textScaleFactor: 1,
+                      style: TextStyle(
+                        color: themeProvider.currentTheme.primaryColor,
+                        fontSize: 12,
+                        fontFamily: 'Manrope',
+                        fontWeight: FontWeight.w400,
+                        height: 1.24,
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 20,
+                  bottom: 20,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                      backgroundColor: themeProvider.currentTheme.shadowColor,
+                      shape: RoundedRectangleBorder(
+                        side: BorderSide(
+                            width: 0.50,
+                            color: themeProvider.currentTheme.shadowColor),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text(
+                      'Log out',
+                      textScaleFactor: 1,
+                      style: TextStyle(
+                        color: Color(0xFFF5FBFF),
+                        fontSize: 20,
+                        fontFamily: 'Manrope',
+                        fontWeight: FontWeight.w500,
+                        height: 1.24,
+                      ),
+                    ),
+                    onPressed: () {
+                      FocusManager.instance.primaryFocus?.unfocus();
+                      writeAccount(Account(
+                          email: '', userName: '', password: '', avatar: ''));
+                      Navigator.of(context).pushReplacement(MaterialPageRoute(
+                        builder: (context) => MyHomePage(),
+                      ));
+                    },
+                  ),
+                )
+              ]),
+            ),
+          );
+        },
+      );
+    },
+  );
 }

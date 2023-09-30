@@ -8,21 +8,41 @@ import 'package:marquee/marquee.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 
+import 'login_popup.dart';
 import 'menu.dart';
 import 'my_appbar.dart';
 import 'themeProvider.dart';
 import 'members.dart';
 import 'messeges.dart';
 import 'account.dart';
-import 'register_popup.dart';
+import 'account.dart';
 
-class CommonChatScreen extends StatelessWidget {
+class CommonChatScreen extends StatefulWidget {
   // ignore: prefer_typing_uninitialized_variables
   final topicName;
   // ignore: prefer_typing_uninitialized_variables
   final id;
   const CommonChatScreen(
       {super.key, required this.topicName, required this.id});
+
+  @override
+  State<CommonChatScreen> createState() => _CommonChatScreenState();
+}
+
+class _CommonChatScreenState extends State<CommonChatScreen> {
+  var token = {};
+  var acc = Account(email: '', userName: '', password: '', avatar: '');
+
+  @override
+  void initState() {
+    super.initState();
+    _makeToken();
+  }
+
+  void _makeToken() async {
+    acc = await readAccountFuture();
+    token = await loginProcess(acc.email, acc.password);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,15 +69,17 @@ class CommonChatScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         SizedBox(
-                            height: 27, child: TopicName(topicName: topicName)),
+                            height: 27,
+                            child: TopicName(topicName: widget.topicName)),
                         SizedBox(
                             height: 140,
-                            child: ChatMembers(topicName: topicName)),
+                            child: ChatMembers(topicName: widget.topicName)),
                         SizedBox(
                             height: (screenHeight - 248) * 1,
-                            child: BlockMasseges(topicName: topicName)),
+                            child: BlockMasseges(topicName: widget.topicName)),
                         TextAndSend(
-                          topicName: topicName,
+                          topicName: widget.topicName,
+                          token: token,
                         ),
                       ]),
                 ),
@@ -403,7 +425,8 @@ class _BlockMassegesState extends State<BlockMasseges>
 class TextAndSend extends StatefulWidget {
   // ignore: prefer_typing_uninitialized_variables
   final topicName;
-  const TextAndSend({super.key, required this.topicName});
+  final token;
+  const TextAndSend({super.key, required this.topicName, required this.token});
 
   @override
   _TextAndSendState createState() => _TextAndSendState();
@@ -443,14 +466,10 @@ class _TextAndSendState extends State<TextAndSend> {
   }
 
   void _sendMessage(String message) async {
-    final url = Uri.parse('http://35.228.45.65:8000/messages/');
+    final url = Uri.parse('http://35.228.45.65:8800/messagesDev/');
 
     final jsonBody = {
-      'name': account.userName,
       'message': message,
-      "published": true,
-      "member_id": account.id,
-      "avatar": account.avatar,
       "is_privat": false,
       "receiver": 0,
       "rooms": widget.topicName
@@ -459,10 +478,12 @@ class _TextAndSendState extends State<TextAndSend> {
     final response = await http.post(
       url,
       headers: {
+        'Authorization': 'Bearer ${widget.token["access_token"]}',
         'Content-Type': 'application/json'
-      }, // Вказати тип відправлених даних
-      body: json.encode(jsonBody), // Кодування JSON-об'єкта у рядок JSON
+      },
+      body: json.encode(jsonBody),
     );
+    print('Bearer ${widget.token["access_token"]}');
 
     if (response.statusCode == 201) {
     } else {}
@@ -537,7 +558,7 @@ class _TextAndSendState extends State<TextAndSend> {
                         account = await showDialog(
                           context: context,
                           builder: (BuildContext context) {
-                            return RegisterDialog();
+                            return LoginDialog();
                           },
                         );
                       } else {
