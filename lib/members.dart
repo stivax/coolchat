@@ -118,12 +118,12 @@ class _MemberState extends State<Member> {
 }
 
 List<Member> getLastHourAndWeekMembers(List<Messages> messages) {
-  final Map<int, Member> membersMap =
-      {}; // Використовуємо Map для унікальних значень
+  final Map<int, Member> membersMap = {};
+  final timeZone = DateTime.now().timeZoneOffset;
 
-  final DateTime now = DateTime.now();
-  final DateTime lastHour = now.subtract(Duration(hours: 1));
-  final DateTime lastWeek = now.subtract(Duration(days: 7));
+  final DateTime now = DateTime.now().add(timeZone);
+  final DateTime lastHour = now.subtract(const Duration(hours: 1));
+  final DateTime lastWeek = now.subtract(const Duration(days: 7));
 
   for (final message in messages.reversed) {
     final DateTime messageDate = DateTime.parse(message.createdAt.toString());

@@ -197,6 +197,7 @@ class _ChatMembersState extends State<ChatMembers> {
   List<Member> members = [];
   List<Messages> messageList = [];
   late Timer _timer;
+  String localResponseBody = '';
 
   @override
   void initState() {
@@ -220,7 +221,7 @@ class _ChatMembersState extends State<ChatMembers> {
   }
 
   Future<http.Response> _getData() async {
-    var url = 'http://35.228.45.65:8000/messages/${widget.topicName}';
+    var url = 'http://35.228.45.65:8800/messagesDev/${widget.topicName}';
     return await http.get(Uri.parse(url));
   }
 
@@ -229,16 +230,18 @@ class _ChatMembersState extends State<ChatMembers> {
       http.Response response = await _getData();
       if (response.statusCode == 200) {
         String responseBody = utf8.decode(response.bodyBytes);
-        List<dynamic> jsonList = jsonDecode(responseBody);
-        List<Messages> messages =
-            Messages.fromJsonList(jsonList).reversed.toList();
-        if (mounted) {
-          setState(() {
-            messageList = messages;
-          });
+        if (responseBody != localResponseBody) {
+          localResponseBody = responseBody;
+          List<dynamic> jsonList = jsonDecode(responseBody);
+          List<Messages> messages =
+              Messages.fromJsonList(jsonList).reversed.toList();
+          if (mounted) {
+            setState(() {
+              messageList = messages;
+            });
+          }
         }
-      } else {}
-      // ignore: empty_catches
+      }
     } catch (error) {}
   }
 
@@ -438,6 +441,7 @@ class _TextAndSendState extends State<TextAndSend> {
       Account(email: '', userName: '', password: '', avatar: '', id: 0);
   late Timer _timer;
   final _textFieldFocusNode = FocusNode();
+  bool isWriting = false;
 
   @override
   void initState() {
@@ -449,6 +453,7 @@ class _TextAndSendState extends State<TextAndSend> {
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
       _readAccount();
+      _sendStatus();
     });
   }
 
@@ -456,6 +461,27 @@ class _TextAndSendState extends State<TextAndSend> {
   void dispose() {
     _timer.cancel();
     super.dispose();
+  }
+
+  void _sendStatus() async {
+    if (messageController.text.isNotEmpty) {
+      setState(() {
+        isWriting = true;
+      });
+    } else {
+      setState(() {
+        isWriting = false;
+      });
+    }
+    final url = Uri.parse('http://35.228.45.65:8800/user_status/${account.id}');
+    final jsonBody = {"room_name": widget.topicName, "status": !isWriting};
+    final response = await http.put(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(jsonBody),
+    );
+    if (response.statusCode == 200) {
+    } else {}
   }
 
   void _readAccount() {
