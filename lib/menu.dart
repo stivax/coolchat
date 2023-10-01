@@ -6,10 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 
 import 'account.dart';
-import 'main.dart';
-import 'register_popup.dart';
 import 'login_popup.dart';
-import 'themeProvider.dart';
+import 'theme_provider.dart';
 
 enum MenuStatus { open, closed }
 
@@ -50,7 +48,8 @@ class MainDropdownMenu extends StatefulWidget {
 }
 
 class _MainDropdownMenuState extends State<MainDropdownMenu> {
-  late Account _account;
+  Account _account =
+      Account(email: '', userName: '', password: '', avatar: '', id: 0);
 
   @override
   void initState() {
@@ -95,9 +94,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                 FocusScope.of(context).unfocus();
                 if (value == 'item5') {
                   handleLogIn(_account, context);
-                } else {
-                  print("Selected: $value");
-                }
+                } else {}
               },
               icon: Icon(Icons.menu_rounded,
                   color: themeProvider.currentTheme.primaryColor),
@@ -138,7 +135,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                   value: 'item5',
                   child: _account.userName != ''
                       ? Text(
-                          'Log out: ' + _account.userName,
+                          'Log out: ${_account.userName}',
                           style: TextStyle(
                               color: themeProvider.currentTheme.primaryColor),
                         )

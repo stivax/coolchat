@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'themeProvider.dart';
+import 'theme_provider.dart';
 import 'account.dart';
 import 'login_popup.dart';
 
@@ -62,7 +62,8 @@ class _RegisterDialogState extends State<RegisterDialog> {
           email: _emailController.text,
           userName: _nicknameController.text,
           password: _passwordController.text,
-          avatar: _selectedItems);
+          avatar: _selectedItems,
+          id: 0);
       sendUser(acc, context);
       await _registerSuccesfulDialog(context);
       Navigator.pop(context);

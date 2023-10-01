@@ -11,9 +11,9 @@ import 'package:http/http.dart' as http;
 import 'login_popup.dart';
 import 'menu.dart';
 import 'my_appbar.dart';
-import 'themeProvider.dart';
+import 'theme_provider.dart';
 import 'members.dart';
-import 'messeges.dart';
+import 'messages.dart';
 import 'account.dart';
 import 'account.dart';
 
@@ -31,7 +31,7 @@ class CommonChatScreen extends StatefulWidget {
 
 class _CommonChatScreenState extends State<CommonChatScreen> {
   var token = {};
-  var acc = Account(email: '', userName: '', password: '', avatar: '');
+  var acc = Account(email: '', userName: '', password: '', avatar: '', id: 0);
 
   @override
   void initState() {
@@ -195,7 +195,7 @@ class ChatMembers extends StatefulWidget {
 
 class _ChatMembersState extends State<ChatMembers> {
   List<Member> members = [];
-  List<Messeges> messageList = [];
+  List<Messages> messageList = [];
   late Timer _timer;
 
   @override
@@ -230,8 +230,8 @@ class _ChatMembersState extends State<ChatMembers> {
       if (response.statusCode == 200) {
         String responseBody = utf8.decode(response.bodyBytes);
         List<dynamic> jsonList = jsonDecode(responseBody);
-        List<Messeges> messages =
-            Messeges.fromJsonList(jsonList).reversed.toList();
+        List<Messages> messages =
+            Messages.fromJsonList(jsonList).reversed.toList();
         if (mounted) {
           setState(() {
             messageList = messages;
@@ -335,7 +335,7 @@ class BlockMasseges extends StatefulWidget {
 
 class _BlockMassegesState extends State<BlockMasseges>
     with SingleTickerProviderStateMixin {
-  List<Messeges> messageList = [];
+  List<Messages> messageList = [];
   String localResponseBody = '';
   late Timer _timer;
 
@@ -359,7 +359,7 @@ class _BlockMassegesState extends State<BlockMasseges>
   }
 
   Future<http.Response> _getData() async {
-    var url = 'http://35.228.45.65:8000/messages/${widget.topicName}';
+    var url = 'http://35.228.45.65:8800/messagesDev/${widget.topicName}';
     return await http.get(Uri.parse(url));
   }
 
@@ -371,8 +371,8 @@ class _BlockMassegesState extends State<BlockMasseges>
         if (responseBody != localResponseBody) {
           localResponseBody = responseBody;
           List<dynamic> jsonList = jsonDecode(responseBody);
-          List<Messeges> messages =
-              Messeges.fromJsonList(jsonList).reversed.toList();
+          List<Messages> messages =
+              Messages.fromJsonList(jsonList).reversed.toList();
           if (mounted) {
             setState(() {
               messageList = messages;
@@ -434,9 +434,10 @@ class TextAndSend extends StatefulWidget {
 
 class _TextAndSendState extends State<TextAndSend> {
   final TextEditingController messageController = TextEditingController();
-  Account account = Account(email: '', userName: '', password: '', avatar: '');
+  Account account =
+      Account(email: '', userName: '', password: '', avatar: '', id: 0);
   late Timer _timer;
-  FocusNode _textFieldFocusNode = FocusNode();
+  final _textFieldFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -483,7 +484,6 @@ class _TextAndSendState extends State<TextAndSend> {
       },
       body: json.encode(jsonBody),
     );
-    print('Bearer ${widget.token["access_token"]}');
 
     if (response.statusCode == 201) {
     } else {}

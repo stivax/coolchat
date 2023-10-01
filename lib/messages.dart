@@ -4,61 +4,67 @@ import 'package:provider/provider.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
-import 'themeProvider.dart';
+import 'theme_provider.dart';
 import 'account.dart';
 
-class Messeges extends StatelessWidget {
-  String name;
-  String messege;
-  bool published;
-  int memberID;
-  String avatar;
-  bool isPrivate;
-  bool isPreviousSameMember;
-  int receiver;
-  int id;
-  String created_at;
+// ignore: must_be_immutable
+class Messages extends StatelessWidget {
+  final String message;
+  final bool isPrivate;
+  final int receiverId;
+  final String rooms;
+  final int id;
+  final DateTime createdAt;
+  final int ownerId;
+  final User owner;
+  final User receiver;
+  final int votes;
+  final bool isPreviousSameMember;
 
-  Account _account = Account(email: '', userName: '', password: '', avatar: '');
+  Account _account =
+      Account(email: '', userName: '', password: '', avatar: '', id: 0);
   late Future<Account> _accountFuture;
 
-  Messeges({
-    required this.name,
-    required this.messege,
-    required this.published,
-    required this.memberID,
-    required this.avatar,
-    required this.isPrivate,
-    required this.isPreviousSameMember,
-    required this.receiver,
-    required this.id,
-    required this.created_at,
-  });
+  Messages(
+      {super.key,
+      required this.message,
+      required this.isPrivate,
+      required this.receiverId,
+      required this.rooms,
+      required this.id,
+      required this.createdAt,
+      required this.ownerId,
+      required this.owner,
+      required this.receiver,
+      required this.votes,
+      required this.isPreviousSameMember});
 
-  static List<Messeges> fromJsonList(List<dynamic> jsonList) {
+  static List<Messages> fromJsonList(List<dynamic> jsonList) {
     int previousMemberID = 0;
+
     return jsonList.map((json) {
-      bool isSameMember = json['member_id'] == previousMemberID;
-      previousMemberID = json['member_id'];
+      bool isSameMember = json['Message']['owner_id'] == previousMemberID;
+      previousMemberID = json['Message']['owner_id'];
 
       // Отримати поточний часовий пояс пристрою
       final timeZone = DateTime.now().timeZoneOffset;
 
       // Додати цю різницю до created_at
-      DateTime createdAt = DateTime.parse(json['created_at']);
+      DateTime createdAt = DateTime.parse(json['Message']['created_at']);
       createdAt = createdAt.add(timeZone);
 
-      return Messeges(
-        name: json['name'],
-        messege: json['message'],
-        published: json['published'],
-        memberID: json['member_id'],
-        avatar: json['avatar'],
-        isPrivate: json['is_privat'],
+      return Messages(
+        message: json['Message']['message'],
+        isPrivate: json['Message']['is_privat'],
+        receiverId: json['Message']['receiver_id'],
+        rooms: json['Message']['rooms'],
+        id: json['Message']['id'],
+        createdAt: createdAt,
+        ownerId: json['Message']['owner']['id'],
+        owner: User.fromJson(json['Message']['owner']),
+        receiver: User.fromJson(json['Message']['receiver']),
+        votes: json['votes'],
         isPreviousSameMember: isSameMember,
-        receiver: json['receiver'],
-        id: json['id'],
-        created_at: createdAt.toString(),
       );
     }).toList();
   }
@@ -97,34 +103,38 @@ class Messeges extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           _account = snapshot.data!;
+          return _account.id == ownerId
+              ? MyMessege(
+                  screenWidth: screenWidth,
+                  message: message,
+                  isPrivate: isPrivate,
+                  receiverId: receiverId,
+                  rooms: rooms,
+                  id: id,
+                  createdAt: formatTime(createdAt.toString()),
+                  ownerId: ownerId,
+                  owner: owner,
+                  receiver: receiver,
+                  votes: votes,
+                  isPreviousSameMember: isPreviousSameMember,
+                )
+              : TheirMessege(
+                  screenWidth: screenWidth,
+                  message: message,
+                  isPrivate: isPrivate,
+                  receiverId: receiverId,
+                  rooms: rooms,
+                  id: id,
+                  createdAt: formatTime(createdAt.toString()),
+                  ownerId: ownerId,
+                  owner: owner,
+                  receiver: receiver,
+                  votes: votes,
+                  isPreviousSameMember: isPreviousSameMember,
+                );
+        } else {
+          return Container();
         }
-        return _account.id == memberID
-            ? MyMessege(
-                screenWidth: screenWidth,
-                name: name,
-                messege: messege,
-                published: true,
-                memberID: memberID,
-                avatar: avatar,
-                isPrivate: isPrivate,
-                isPreviousSameMember: isPreviousSameMember,
-                receiver: receiver,
-                id: id,
-                created_at: formatTime(created_at),
-              )
-            : TheirMessege(
-                screenWidth: screenWidth,
-                name: name,
-                messege: messege,
-                published: true,
-                memberID: memberID,
-                avatar: avatar,
-                isPrivate: isPrivate,
-                isPreviousSameMember: isPreviousSameMember,
-                receiver: receiver,
-                id: id,
-                created_at: formatTime(created_at),
-              );
       },
     );
   }
@@ -132,31 +142,32 @@ class Messeges extends StatelessWidget {
 
 class TheirMessege extends StatelessWidget {
   final double screenWidth;
-  String name;
-  String messege;
-  bool published;
-  int memberID;
-  String avatar;
-  bool isPrivate;
-  bool isPreviousSameMember;
-  int receiver;
-  int id;
-  String created_at;
+  final String message;
+  final bool isPrivate;
+  final int receiverId;
+  final String rooms;
+  final int id;
+  final String createdAt;
+  final int ownerId;
+  final User owner;
+  final User receiver;
+  final int votes;
+  final bool isPreviousSameMember;
 
-  TheirMessege({
-    super.key,
-    required this.screenWidth,
-    required this.name,
-    required this.messege,
-    required this.published,
-    required this.memberID,
-    required this.avatar,
-    required this.isPrivate,
-    required this.isPreviousSameMember,
-    required this.receiver,
-    required this.id,
-    required this.created_at,
-  });
+  const TheirMessege(
+      {super.key,
+      required this.screenWidth,
+      required this.message,
+      required this.isPrivate,
+      required this.receiverId,
+      required this.rooms,
+      required this.id,
+      required this.createdAt,
+      required this.ownerId,
+      required this.owner,
+      required this.receiver,
+      required this.votes,
+      required this.isPreviousSameMember});
 
   @override
   Widget build(BuildContext context) {
@@ -221,7 +232,7 @@ class TheirMessege extends StatelessWidget {
                                   width: 24,
                                   height: 32,
                                   child: Image(
-                                    image: NetworkImage(avatar),
+                                    image: NetworkImage(owner.avatar),
                                     fit: BoxFit.fitHeight,
                                   ),
                                 ),
@@ -243,7 +254,7 @@ class TheirMessege extends StatelessWidget {
                                 child: isPreviousSameMember
                                     ? Container()
                                     : Text(
-                                        name,
+                                        owner.userName,
                                         style: TextStyle(
                                           color: themeProvider
                                               .currentTheme.primaryColor,
@@ -261,7 +272,7 @@ class TheirMessege extends StatelessWidget {
                               child: Opacity(
                                 opacity: 0.50,
                                 child: Text(
-                                  created_at,
+                                  createdAt,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color:
@@ -301,7 +312,7 @@ class TheirMessege extends StatelessWidget {
                               await launchUrlString(url.url,
                                   mode: LaunchMode.externalApplication);
                             },
-                            text: messege,
+                            text: message,
                             style: TextStyle(
                               color: themeProvider.currentTheme.primaryColor,
                               fontSize: 14,
@@ -342,31 +353,32 @@ class TheirMessege extends StatelessWidget {
 
 class MyMessege extends StatelessWidget {
   final double screenWidth;
-  String name;
-  String messege;
-  bool published;
-  int memberID;
-  String avatar;
-  bool isPrivate;
-  bool isPreviousSameMember;
-  int receiver;
-  int id;
-  String created_at;
+  final String message;
+  final bool isPrivate;
+  final int receiverId;
+  final String rooms;
+  final int id;
+  final String createdAt;
+  final int ownerId;
+  final User owner;
+  final User receiver;
+  final int votes;
+  final bool isPreviousSameMember;
 
-  MyMessege({
-    super.key,
-    required this.screenWidth,
-    required this.name,
-    required this.messege,
-    required this.published,
-    required this.memberID,
-    required this.avatar,
-    required this.isPrivate,
-    required this.isPreviousSameMember,
-    required this.receiver,
-    required this.id,
-    required this.created_at,
-  });
+  const MyMessege(
+      {super.key,
+      required this.screenWidth,
+      required this.message,
+      required this.isPrivate,
+      required this.receiverId,
+      required this.rooms,
+      required this.id,
+      required this.createdAt,
+      required this.ownerId,
+      required this.owner,
+      required this.receiver,
+      required this.votes,
+      required this.isPreviousSameMember});
 
   @override
   Widget build(BuildContext context) {
@@ -397,7 +409,7 @@ class MyMessege extends StatelessWidget {
                               child: Opacity(
                                 opacity: 0.50,
                                 child: Text(
-                                  created_at,
+                                  createdAt,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color:
@@ -416,7 +428,7 @@ class MyMessege extends StatelessWidget {
                                       padding: EdgeInsets.only(bottom: 5),
                                       alignment: Alignment.centerRight,
                                       child: Text(
-                                        name,
+                                        owner.userName,
                                         style: TextStyle(
                                           color: themeProvider
                                               .currentTheme.primaryColor,
@@ -456,7 +468,7 @@ class MyMessege extends StatelessWidget {
                               await launchUrlString(url.url,
                                   mode: LaunchMode.externalApplication);
                             },
-                            text: messege,
+                            text: message,
                             style: TextStyle(
                               color: themeProvider.currentTheme.primaryColor,
                               fontSize: 14,
@@ -534,7 +546,7 @@ class MyMessege extends StatelessWidget {
                                   width: 24,
                                   height: 32,
                                   child: Image(
-                                    image: NetworkImage(avatar),
+                                    image: NetworkImage(owner.avatar),
                                     fit: BoxFit.fitHeight,
                                   ),
                                 ),

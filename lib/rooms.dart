@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'common_chat.dart';
 import 'login_popup.dart';
 import 'register_popup.dart';
-import 'themeProvider.dart';
+import 'theme_provider.dart';
 import 'account.dart';
 
 class Room extends StatelessWidget {

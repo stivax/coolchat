@@ -3,8 +3,8 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'themeProvider.dart';
-import 'messeges.dart';
+import 'theme_provider.dart';
+import 'messages.dart';
 
 class Member extends StatefulWidget {
   ImageProvider avatar;
@@ -117,7 +117,7 @@ class _MemberState extends State<Member> {
   }
 }
 
-List<Member> getLastHourAndWeekMembers(List<Messeges> messages) {
+List<Member> getLastHourAndWeekMembers(List<Messages> messages) {
   final Map<int, Member> membersMap =
       {}; // Використовуємо Map для унікальних значень
 
@@ -126,12 +126,12 @@ List<Member> getLastHourAndWeekMembers(List<Messeges> messages) {
   final DateTime lastWeek = now.subtract(Duration(days: 7));
 
   for (final message in messages.reversed) {
-    final DateTime messageDate = DateTime.parse(message.created_at);
+    final DateTime messageDate = DateTime.parse(message.createdAt.toString());
     if (messageDate.isAfter(lastWeek)) {
       final Member member = Member(
-        avatar: NetworkImage(message.avatar),
-        name: message.name,
-        memberID: message.memberID,
+        avatar: NetworkImage(message.owner.avatar),
+        name: message.owner.userName,
+        memberID: message.ownerId,
         isOnline: messageDate
             .isAfter(lastHour), // Определяємо isOnline відповідно до умови
       );

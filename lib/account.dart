@@ -9,21 +9,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 import 'main.dart';
-import 'themeProvider.dart';
+import 'theme_provider.dart';
 
 class Account {
   String email;
   String userName;
   String password;
   String avatar;
-  int? id;
+  int id;
 
   Account(
       {required this.email,
       required this.userName,
       required this.password,
       required this.avatar,
-      this.id});
+      required this.id});
 
   Map<String, dynamic> toJsonWithId() {
     return {
@@ -41,6 +41,7 @@ class Account {
       "user_name": userName,
       "password": password,
       "avatar": avatar,
+      "id": id
     };
   }
 
@@ -49,6 +50,17 @@ class Account {
       email: json["email"],
       userName: json["user_name"],
       password: json["password"],
+      avatar: json["avatar"],
+      id: json["id"],
+    );
+  }
+
+  static Account fromJsonWithPassword(
+      Map<String, dynamic> json, String password) {
+    return Account(
+      email: json["email"],
+      userName: json["user_name"],
+      password: password,
       avatar: json["avatar"],
       id: json["id"],
     );
@@ -83,7 +95,7 @@ Future<Account> readAccountFuture() async {
     Account account = Account.fromJson(jsonData);
     return account;
   } else {
-    return Account(email: '', userName: '', password: '', avatar: '');
+    return Account(email: '', userName: '', password: '', avatar: '', id: 0);
   }
 }
 
@@ -132,20 +144,14 @@ void sendUser(Account account, BuildContext context) async {
   }
 }
 
-Future<Account> readAccountFromServer(String emailUser) async {
-  final url = Uri.parse('http://35.228.45.65:8800/users/');
+Future<Account> readAccountFromServer(String emailUser, String password) async {
+  final url = Uri.parse('http://35.228.45.65:8800/users/$emailUser');
 
-  final jsonBody = {"email": emailUser};
+  final response = await http.get(url);
 
-  final response = await http.post(
-    url,
-    headers: {'Content-Type': 'application/json'},
-    body: json.encode(jsonBody),
-  );
-
-  if (response.statusCode == 201) {
+  if (response.statusCode == 200) {
     final responseData = json.decode(response.body);
-    final acc = Account.fromJson(responseData);
+    final acc = Account.fromJsonWithPassword(responseData, password);
     return Account(
         email: acc.email,
         userName: acc.userName,
@@ -153,7 +159,7 @@ Future<Account> readAccountFromServer(String emailUser) async {
         avatar: acc.avatar,
         id: acc.id);
   } else {
-    return Account(email: '', userName: '', password: '', avatar: '');
+    return Account(email: '', userName: '', password: '', avatar: '', id: 0);
   }
 }
 
@@ -178,11 +184,9 @@ Future<Map<String, dynamic>> loginProcess(
 
       return Account.fromJsonToken(responseData);
     } else {
-      print('Помилка: ${response.statusCode}');
       return {"access_token": "", "token_type": ""};
     }
   } catch (error) {
-    print('Помилка: ${error}');
     return {"access_token": "", "token_type": ""};
   }
 }
@@ -278,7 +282,11 @@ void showPopupLogOut(Account acc, BuildContext context) {
                     onPressed: () {
                       FocusManager.instance.primaryFocus?.unfocus();
                       writeAccount(Account(
-                          email: '', userName: '', password: '', avatar: ''));
+                          email: '',
+                          userName: '',
+                          password: '',
+                          avatar: '',
+                          id: 0));
                       Navigator.of(context).pushReplacement(MaterialPageRoute(
                         builder: (context) => MyHomePage(),
                       ));

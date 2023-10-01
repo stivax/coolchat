@@ -6,12 +6,10 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
 
-import 'formChatList.dart';
 import 'menu.dart';
 import 'my_appbar.dart';
-import 'themeProvider.dart';
+import 'theme_provider.dart';
 import 'splashScreen.dart';
-import 'register_popup.dart';
 import 'rooms.dart';
 
 void main() => runApp(
@@ -212,11 +210,8 @@ class _ScrollRoomsListState extends State<ScrollRoomsList> {
       http.Response response = await _getData();
       if (response.statusCode == 200) {
         String responseBody = utf8.decode(response.bodyBytes);
-        print(responseBody);
         List<dynamic> jsonList = jsonDecode(responseBody);
-        print(jsonList);
         List<Room> rooms = Room.fromJsonList(jsonList).toList();
-        print(rooms.length);
         if (mounted) {
           setState(() {
             roomsList = rooms;

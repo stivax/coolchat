@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'main.dart';
-import 'themeProvider.dart';
+import 'theme_provider.dart';
 import 'account.dart';
 import 'register_popup.dart';
 
@@ -43,17 +43,11 @@ class _LoginDialogState extends State<LoginDialog> {
     if (_formKey.currentState!.validate()) {
       final token =
           await loginProcess(_emailController.text, _passwordController.text);
-      print(token);
-      //Account acc = await readAccountFromServer(_emailController.text);
-      Account acc = Account(
-          email: 'dd@dd.dd',
-          userName: "Ivan",
-          password: "11111111",
-          avatar:
-              "https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%2010%20mobile.png");
+      Account acc = await readAccountFromServer(
+          _emailController.text, _passwordController.text);
       writeAccount(acc);
       Navigator.pop(context, token);
-      //_showPopupWelcome(acc, context);
+      _showPopupWelcome(acc, context);
     }
   }
 
