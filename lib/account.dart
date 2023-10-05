@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'error_answer.dart';
 
 import 'main.dart';
 import 'theme_provider.dart';
@@ -99,7 +100,7 @@ Future<Account> readAccountFuture() async {
   }
 }
 
-void sendUser(Account account, BuildContext context) async {
+Future<String> sendUser(Account account, BuildContext context) async {
   final url = Uri.parse('http://35.228.45.65:8800/users/');
 
   final jsonBody = {
@@ -116,31 +117,12 @@ void sendUser(Account account, BuildContext context) async {
   );
 
   if (response.statusCode == 201) {
-    // ignore: use_build_context_synchronously
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Registration successful',
-          style: TextStyle(
-            color: Colors.red,
-            fontSize: 24,
-          ),
-        ),
-        duration: Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-        margin: EdgeInsets.only(top: 50),
-      ),
-    );
+    return '';
   } else {
-    // ignore: use_build_context_synchronously
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Registration error'),
-        duration: Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-        margin: EdgeInsets.only(top: 50),
-      ),
-    );
+    final responseData = json.decode(response.body);
+    final error = ErrorAnswer.fromJson(responseData);
+    return '${error.detail}';
+    //'Registration ${account.email} error';
   }
 }
 
@@ -159,7 +141,14 @@ Future<Account> readAccountFromServer(String emailUser, String password) async {
         avatar: acc.avatar,
         id: acc.id);
   } else {
-    return Account(email: '', userName: '', password: '', avatar: '', id: 0);
+    final responseData = json.decode(response.body);
+    final error = ErrorAnswer.fromJson(responseData);
+    return Account(
+        email: '${error.detail}',
+        userName: '',
+        password: '',
+        avatar: '',
+        id: 0);
   }
 }
 

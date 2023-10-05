@@ -1,47 +1,36 @@
 import 'dart:async';
 
+import 'package:coolchat/rooms.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'theme_provider.dart';
 import 'account.dart';
 import 'login_popup.dart';
+import 'rooms.dart';
 
-class RegisterDialog extends StatefulWidget {
-  const RegisterDialog({super.key});
+class RoomAddDialog extends StatefulWidget {
+  const RoomAddDialog({super.key});
 
   @override
-  _RegisterDialogState createState() => _RegisterDialogState();
+  _RoomAddDialogState createState() => _RoomAddDialogState();
 }
 
-class _RegisterDialogState extends State<RegisterDialog> {
-  bool _hidePass = true;
-
+class _RoomAddDialogState extends State<RoomAddDialog> {
   final _formKey = GlobalKey<FormState>();
 
-  final _emailController = TextEditingController();
-  final _nicknameController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
+  final _nameRoomController = TextEditingController();
 
   String _selectedItems = '';
 
-  final _emailFocus = FocusNode();
-  final _passFocus = FocusNode();
-  final _confirmPassFocus = FocusNode();
-  final _nickNameFocus = FocusNode();
+  final _nameRoomFocus = FocusNode();
 
   @override
   void dispose() {
     super.dispose();
-    _emailController.dispose();
-    _nicknameController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    _emailFocus.dispose();
-    _passFocus.dispose();
-    _confirmPassFocus.dispose();
-    _nickNameFocus.dispose();
+    _nameRoomController.dispose();
+    ;
+    _nameRoomFocus.dispose();
   }
 
   void _fieldFocusChange(
@@ -58,27 +47,18 @@ class _RegisterDialogState extends State<RegisterDialog> {
 
   Future<void> _saveDataAndClosePopup() async {
     if (_formKey.currentState!.validate() && _selectedItems != '') {
-      Account acc = Account(
-          email: _emailController.text,
-          userName: _nicknameController.text,
-          password: _passwordController.text,
-          avatar: _selectedItems,
-          id: 0);
-      final answer = await sendUser(acc, context);
-      if (answer.isEmpty) {
-        final token =
-            await loginProcess(_emailController.text, _passwordController.text);
-        Account acc = await readAccountFromServer(
-            _emailController.text, _passwordController.text);
-        writeAccount(acc);
-        Navigator.pop(context, token);
-        _showPopupWelcome(acc, context);
+      final acc = await readAccountFuture();
+      final answer = await sendRoom(
+          context, _nameRoomController.text, _selectedItems, acc);
+      if (answer == '') {
+        Navigator.pop(context);
+        // newRoomCreated();
       } else {
         _showPopupErrorInput(answer, context);
       }
     } else if (_formKey.currentState!.validate() && _selectedItems == '') {
       _showPopupErrorInput(
-          'It seems that you have not selected your avatar', context);
+          'It seems that you have not selected your room image', context);
     }
   }
 
@@ -110,7 +90,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
                       children: [
                         Center(
                           child: Text(
-                            'Register \nin TeamChat',
+                            'Add a new \nchat room',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: themeProvider.currentTheme.primaryColor,
@@ -125,7 +105,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
                         Padding(
                           padding: const EdgeInsets.only(top: 15, bottom: 5),
                           child: Text(
-                            'Write your e-mail',
+                            'Name of the chat room',
                             style: TextStyle(
                               color: themeProvider.currentTheme.primaryColor
                                   .withOpacity(0.9),
@@ -139,94 +119,16 @@ class _RegisterDialogState extends State<RegisterDialog> {
                         // email form
                         TextFormField(
                           keyboardType: TextInputType.emailAddress,
-                          validator: _emailValidate,
+                          validator: _roomNameValidate,
                           autofocus: true,
-                          focusNode: _emailFocus,
-                          controller: _emailController,
-                          onTapOutside: (_) {
-                            FocusScope.of(context).unfocus();
-                          },
-                          onFieldSubmitted: (_) {
-                            _fieldFocusChange(context, _emailFocus, _passFocus);
-                          },
-                          style: TextStyle(
-                            color: themeProvider.currentTheme.primaryColor,
-                            fontSize: 16,
-                            fontFamily: 'Manrope',
-                            fontWeight: FontWeight.w400,
-                          ),
-                          decoration: InputDecoration(
-                            helperText: 'E-mail format xxxxx@xxx.xx',
-                            helperStyle: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor
-                                  .withOpacity(0.5),
-                            ),
-                            suffixIcon: Icon(Icons.person),
-                            counterStyle: TextStyle(
-                                color: themeProvider.currentTheme.primaryColor
-                                    .withOpacity(0.5)),
-                            border: InputBorder.none,
-                            hintText: 'E-mail *',
-                            hintStyle: TextStyle(
-                                color: themeProvider.currentTheme.primaryColor
-                                    .withOpacity(0.6)),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(10.0)),
-                              borderSide: BorderSide(
-                                  width: 0.50,
-                                  color:
-                                      themeProvider.currentTheme.shadowColor),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(10.0)),
-                              borderSide: BorderSide(
-                                  width: 0.50,
-                                  color:
-                                      themeProvider.currentTheme.shadowColor),
-                            ),
-                            errorBorder: const OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(10.0)),
-                              borderSide:
-                                  BorderSide(width: 0.50, color: Colors.red),
-                            ),
-                            focusedErrorBorder: const OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(10.0)),
-                              borderSide:
-                                  BorderSide(width: 0.50, color: Colors.red),
-                            ),
-                          ),
-                        ),
-                        // password form
-                        Padding(
-                          padding: const EdgeInsets.only(top: 15, bottom: 5),
-                          child: Text(
-                            'Write your password',
-                            style: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor
-                                  .withOpacity(0.9),
-                              fontSize: 16,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w400,
-                            ),
-                            textScaleFactor: 1,
-                          ),
-                        ),
-                        TextFormField(
-                          obscureText: _hidePass,
-                          maxLength: 8,
-                          focusNode: _passFocus,
-                          controller: _passwordController,
-                          validator: _passValidator,
+                          focusNode: _nameRoomFocus,
+                          controller: _nameRoomController,
                           onTapOutside: (_) {
                             FocusScope.of(context).unfocus();
                           },
                           onFieldSubmitted: (_) {
                             _fieldFocusChange(
-                                context, _passFocus, _confirmPassFocus);
+                                context, _nameRoomFocus, FocusNode());
                           },
                           style: TextStyle(
                             color: themeProvider.currentTheme.primaryColor,
@@ -235,192 +137,17 @@ class _RegisterDialogState extends State<RegisterDialog> {
                             fontWeight: FontWeight.w400,
                           ),
                           decoration: InputDecoration(
-                              helperText: 'Remember your password',
-                              helperStyle: TextStyle(
-                                color: themeProvider.currentTheme.primaryColor
-                                    .withOpacity(0.5),
-                              ),
-                              counterStyle: TextStyle(
-                                  color: themeProvider.currentTheme.primaryColor
-                                      .withOpacity(0.5)),
-                              border: InputBorder.none,
-                              hintText: 'Password *',
-                              hintStyle: TextStyle(
-                                  color: themeProvider.currentTheme.primaryColor
-                                      .withOpacity(0.6)),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: const BorderRadius.all(
-                                    Radius.circular(10.0)),
-                                borderSide: BorderSide(
-                                    width: 0.50,
-                                    color:
-                                        themeProvider.currentTheme.shadowColor),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: const BorderRadius.all(
-                                    Radius.circular(10.0)),
-                                borderSide: BorderSide(
-                                    width: 0.50,
-                                    color:
-                                        themeProvider.currentTheme.shadowColor),
-                              ),
-                              errorBorder: const OutlineInputBorder(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(10.0)),
-                                borderSide:
-                                    BorderSide(width: 0.50, color: Colors.red),
-                              ),
-                              focusedErrorBorder: const OutlineInputBorder(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(10.0)),
-                                borderSide:
-                                    BorderSide(width: 0.50, color: Colors.red),
-                              ),
-                              suffixIcon: IconButton(
-                                icon: Icon(_hidePass
-                                    ? Icons.visibility
-                                    : Icons.visibility_off),
-                                onPressed: () {
-                                  setState(() {
-                                    _hidePass = !_hidePass;
-                                  });
-                                },
-                              )),
-                        ),
-                        // confirm password form
-                        Padding(
-                          padding: const EdgeInsets.only(top: 15, bottom: 5),
-                          child: Text(
-                            'Confirm password',
-                            style: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor
-                                  .withOpacity(0.9),
-                              fontSize: 16,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w400,
-                            ),
-                            textScaleFactor: 1,
-                          ),
-                        ),
-                        TextFormField(
-                          obscureText: _hidePass,
-                          maxLength: 8,
-                          focusNode: _confirmPassFocus,
-                          controller: _confirmPasswordController,
-                          validator: _passValidator,
-                          onTapOutside: (_) {
-                            FocusScope.of(context).unfocus();
-                          },
-                          onFieldSubmitted: (_) {
-                            _fieldFocusChange(
-                                context, _confirmPassFocus, _nickNameFocus);
-                          },
-                          style: TextStyle(
-                            color: themeProvider.currentTheme.primaryColor,
-                            fontSize: 16,
-                            fontFamily: 'Manrope',
-                            fontWeight: FontWeight.w400,
-                          ),
-                          decoration: InputDecoration(
-                            helperText: 'Confirm to remember',
+                            helperText: 'Max 50 characters',
                             helperStyle: TextStyle(
                               color: themeProvider.currentTheme.primaryColor
                                   .withOpacity(0.5),
                             ),
+                            suffixIcon: Icon(Icons.room),
                             counterStyle: TextStyle(
                                 color: themeProvider.currentTheme.primaryColor
                                     .withOpacity(0.5)),
                             border: InputBorder.none,
-                            hintText: 'Confirm password *',
-                            hintStyle: TextStyle(
-                                color: themeProvider.currentTheme.primaryColor
-                                    .withOpacity(0.6)),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(10.0)),
-                              borderSide: BorderSide(
-                                  width: 0.50,
-                                  color:
-                                      themeProvider.currentTheme.shadowColor),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(10.0)),
-                              borderSide: BorderSide(
-                                  width: 0.50,
-                                  color:
-                                      themeProvider.currentTheme.shadowColor),
-                            ),
-                            errorBorder: const OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(10.0)),
-                              borderSide:
-                                  BorderSide(width: 0.50, color: Colors.red),
-                            ),
-                            focusedErrorBorder: const OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(10.0)),
-                              borderSide:
-                                  BorderSide(width: 0.50, color: Colors.red),
-                            ),
-                            suffixIcon: IconButton(
-                              icon: Icon(_hidePass
-                                  ? Icons.visibility
-                                  : Icons.visibility_off),
-                              onPressed: () {
-                                setState(() {
-                                  _hidePass = !_hidePass;
-                                });
-                              },
-                            ),
-                          ),
-                        ),
-                        // nickname form
-                        Padding(
-                          padding: const EdgeInsets.only(top: 15, bottom: 5),
-                          child: Text(
-                            'Write your nickname',
-                            style: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor
-                                  .withOpacity(0.9),
-                              fontSize: 16,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w400,
-                            ),
-                            textScaleFactor: 1,
-                          ),
-                        ),
-                        TextFormField(
-                          keyboardType: TextInputType.emailAddress,
-                          autofocus: true,
-                          maxLength: 25,
-                          focusNode: _nickNameFocus,
-                          controller: _nicknameController,
-                          onTapOutside: (_) {
-                            FocusScope.of(context).unfocus();
-                          },
-                          onFieldSubmitted: (_) {
-                            _fieldFocusChange(
-                                context, _nickNameFocus, FocusNode());
-                          },
-                          style: TextStyle(
-                            color: themeProvider.currentTheme.primaryColor,
-                            fontSize: 16,
-                            fontFamily: 'Manrope',
-                            fontWeight: FontWeight.w400,
-                          ),
-                          decoration: InputDecoration(
-                            helperText: '',
-                            helperStyle: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor
-                                  .withOpacity(0.5),
-                            ),
-                            suffixIcon: Icon(Icons.person),
-                            counterStyle: TextStyle(
-                                color: themeProvider.currentTheme.primaryColor
-                                    .withOpacity(0.5)),
-                            border: InputBorder.none,
-                            hintText: 'Nickname *',
+                            hintText: 'Name room *',
                             hintStyle: TextStyle(
                                 color: themeProvider.currentTheme.primaryColor
                                     .withOpacity(0.6)),
@@ -511,28 +238,6 @@ class _RegisterDialogState extends State<RegisterDialog> {
                         ),
                       ),
                     ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return LoginDialog();
-                          },
-                        );
-                      },
-                      child: Text(
-                        'Already registered',
-                        textScaleFactor: 1,
-                        style: TextStyle(
-                          color: themeProvider.currentTheme.shadowColor,
-                          fontSize: screenSize.height * 0.03,
-                          fontFamily: 'Manrope',
-                          fontWeight: FontWeight.w400,
-                          height: 0,
-                        ),
-                      ),
-                    )
                   ],
                 ),
               ),
@@ -774,51 +479,12 @@ class _RegisterDialogState extends State<RegisterDialog> {
     );
   }
 
-  Future<void> _registerSuccesfulDialog(BuildContext context) async {
-    return showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          content: Text('Register succesful'),
-        );
-      },
-    ).then((value) {
-      // Чекаємо 3 секунди і закриваємо AlertDialog
-      Timer(Duration(seconds: 3), () {
-        Navigator.of(context).pop();
-      });
-    });
-  }
-
-  String? _nameValidate(String? value) {
+  String? _roomNameValidate(String? value) {
     final _nameExp = RegExp(r'^[a-zA-Z ]+$');
     if (value!.isEmpty) {
       return 'Name is reqired';
     } else if (!_nameExp.hasMatch(value)) {
       return 'Please input correct Name (char, number and _)';
-    } else {
-      return null;
-    }
-  }
-
-  String? _emailValidate(String? value) {
-    final emailRegExp = RegExp(
-      r'^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$',
-    );
-    if (value!.isEmpty) {
-      return 'Fild is reqired';
-    } else if (!emailRegExp.hasMatch(_emailController.text)) {
-      return 'Pleare input correct email';
-    } else {
-      return null;
-    }
-  }
-
-  String? _passValidator(String? value) {
-    if (_passwordController.text.length != 8) {
-      return '8 character required for password';
-    } else if (_passwordController.text != _confirmPasswordController.text) {
-      return 'Password does not much';
     } else {
       return null;
     }

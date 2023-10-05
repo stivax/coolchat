@@ -45,9 +45,17 @@ class _LoginDialogState extends State<LoginDialog> {
           await loginProcess(_emailController.text, _passwordController.text);
       Account acc = await readAccountFromServer(
           _emailController.text, _passwordController.text);
-      writeAccount(acc);
-      Navigator.pop(context, token);
-      _showPopupWelcome(acc, context);
+      if (acc.userName.isNotEmpty &&
+          token["access_token"].toString().isNotEmpty) {
+        writeAccount(acc);
+        Navigator.pop(context, token);
+        showPopupWelcome(acc, context);
+      } else if (acc.userName.isNotEmpty &&
+          token["access_token"].toString().isEmpty) {
+        _showPopupErrorInput('Password is not valid', context);
+      } else {
+        _showPopupErrorInput(acc.email, context);
+      }
     }
   }
 
@@ -244,7 +252,7 @@ class _LoginDialogState extends State<LoginDialog> {
             Center(
               child: Container(
                 margin: const EdgeInsets.only(bottom: 8, top: 8),
-                width: screenSize.width * 0.4,
+                width: screenSize.width * 0.5,
                 height: screenSize.height * 0.17,
                 child: Center(
                   child: Column(
@@ -326,7 +334,7 @@ class _LoginDialogState extends State<LoginDialog> {
     );
   }
 
-  void _showPopupWelcome(Account account, BuildContext context) {
+  void showPopupWelcome(Account account, BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -422,6 +430,98 @@ class _LoginDialogState extends State<LoginDialog> {
                         ),
                         child: const Text(
                           'Chat',
+                          textScaleFactor: 1,
+                          style: TextStyle(
+                            color: Color(0xFFF5FBFF),
+                            fontSize: 24,
+                            fontFamily: 'Manrope',
+                            fontWeight: FontWeight.w500,
+                            height: 1.24,
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showPopupErrorInput(String text, BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Consumer<ThemeProvider>(
+          builder: (context, themeProvider, child) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20.0),
+              ),
+              backgroundColor: themeProvider.currentTheme.primaryColorDark,
+              scrollable: true,
+              content: SizedBox(
+                width: 250,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    SizedBox(
+                      height: 120,
+                      width: 105,
+                      child: Image.asset('assets/images/fire.png'),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: Text(
+                        'Fire!',
+                        style: TextStyle(
+                          color: themeProvider.currentTheme.primaryColor,
+                          fontSize: 20,
+                          fontFamily: 'Manrope',
+                          fontWeight: FontWeight.w500,
+                          height: 1.24,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16, top: 8),
+                      child: Container(
+                        alignment: Alignment.center,
+                        child: Text(
+                          text,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: themeProvider.currentTheme.primaryColor,
+                            fontSize: 16,
+                            fontFamily: 'Manrope',
+                            fontWeight: FontWeight.w400,
+                            height: 1.24,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Center(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 30, vertical: 10),
+                          backgroundColor:
+                              themeProvider.currentTheme.shadowColor,
+                          shape: RoundedRectangleBorder(
+                            side: BorderSide(
+                                width: 0.50,
+                                color: themeProvider.currentTheme.shadowColor),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: const Text(
+                          'OK',
                           textScaleFactor: 1,
                           style: TextStyle(
                             color: Color(0xFFF5FBFF),

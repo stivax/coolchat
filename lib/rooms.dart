@@ -1,9 +1,14 @@
+import 'dart:convert';
+
+import 'package:coolchat/add_room_popup.dart';
+import 'package:coolchat/server.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
 
 import 'common_chat.dart';
+import 'error_answer.dart';
 import 'login_popup.dart';
-import 'register_popup.dart';
 import 'theme_provider.dart';
 import 'account.dart';
 
@@ -262,13 +267,52 @@ class Room extends StatelessWidget {
 void addRoomDialog(BuildContext context) async {
   final acc = await readAccountFuture();
   if (acc.userName == '') {
-    showDialog(
+    await showDialog(
       context: context,
       builder: (BuildContext context) {
         return LoginDialog();
       },
     );
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return RoomAddDialog();
+      },
+    );
   } else {
-    final token = await loginProcess(acc.email, acc.password);
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return RoomAddDialog();
+      },
+    );
+  }
+}
+
+Future<String> sendRoom(BuildContext context, String roomName, String roomImage,
+    Account acc) async {
+  final token = await loginProcess(acc.email, acc.password);
+  final server = ServerProvider.of(context).server;
+  var url = Uri.parse('${server}rooms/');
+
+  final jsonBody = {
+    "name_room": roomName,
+    "image_room": roomImage,
+  };
+  final response = await http.post(
+    url,
+    headers: {
+      'Authorization': 'Bearer ${token["access_token"]}',
+      'Content-Type': 'application/json'
+    },
+    body: json.encode(jsonBody),
+  );
+
+  if (response.statusCode == 201) {
+    return '';
+  } else {
+    final responseData = json.decode(response.body);
+    final error = ErrorAnswer.fromJson(responseData);
+    return '${error.detail}';
   }
 }

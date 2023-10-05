@@ -473,15 +473,18 @@ class _TextAndSendState extends State<TextAndSend> {
         isWriting = false;
       });
     }
-    final url = Uri.parse('http://35.228.45.65:8800/user_status/${account.id}');
-    final jsonBody = {"room_name": widget.topicName, "status": !isWriting};
-    final response = await http.put(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(jsonBody),
-    );
-    if (response.statusCode == 200) {
-    } else {}
+    if (account.userName.isNotEmpty) {
+      final url =
+          Uri.parse('http://35.228.45.65:8800/user_status/${account.id}');
+      final jsonBody = {"room_name": widget.topicName, "status": !isWriting};
+      final response = await http.put(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(jsonBody),
+      );
+      if (response.statusCode == 200) {
+      } else {}
+    }
   }
 
   void _readAccount() {

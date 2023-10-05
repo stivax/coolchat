@@ -11,11 +11,13 @@ import 'my_appbar.dart';
 import 'theme_provider.dart';
 import 'splashScreen.dart';
 import 'rooms.dart';
+import 'server.dart';
 
 void main() => runApp(
       ChangeNotifierProvider(
         create: (context) => ThemeProvider(),
-        child: MyApp(),
+        child:
+            ServerProvider(server: 'http://35.228.45.65:8800/', child: MyApp()),
       ),
     );
 
@@ -23,8 +25,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
+        GlobalKey<ScaffoldMessengerState>();
 
     return MaterialApp(
+      scaffoldMessengerKey: scaffoldMessengerKey,
       theme: themeProvider.currentTheme,
       home: FutureBuilder(
         future: Future.delayed(Duration(seconds: 3)),
@@ -201,6 +206,8 @@ class _ScrollRoomsListState extends State<ScrollRoomsList> {
   }
 
   Future<http.Response> _getData() async {
+    //final server = ServerProvider.of(context).server;
+    // print(server);
     var url = 'http://35.228.45.65:8800/rooms/';
     return await http.get(Uri.parse(url));
   }
