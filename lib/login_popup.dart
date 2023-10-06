@@ -19,8 +19,6 @@ class _LoginDialogState extends State<LoginDialog> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  String _selectedItems = '';
-
   final _emailFocus = FocusNode();
   final _passFocus = FocusNode();
 
@@ -47,12 +45,12 @@ class _LoginDialogState extends State<LoginDialog> {
           _emailController.text, _passwordController.text);
       if (acc.userName.isNotEmpty &&
           token["access_token"].toString().isNotEmpty) {
-        writeAccount(acc);
-        Navigator.pop(context, token);
+        await writeAccount(acc);
+        Navigator.pop(context);
         showPopupWelcome(acc, context);
       } else if (acc.userName.isNotEmpty &&
           token["access_token"].toString().isEmpty) {
-        _showPopupErrorInput('Password is not valid', context);
+        _showPopupErrorInput('Email or password is not valid', context);
       } else {
         _showPopupErrorInput(acc.email, context);
       }

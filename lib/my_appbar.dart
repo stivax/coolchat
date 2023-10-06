@@ -15,7 +15,6 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
           toolbarHeight: 56,
           backgroundColor: themeProvider.currentTheme.primaryColorDark,
           title: Container(
-            width: 70,
             height: 35,
             child: Image(
               image: themeProvider.isLightMode
@@ -31,10 +30,14 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
                   onTap: () {
                     themeProvider.toggleTheme();
                   },
-                  child: Image(
-                    image: themeProvider.isLightMode
-                        ? AssetImage('assets/images/toogle_light.png')
-                        : AssetImage('assets/images/toogle_dark.png'),
+                  child: Container(
+                    width: 48,
+                    height: 26,
+                    child: Image(
+                      image: themeProvider.isLightMode
+                          ? AssetImage('assets/images/toogle_light.png')
+                          : AssetImage('assets/images/toogle_dark.png'),
+                    ),
                   ),
                 ),
                 const SizedBox(
@@ -42,10 +45,14 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
                 GestureDetector(
                   onTap: () {},
-                  child: Image(
-                    image: themeProvider.isLightMode
-                        ? AssetImage('assets/images/lang_en_light.png')
-                        : AssetImage('assets/images/lang_en_dark.png'),
+                  child: Container(
+                    width: 48,
+                    height: 26,
+                    child: Image(
+                      image: themeProvider.isLightMode
+                          ? AssetImage('assets/images/lang_en_light.png')
+                          : AssetImage('assets/images/lang_en_dark.png'),
+                    ),
                   ),
                 ),
                 const SizedBox(

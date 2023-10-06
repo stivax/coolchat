@@ -102,6 +102,8 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class ChatListWidget extends StatelessWidget {
+  const ChatListWidget({super.key});
+
   @override
   Widget build(BuildContext context) {
     return CustomScrollView(
@@ -135,7 +137,8 @@ class ChatListWidget extends StatelessWidget {
           },
         ),
         ScrollRoomsList(),
-        SliverToBoxAdapter(child: SizedBox(height: 8, width: double.infinity)),
+        const SliverToBoxAdapter(
+            child: SizedBox(height: 8, width: double.infinity)),
       ],
     );
   }
@@ -192,6 +195,8 @@ class HeaderWidget extends StatelessWidget {
 }
 
 class ScrollRoomsList extends StatefulWidget {
+  const ScrollRoomsList({super.key});
+
   @override
   State<ScrollRoomsList> createState() => _ScrollRoomsListState();
 }
@@ -206,8 +211,6 @@ class _ScrollRoomsListState extends State<ScrollRoomsList> {
   }
 
   Future<http.Response> _getData() async {
-    //final server = ServerProvider.of(context).server;
-    // print(server);
     var url = 'http://35.228.45.65:8800/rooms/';
     return await http.get(Uri.parse(url));
   }

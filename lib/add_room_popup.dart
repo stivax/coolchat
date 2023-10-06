@@ -1,12 +1,11 @@
 import 'dart:async';
 
-import 'package:coolchat/rooms.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'common_chat.dart';
 import 'theme_provider.dart';
 import 'account.dart';
-import 'login_popup.dart';
 import 'rooms.dart';
 
 class RoomAddDialog extends StatefulWidget {
@@ -18,18 +17,21 @@ class RoomAddDialog extends StatefulWidget {
 
 class _RoomAddDialogState extends State<RoomAddDialog> {
   final _formKey = GlobalKey<FormState>();
-
   final _nameRoomController = TextEditingController();
-
   String _selectedItems = '';
-
   final _nameRoomFocus = FocusNode();
+  List<String> listRoom = [];
+
+  @override
+  void initState() {
+    fetchRoomList();
+    super.initState();
+  }
 
   @override
   void dispose() {
     super.dispose();
     _nameRoomController.dispose();
-    ;
     _nameRoomFocus.dispose();
   }
 
@@ -48,12 +50,23 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
   Future<void> _saveDataAndClosePopup() async {
     if (_formKey.currentState!.validate() && _selectedItems != '') {
       final acc = await readAccountFuture();
+      // ignore: use_build_context_synchronously
       final answer = await sendRoom(
           context, _nameRoomController.text, _selectedItems, acc);
       if (answer == '') {
+        // ignore: use_build_context_synchronously
         Navigator.pop(context);
-        // newRoomCreated();
+        // ignore: use_build_context_synchronously
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CommonChatScreen(
+              topicName: _nameRoomController.text,
+            ),
+          ),
+        );
       } else {
+        // ignore: use_build_context_synchronously
         _showPopupErrorInput(answer, context);
       }
     } else if (_formKey.currentState!.validate() && _selectedItems == '') {
@@ -64,6 +77,33 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
 
   void handlePopupOpen() {
     FocusManager.instance.primaryFocus?.unfocus();
+  }
+
+  void fetchRoomList() async {
+    final result = await fetchData();
+    result.removeAt(0);
+    setState(() {
+      listRoom = result;
+    });
+  }
+
+  List<Widget> makeListRoomAvatar() {
+    return List.generate(listRoom.length, (index) {
+      return GestureDetector(
+        onTap: () {
+          _addToSelectedItems(listRoom[index]);
+        },
+        child: _selectedItems == listRoom[index]
+            ? RoomAvatar(
+                image: NetworkImage(listRoom[index]),
+                isChoise: true,
+              )
+            : RoomAvatar(
+                image: NetworkImage(listRoom[index]),
+                isChoise: false,
+              ),
+      );
+    });
   }
 
   @override
@@ -116,7 +156,7 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
                             textScaleFactor: 1,
                           ),
                         ),
-                        // email form
+                        // room name form
                         TextFormField(
                           keyboardType: TextInputType.emailAddress,
                           validator: _roomNameValidate,
@@ -142,7 +182,7 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
                               color: themeProvider.currentTheme.primaryColor
                                   .withOpacity(0.5),
                             ),
-                            suffixIcon: Icon(Icons.room),
+                            suffixIcon: Icon(Icons.door_front_door_outlined),
                             counterStyle: TextStyle(
                                 color: themeProvider.currentTheme.primaryColor
                                     .withOpacity(0.5)),
@@ -189,12 +229,12 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
                   padding: const EdgeInsets.all(0.0),
                   sliver: SliverGrid(
                     delegate: SliverChildBuilderDelegate(
-                      (context, index) => generateListAvatars()[index],
-                      childCount: generateListAvatars().length,
+                      (context, index) => makeListRoomAvatar()[index],
+                      childCount: makeListRoomAvatar().length,
                     ),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,
+                      crossAxisCount: 2,
                       crossAxisSpacing: 4.0,
                       mainAxisSpacing: 8.0,
                       childAspectRatio: 0.84,
@@ -246,25 +286,6 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
         );
       },
     );
-  }
-
-  List<Widget> generateListAvatars() {
-    return List.generate(avatars().length, (index) {
-      return GestureDetector(
-        onTap: () {
-          _addToSelectedItems(avatars()[index]);
-        },
-        child: _selectedItems == avatars()[index]
-            ? Avatar(
-                image: NetworkImage(avatars()[index]),
-                isChoise: true,
-              )
-            : Avatar(
-                image: NetworkImage(avatars()[index]),
-                isChoise: false,
-              ),
-      );
-    });
   }
 
   void _showPopupErrorInput(String text, BuildContext context) {
@@ -359,126 +380,6 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
     );
   }
 
-  void _showPopupWelcome(Account account, BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Consumer<ThemeProvider>(
-          builder: (context, themeProvider, child) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20.0),
-              ),
-              backgroundColor: themeProvider.currentTheme.primaryColorDark,
-              scrollable: true,
-              content: SizedBox(
-                width: 250,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: 80,
-                      height: 100,
-                      child: Avatar(
-                          image: NetworkImage(account.avatar), isChoise: false),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(
-                            text: 'Hello, ',
-                            style: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor,
-                              fontSize: 24,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w500,
-                              height: 1.24,
-                            ),
-                          ),
-                          TextSpan(
-                            text: account.userName,
-                            style: TextStyle(
-                              color: themeProvider.currentTheme.shadowColor,
-                              fontSize: 24,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w500,
-                              height: 1.24,
-                            ),
-                          ),
-                          TextSpan(
-                            text: '!',
-                            style: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor,
-                              fontSize: 24,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w500,
-                              height: 1.24,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Text(
-                      'Welcome \nto the TeamChat',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: themeProvider.currentTheme.primaryColor,
-                        fontSize: 16,
-                        fontFamily: 'Manrope',
-                        fontWeight: FontWeight.w400,
-                        height: 1.24,
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 16,
-                    ),
-                    Center(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 30, vertical: 10),
-                          backgroundColor:
-                              themeProvider.currentTheme.shadowColor,
-                          shape: RoundedRectangleBorder(
-                            side: BorderSide(
-                                width: 0.50,
-                                color: themeProvider.currentTheme.shadowColor),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: const Text(
-                          'Chat',
-                          textScaleFactor: 1,
-                          style: TextStyle(
-                            color: Color(0xFFF5FBFF),
-                            fontSize: 24,
-                            fontFamily: 'Manrope',
-                            fontWeight: FontWeight.w500,
-                            height: 1.24,
-                          ),
-                        ),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
   String? _roomNameValidate(String? value) {
     final _nameExp = RegExp(r'^[a-zA-Z ]+$');
     if (value!.isEmpty) {
@@ -489,120 +390,4 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
       return null;
     }
   }
-}
-
-class Avatar extends StatelessWidget {
-  ImageProvider image;
-  bool isChoise;
-  Avatar({Key? key, required this.image, required this.isChoise})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
-        return Container(
-          child: Stack(
-            fit: StackFit.expand,
-            clipBehavior: Clip.hardEdge,
-            children: [
-              Positioned(
-                  top: 5,
-                  right: 5,
-                  left: 0,
-                  bottom: 0,
-                  child: Container(
-                    decoration: ShapeDecoration(
-                      color: !isChoise
-                          ? themeProvider.currentTheme.primaryColorDark
-                          : themeProvider.currentTheme.shadowColor,
-                      shape: RoundedRectangleBorder(
-                        side: BorderSide(
-                            width: 0.50,
-                            color: themeProvider.currentTheme.shadowColor),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      shadows: const [
-                        BoxShadow(
-                          color: Color(0x4C024A7A),
-                          blurRadius: 3,
-                          offset: Offset(2, 2),
-                          spreadRadius: 0,
-                        )
-                      ],
-                    ),
-                  )),
-              Positioned(
-                top: 1,
-                right: 1,
-                left: 1,
-                bottom: 0,
-                child: Image(
-                  image: image,
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-List<String> avatars() {
-  List<String> avatars = [
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%2010%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%2011%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%2012%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%2013%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%2014%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%2015%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%2016%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%2017%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%2018%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%2019%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%2020%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%2021%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%2022%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%2023%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%2024%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%2025%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%2026%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%2027%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%2028%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%2029%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%2030%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%205%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%206%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%207%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%208%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Boy%209%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Girl%2010%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Girl%2011%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Girl%2012%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Girl%2013%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Girl%2014%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Girl%2015%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Girl%2016%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Girl%2017%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Girl%2018%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Girl%2019%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Girl%2020%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Girl%2021%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Girl%2022%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Girl%2023%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Girl%2024%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Girl%2025%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Girl%2026%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Girl%2027%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Girl%2028%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Girl%2029%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Girl%2030%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Girl%207%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Girl%208%20mobile.png',
-    'https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Mobile/Girl%209%20mobile.png',
-  ];
-
-  return avatars;
 }

@@ -81,7 +81,7 @@ class Account {
   }
 }
 
-void writeAccount(Account account) async {
+Future<void> writeAccount(Account account) async {
   final acc = await SharedPreferences.getInstance();
   final toWrite = jsonEncode(account);
   acc.setString("account", toWrite);

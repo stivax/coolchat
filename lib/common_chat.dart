@@ -22,26 +22,16 @@ class CommonChatScreen extends StatefulWidget {
   final topicName;
   // ignore: prefer_typing_uninitialized_variables
   final id;
-  const CommonChatScreen(
-      {super.key, required this.topicName, required this.id});
+  const CommonChatScreen({super.key, required this.topicName, this.id});
 
   @override
   State<CommonChatScreen> createState() => _CommonChatScreenState();
 }
 
 class _CommonChatScreenState extends State<CommonChatScreen> {
-  var token = {};
-  var acc = Account(email: '', userName: '', password: '', avatar: '', id: 0);
-
   @override
   void initState() {
     super.initState();
-    _makeToken();
-  }
-
-  void _makeToken() async {
-    acc = await readAccountFuture();
-    token = await loginProcess(acc.email, acc.password);
   }
 
   @override
@@ -79,7 +69,6 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
                             child: BlockMasseges(topicName: widget.topicName)),
                         TextAndSend(
                           topicName: widget.topicName,
-                          token: token,
                         ),
                       ]),
                 ),
@@ -428,8 +417,7 @@ class _BlockMassegesState extends State<BlockMasseges>
 class TextAndSend extends StatefulWidget {
   // ignore: prefer_typing_uninitialized_variables
   final topicName;
-  final token;
-  const TextAndSend({super.key, required this.topicName, required this.token});
+  const TextAndSend({super.key, required this.topicName});
 
   @override
   _TextAndSendState createState() => _TextAndSendState();
@@ -439,20 +427,22 @@ class _TextAndSendState extends State<TextAndSend> {
   final TextEditingController messageController = TextEditingController();
   Account account =
       Account(email: '', userName: '', password: '', avatar: '', id: 0);
+  var token = {};
   late Timer _timer;
   final _textFieldFocusNode = FocusNode();
   bool isWriting = false;
+  final _blockMassegesState = GlobalKey<_BlockMassegesState>().currentState;
 
   @override
   void initState() {
     super.initState();
     _readAccount();
+    _makeToken();
     _startTimer();
   }
 
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      _readAccount();
       _sendStatus();
     });
   }
@@ -487,12 +477,16 @@ class _TextAndSendState extends State<TextAndSend> {
     }
   }
 
-  void _readAccount() {
-    readAccountFuture().then((value) => {
-          setState(() {
-            account = value;
-          })
-        });
+  Future<void> _readAccount() async {
+    Account acc = await readAccountFuture();
+    setState(() {
+      account = acc;
+    });
+  }
+
+  Future<void> _makeToken() async {
+    account = await readAccountFuture();
+    token = await loginProcess(account.email, account.password);
   }
 
   void _sendMessage(String message) async {
@@ -508,7 +502,7 @@ class _TextAndSendState extends State<TextAndSend> {
     final response = await http.post(
       url,
       headers: {
-        'Authorization': 'Bearer ${widget.token["access_token"]}',
+        'Authorization': 'Bearer ${token["access_token"]}',
         'Content-Type': 'application/json'
       },
       body: json.encode(jsonBody),
@@ -584,12 +578,17 @@ class _TextAndSendState extends State<TextAndSend> {
                     onTap: () async {
                       if (account.userName == '') {
                         FocusScope.of(context).unfocus();
-                        account = await showDialog(
+                        await showDialog(
                           context: context,
                           builder: (BuildContext context) {
                             return LoginDialog();
                           },
                         );
+                        _blockMassegesState?.fetchData();
+                        await _readAccount();
+                        await _makeToken();
+                        setState(() {});
+                        print(token);
                       } else {
                         FocusScope.of(context)
                             .requestFocus(_textFieldFocusNode);
@@ -609,11 +608,7 @@ class _TextAndSendState extends State<TextAndSend> {
                       messageController.clear();
 
                       // Оновлення BlockMasseges після відправлення повідомлення
-                      final blockMassegesKey = GlobalKey<_BlockMassegesState>();
-                      final _blockMassegesState = blockMassegesKey.currentState;
-                      if (_blockMassegesState != null) {
-                        _blockMassegesState.fetchData();
-                      }
+                      _blockMassegesState?.fetchData();
                     }
                   },
                   child: Container(

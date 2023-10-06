@@ -49,6 +49,12 @@ class Room extends StatelessWidget {
       ));
   }
 
+  static List<String> fromJsonListToListString(List<dynamic> jsonList) {
+    return jsonList.map((json) {
+      return '${json["images"]}';
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -267,12 +273,14 @@ class Room extends StatelessWidget {
 void addRoomDialog(BuildContext context) async {
   final acc = await readAccountFuture();
   if (acc.userName == '') {
+    // ignore: use_build_context_synchronously
     await showDialog(
       context: context,
       builder: (BuildContext context) {
         return LoginDialog();
       },
     );
+    // ignore: use_build_context_synchronously
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -280,6 +288,7 @@ void addRoomDialog(BuildContext context) async {
       },
     );
   } else {
+    // ignore: use_build_context_synchronously
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -314,5 +323,66 @@ Future<String> sendRoom(BuildContext context, String roomName, String roomImage,
     final responseData = json.decode(response.body);
     final error = ErrorAnswer.fromJson(responseData);
     return '${error.detail}';
+  }
+}
+
+Future<http.Response> _getData() async {
+  var url = 'http://35.228.45.65:8800/images/Home';
+  return await http.get(Uri.parse(url));
+}
+
+Future<List<String>> fetchData() async {
+  try {
+    http.Response response = await _getData();
+    if (response.statusCode == 200) {
+      String responseBody = utf8.decode(response.bodyBytes);
+      List<dynamic> jsonList = jsonDecode(responseBody);
+      List<String> roomsListString =
+          Room.fromJsonListToListString(jsonList).toList();
+      return roomsListString;
+    } else {
+      return [];
+    }
+    // ignore: empty_catches
+  } catch (error) {
+    return [];
+  }
+}
+
+class RoomAvatar extends StatelessWidget {
+  ImageProvider image;
+  bool isChoise;
+  RoomAvatar({Key? key, required this.image, required this.isChoise})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: image,
+              fit: BoxFit.cover,
+            ),
+            borderRadius: BorderRadius.circular(20.0),
+            border: Border.all(
+              width: 3,
+              color: !isChoise
+                  ? themeProvider.currentTheme.primaryColorDark
+                  : themeProvider.currentTheme.shadowColor,
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x4C024A7A),
+                blurRadius: 3,
+                offset: Offset(2, 2),
+                spreadRadius: 1,
+              )
+            ],
+          ),
+        );
+      },
+    );
   }
 }
