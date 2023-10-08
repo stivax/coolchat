@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'common_chat.dart';
+import 'image.dart';
 import 'theme_provider.dart';
 import 'account.dart';
 import 'rooms.dart';
@@ -95,11 +96,11 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
         },
         child: _selectedItems == listRoom[index]
             ? RoomAvatar(
-                image: NetworkImage(listRoom[index]),
+                image: CachedImageProvider(listRoom[index]),
                 isChoise: true,
               )
             : RoomAvatar(
-                image: NetworkImage(listRoom[index]),
+                image: CachedImageProvider(listRoom[index]),
                 isChoise: false,
               ),
       );
@@ -159,6 +160,7 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
                         // room name form
                         TextFormField(
                           keyboardType: TextInputType.emailAddress,
+                          maxLength: 50,
                           validator: _roomNameValidate,
                           autofocus: true,
                           focusNode: _nameRoomFocus,
@@ -226,7 +228,7 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
                   ),
                 ),
                 SliverPadding(
-                  padding: const EdgeInsets.all(0.0),
+                  padding: const EdgeInsets.only(top: 16),
                   sliver: SliverGrid(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) => makeListRoomAvatar()[index],
@@ -235,7 +237,7 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      crossAxisSpacing: 4.0,
+                      crossAxisSpacing: 8.0,
                       mainAxisSpacing: 8.0,
                       childAspectRatio: 0.84,
                     ),

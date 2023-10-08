@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:async';
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marquee/marquee.dart';
@@ -15,7 +14,7 @@ import 'theme_provider.dart';
 import 'members.dart';
 import 'messages.dart';
 import 'account.dart';
-import 'account.dart';
+import 'main.dart';
 
 class CommonChatScreen extends StatefulWidget {
   // ignore: prefer_typing_uninitialized_variables
@@ -32,6 +31,14 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    print('dispose chat ${widget.topicName}');
+    print(scrollRoomsListKey.currentState!.roomsList);
+    //scrollRoomsListKey.currentState!.fetchData();
+    super.dispose();
   }
 
   @override
@@ -588,7 +595,6 @@ class _TextAndSendState extends State<TextAndSend> {
                         await _readAccount();
                         await _makeToken();
                         setState(() {});
-                        print(token);
                       } else {
                         FocusScope.of(context)
                             .requestFocus(_textFieldFocusNode);

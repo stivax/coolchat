@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -16,12 +17,14 @@ import 'server.dart';
 void main() => runApp(
       ChangeNotifierProvider(
         create: (context) => ThemeProvider(),
-        child:
-            ServerProvider(server: 'http://35.228.45.65:8800/', child: MyApp()),
+        child: ServerProvider(
+            server: 'http://35.228.45.65:8800/', child: const MyApp()),
       ),
     );
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -32,16 +35,16 @@ class MyApp extends StatelessWidget {
       scaffoldMessengerKey: scaffoldMessengerKey,
       theme: themeProvider.currentTheme,
       home: FutureBuilder(
-        future: Future.delayed(Duration(seconds: 3)),
+        future: Future.delayed(const Duration(seconds: 3)),
         builder: (context, snapshot) {
           if (themeProvider.isThemeChange &&
               snapshot.connectionState == ConnectionState.waiting) {
             return AnimatedSwitcher(
-              duration: Duration(milliseconds: 100),
+              duration: const Duration(milliseconds: 100),
               child: SplashScreen(),
             );
           } else {
-            return MyHomePage();
+            return const MyHomePage();
           }
         },
       ),
@@ -50,15 +53,40 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key});
+
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     requestPermissions();
+  }
+
+  void _onScroll() {
+    // Отримуємо поточну позицію скролінгу
+    double offset = _scrollController.position.pixels;
+    // Отримуємо максимально можливий офсет (кінцеву позицію) скролінгу
+    double maxOffset = _scrollController.position.maxScrollExtent;
+    // Перевіряємо, чи користувач знаходиться внизу екрану (різниця між офсетом і максимально можливим офсетом дорівнює 0)
+    if (offset >= maxOffset &&
+        _scrollController.position.userScrollDirection ==
+            ScrollDirection.reverse) {
+      // Викликаємо ваш метод при спробі скролити вниз, коли вже знаходишся внизу
+      _handleScrollDown();
+    }
+  }
+
+  void _handleScrollDown() {
+    // Ваш метод, який викликається при спробі скролити вниз, коли вже знаходишся внизу
+    //_scrollRoomsListState!.fetchData();
+    print('Користувач спробує скролити вниз, коли вже знаходиться внизу');
   }
 
   Future<void> requestPermissions() async {
@@ -88,7 +116,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       clipBehavior: Clip.antiAlias,
                       decoration: BoxDecoration(
                           color: themeProvider.currentTheme.primaryColorDark),
-                      child: ChatListWidget(),
+                      child:
+                          ChatListWidget(scrollController: _scrollController),
                     ),
                   ),
                 ],
@@ -102,13 +131,15 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class ChatListWidget extends StatelessWidget {
-  const ChatListWidget({super.key});
+  final ScrollController scrollController;
+  const ChatListWidget({super.key, required this.scrollController});
 
   @override
   Widget build(BuildContext context) {
     return CustomScrollView(
+      controller: scrollController,
       slivers: [
-        SliverToBoxAdapter(child: HeaderWidget()),
+        const SliverToBoxAdapter(child: HeaderWidget()),
         const SliverToBoxAdapter(
           child: SizedBox(height: 30),
         ),
@@ -136,7 +167,7 @@ class ChatListWidget extends StatelessWidget {
             );
           },
         ),
-        ScrollRoomsList(),
+        const ScrollRoomsList(),
         const SliverToBoxAdapter(
             child: SizedBox(height: 8, width: double.infinity)),
       ],
@@ -145,6 +176,8 @@ class ChatListWidget extends StatelessWidget {
 }
 
 class HeaderWidget extends StatelessWidget {
+  const HeaderWidget({super.key});
+
   @override
   Widget build(BuildContext context) {
     var screenWidth = MediaQuery.of(context).size.width;
@@ -162,12 +195,12 @@ class HeaderWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.only(left: 20, right: 20),
+            padding: const EdgeInsets.only(left: 20, right: 20),
             child: Text(
               'Welcome every\ntourist to Teamchat',
               textScaleFactor: 0.97,
               style: TextStyle(
-                color: Color(0xFFF5FBFF),
+                color: const Color(0xFFF5FBFF),
                 fontSize: screenWidth * 0.095,
                 fontFamily: 'Manrope',
                 fontWeight: FontWeight.w700,
@@ -176,12 +209,13 @@ class HeaderWidget extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: EdgeInsets.only(left: 20, bottom: 20, top: 10, right: 20),
+            padding:
+                const EdgeInsets.only(left: 20, bottom: 20, top: 10, right: 20),
             child: Text(
               'Chat about a wide variety of tourist equipment.\nCommunicate, get good advice and choose!',
               textScaleFactor: 0.97,
               style: TextStyle(
-                color: Color(0xFFF5FBFF),
+                color: const Color(0xFFF5FBFF),
                 fontSize: screenWidth * 0.042,
                 fontFamily: 'Manrope',
                 fontWeight: FontWeight.w400,
@@ -216,6 +250,7 @@ class _ScrollRoomsListState extends State<ScrollRoomsList> {
   }
 
   Future<void> fetchData() async {
+    print('fetch');
     try {
       http.Response response = await _getData();
       if (response.statusCode == 200) {
@@ -251,3 +286,5 @@ class _ScrollRoomsListState extends State<ScrollRoomsList> {
     );
   }
 }
+
+final scrollRoomsListKey = GlobalKey<_ScrollRoomsListState>();

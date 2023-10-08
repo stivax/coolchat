@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 
 import 'common_chat.dart';
 import 'error_answer.dart';
+import 'image.dart';
 import 'login_popup.dart';
 import 'theme_provider.dart';
 import 'account.dart';
@@ -34,7 +35,7 @@ class Room extends StatelessWidget {
         name: json["name_room"],
         id: json["id"],
         createdAt: json["created_at"],
-        image: NetworkImage(json["image_room"]),
+        image: CachedImageProvider(json["image_room"]),
         countPeople: 10,
         countOnline: 5,
       );

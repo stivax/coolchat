@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'image.dart';
 import 'theme_provider.dart';
 import 'account.dart';
 import 'login_popup.dart';
@@ -551,11 +552,11 @@ class _RegisterDialogState extends State<RegisterDialog> {
         },
         child: _selectedItems == avatars()[index]
             ? Avatar(
-                image: NetworkImage(avatars()[index]),
+                image: CachedImageProvider(avatars()[index]),
                 isChoise: true,
               )
             : Avatar(
-                image: NetworkImage(avatars()[index]),
+                image: CachedImageProvider(avatars()[index]),
                 isChoise: false,
               ),
       );

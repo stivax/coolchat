@@ -46,8 +46,9 @@ class _LoginDialogState extends State<LoginDialog> {
       if (acc.userName.isNotEmpty &&
           token["access_token"].toString().isNotEmpty) {
         await writeAccount(acc);
+        //Navigator.pop(context);
+        final answer = await showPopupWelcome(acc, context);
         Navigator.pop(context);
-        showPopupWelcome(acc, context);
       } else if (acc.userName.isNotEmpty &&
           token["access_token"].toString().isEmpty) {
         _showPopupErrorInput('Email or password is not valid', context);
@@ -332,8 +333,9 @@ class _LoginDialogState extends State<LoginDialog> {
     );
   }
 
-  void showPopupWelcome(Account account, BuildContext context) {
-    showDialog(
+  Future<String> showPopupWelcome(Account account, BuildContext context) async {
+    String answer = '';
+    await showDialog(
       context: context,
       builder: (BuildContext context) {
         return Consumer<ThemeProvider>(
@@ -415,7 +417,7 @@ class _LoginDialogState extends State<LoginDialog> {
                     Center(
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                               horizontal: 30, vertical: 10),
                           backgroundColor:
                               themeProvider.currentTheme.shadowColor,
@@ -437,8 +439,8 @@ class _LoginDialogState extends State<LoginDialog> {
                             height: 1.24,
                           ),
                         ),
-                        onPressed: () {
-                          Navigator.of(context).pop();
+                        onPressed: () async {
+                          Navigator.pop(context);
                         },
                       ),
                     ),
@@ -450,6 +452,7 @@ class _LoginDialogState extends State<LoginDialog> {
         );
       },
     );
+    return answer;
   }
 
   void _showPopupErrorInput(String text, BuildContext context) {
