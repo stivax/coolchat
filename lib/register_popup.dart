@@ -1,15 +1,21 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first, use_build_context_synchronously
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'image.dart';
-import 'theme_provider.dart';
 import 'account.dart';
+import 'add_room_popup.dart';
+import 'image.dart';
 import 'login_popup.dart';
+import 'theme_provider.dart';
 
 class RegisterDialog extends StatefulWidget {
-  const RegisterDialog({super.key});
+  String addRoom = '';
+  RegisterDialog({
+    Key? key,
+    this.addRoom = '',
+  }) : super(key: key);
 
   @override
   _RegisterDialogState createState() => _RegisterDialogState();
@@ -72,8 +78,17 @@ class _RegisterDialogState extends State<RegisterDialog> {
         Account acc = await readAccountFromServer(
             _emailController.text, _passwordController.text);
         writeAccount(acc);
+        final answer = await _showPopupWelcome(acc, context);
         Navigator.pop(context, token);
-        _showPopupWelcome(acc, context);
+        if (widget.addRoom == 'add') {
+          await showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return RoomAddDialog();
+            },
+          );
+          Navigator.pop(context);
+        }
       } else {
         _showPopupErrorInput(answer, context);
       }
@@ -655,8 +670,10 @@ class _RegisterDialogState extends State<RegisterDialog> {
     );
   }
 
-  void _showPopupWelcome(Account account, BuildContext context) {
-    showDialog(
+  Future<String> _showPopupWelcome(
+      Account account, BuildContext context) async {
+    String answer = '';
+    await showDialog(
       context: context,
       builder: (BuildContext context) {
         return Consumer<ThemeProvider>(
@@ -738,7 +755,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
                     Center(
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                               horizontal: 30, vertical: 10),
                           backgroundColor:
                               themeProvider.currentTheme.shadowColor,
@@ -761,7 +778,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
                           ),
                         ),
                         onPressed: () {
-                          Navigator.of(context).pop();
+                          Navigator.pop(context);
                         },
                       ),
                     ),
@@ -773,22 +790,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
         );
       },
     );
-  }
-
-  Future<void> _registerSuccesfulDialog(BuildContext context) async {
-    return showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          content: Text('Register succesful'),
-        );
-      },
-    ).then((value) {
-      // Чекаємо 3 секунди і закриваємо AlertDialog
-      Timer(Duration(seconds: 3), () {
-        Navigator.of(context).pop();
-      });
-    });
+    return answer;
   }
 
   String? _nameValidate(String? value) {

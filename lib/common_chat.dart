@@ -35,8 +35,8 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
 
   @override
   void dispose() {
-    print('dispose chat ${widget.topicName}');
-    print(scrollRoomsListKey.currentState!.roomsList);
+    //print('dispose chat ${widget.topicName}');
+    //print(scrollRoomsListKey.currentState!.roomsList);
     //scrollRoomsListKey.currentState!.fetchData();
     super.dispose();
   }

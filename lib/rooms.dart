@@ -278,14 +278,9 @@ void addRoomDialog(BuildContext context) async {
     await showDialog(
       context: context,
       builder: (BuildContext context) {
-        return LoginDialog();
-      },
-    );
-    // ignore: use_build_context_synchronously
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return RoomAddDialog();
+        return LoginDialog(
+          addRoom: 'add',
+        );
       },
     );
   } else {

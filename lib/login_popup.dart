@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -5,8 +7,12 @@ import 'main.dart';
 import 'theme_provider.dart';
 import 'account.dart';
 import 'register_popup.dart';
+import 'add_room_popup.dart';
 
 class LoginDialog extends StatefulWidget {
+  String addRoom = '';
+
+  LoginDialog({super.key, this.addRoom = ''});
   @override
   _LoginDialogState createState() => _LoginDialogState();
 }
@@ -49,6 +55,15 @@ class _LoginDialogState extends State<LoginDialog> {
         //Navigator.pop(context);
         final answer = await showPopupWelcome(acc, context);
         Navigator.pop(context);
+        if (widget.addRoom == 'add') {
+          await showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return RoomAddDialog();
+            },
+          );
+          Navigator.pop(context);
+        }
       } else if (acc.userName.isNotEmpty &&
           token["access_token"].toString().isEmpty) {
         _showPopupErrorInput('Email or password is not valid', context);
@@ -306,7 +321,9 @@ class _LoginDialogState extends State<LoginDialog> {
                           showDialog(
                             context: context,
                             builder: (BuildContext context) {
-                              return RegisterDialog();
+                              return RegisterDialog(
+                                addRoom: widget.addRoom,
+                              );
                             },
                           );
                         },
@@ -439,7 +456,7 @@ class _LoginDialogState extends State<LoginDialog> {
                             height: 1.24,
                           ),
                         ),
-                        onPressed: () async {
+                        onPressed: () {
                           Navigator.pop(context);
                         },
                       ),
