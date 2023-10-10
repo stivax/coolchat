@@ -73,10 +73,10 @@ class _RegisterDialogState extends State<RegisterDialog> {
           id: 0);
       final answer = await sendUser(acc, context);
       if (answer.isEmpty) {
-        final token =
-            await loginProcess(_emailController.text, _passwordController.text);
+        final token = await loginProcess(
+            context, _emailController.text, _passwordController.text);
         Account acc = await readAccountFromServer(
-            _emailController.text, _passwordController.text);
+            context, _emailController.text, _passwordController.text);
         writeAccount(acc);
         final answer = await _showPopupWelcome(acc, context);
         Navigator.pop(context, token);
@@ -95,6 +95,8 @@ class _RegisterDialogState extends State<RegisterDialog> {
     } else if (_formKey.currentState!.validate() && _selectedItems == '') {
       _showPopupErrorInput(
           'It seems that you have not selected your avatar', context);
+    } else {
+      FocusScope.of(context).requestFocus(_emailFocus);
     }
   }
 
@@ -407,8 +409,8 @@ class _RegisterDialogState extends State<RegisterDialog> {
                           ),
                         ),
                         TextFormField(
-                          keyboardType: TextInputType.emailAddress,
-                          autofocus: true,
+                          textCapitalization: TextCapitalization.sentences,
+                          keyboardType: TextInputType.name,
                           maxLength: 25,
                           focusNode: _nickNameFocus,
                           controller: _nicknameController,

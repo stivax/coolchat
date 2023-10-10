@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 class ServerProvider extends InheritedWidget {
   final String server;
 
-  ServerProvider({
+  const ServerProvider({
+    super.key,
     required this.server,
     required Widget child,
   }) : super(child: child);

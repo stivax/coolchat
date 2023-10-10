@@ -17,8 +17,8 @@ import 'server.dart';
 void main() => runApp(
       ChangeNotifierProvider(
         create: (context) => ThemeProvider(),
-        child: ServerProvider(
-            server: 'http://35.228.45.65:8800/', child: const MyApp()),
+        child: const ServerProvider(
+            server: 'http://35.228.45.65:8800/', child: MyApp()),
       ),
     );
 
@@ -61,12 +61,43 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final _scrollController = ScrollController();
+  List<Room> roomsList = [];
+  late String server;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
     requestPermissions();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    server = ServerProvider.of(context).server;
+    fetchData(server);
+  }
+
+  Future<http.Response> _getData(String server) async {
+    var url = '${server}rooms/';
+    return await http.get(Uri.parse(url));
+  }
+
+  Future<void> fetchData(String server) async {
+    try {
+      http.Response response = await _getData(server);
+      if (response.statusCode == 200) {
+        String responseBody = utf8.decode(response.bodyBytes);
+        List<dynamic> jsonList = jsonDecode(responseBody);
+        List<Room> rooms = Room.fromJsonList(jsonList).toList();
+        if (mounted) {
+          setState(() {
+            roomsList = rooms;
+          });
+        }
+      } else {}
+      // ignore: empty_catches
+    } catch (error) {}
   }
 
   void _onScroll() {
@@ -84,20 +115,14 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _handleScrollDown() {
-    // Ваш метод, який викликається при спробі скролити вниз, коли вже знаходишся внизу
-    //_scrollRoomsListState!.fetchData();
-    print('Користувач спробує скролити вниз, коли вже знаходиться внизу');
+    fetchData(server);
   }
 
   Future<void> requestPermissions() async {
-    // Запит дозволу на доступ до файлової системи (запис)
     final storagePermission = await Permission.storage.request();
 
     if (storagePermission.isGranted) {
-      // Дозвіл отримано, ви можете виконувати дії, які потребують цього дозволу
-    } else {
-      // Ви не отримали необхідний дозвіл, обробіть це відповідно
-    }
+    } else {}
   }
 
   @override
@@ -116,8 +141,10 @@ class _MyHomePageState extends State<MyHomePage> {
                       clipBehavior: Clip.antiAlias,
                       decoration: BoxDecoration(
                           color: themeProvider.currentTheme.primaryColorDark),
-                      child:
-                          ChatListWidget(scrollController: _scrollController),
+                      child: ChatListWidget(
+                        scrollController: _scrollController,
+                        roomsList: roomsList,
+                      ),
                     ),
                   ),
                 ],
@@ -130,9 +157,13 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
+final myHomePageStateKey = GlobalKey<_MyHomePageState>();
+
 class ChatListWidget extends StatelessWidget {
   final ScrollController scrollController;
-  const ChatListWidget({super.key, required this.scrollController});
+  List<Room> roomsList;
+  ChatListWidget(
+      {super.key, required this.scrollController, required this.roomsList});
 
   @override
   Widget build(BuildContext context) {
@@ -167,7 +198,9 @@ class ChatListWidget extends StatelessWidget {
             );
           },
         ),
-        const ScrollRoomsList(),
+        ScrollRoomsList(
+          roomsList: roomsList,
+        ),
         const SliverToBoxAdapter(
             child: SizedBox(height: 8, width: double.infinity)),
       ],
@@ -229,42 +262,17 @@ class HeaderWidget extends StatelessWidget {
 }
 
 class ScrollRoomsList extends StatefulWidget {
-  const ScrollRoomsList({super.key});
+  List<Room> roomsList;
+  ScrollRoomsList({super.key, required this.roomsList});
 
   @override
   State<ScrollRoomsList> createState() => _ScrollRoomsListState();
 }
 
 class _ScrollRoomsListState extends State<ScrollRoomsList> {
-  List<Room> roomsList = [];
-
   @override
   void initState() {
     super.initState();
-    fetchData();
-  }
-
-  Future<http.Response> _getData() async {
-    var url = 'http://35.228.45.65:8800/rooms/';
-    return await http.get(Uri.parse(url));
-  }
-
-  Future<void> fetchData() async {
-    print('fetch');
-    try {
-      http.Response response = await _getData();
-      if (response.statusCode == 200) {
-        String responseBody = utf8.decode(response.bodyBytes);
-        List<dynamic> jsonList = jsonDecode(responseBody);
-        List<Room> rooms = Room.fromJsonList(jsonList).toList();
-        if (mounted) {
-          setState(() {
-            roomsList = rooms;
-          });
-        }
-      } else {}
-      // ignore: empty_catches
-    } catch (error) {}
   }
 
   @override
@@ -273,8 +281,8 @@ class _ScrollRoomsListState extends State<ScrollRoomsList> {
       padding: const EdgeInsets.all(16.0),
       sliver: SliverGrid(
         delegate: SliverChildBuilderDelegate(
-          (context, index) => roomsList[index],
-          childCount: roomsList.length,
+          (context, index) => widget.roomsList[index],
+          childCount: widget.roomsList.length,
         ),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
@@ -286,5 +294,3 @@ class _ScrollRoomsListState extends State<ScrollRoomsList> {
     );
   }
 }
-
-final scrollRoomsListKey = GlobalKey<_ScrollRoomsListState>();

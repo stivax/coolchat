@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import 'common_chat.dart';
 import 'image.dart';
+import 'server.dart';
 import 'theme_provider.dart';
 import 'account.dart';
 import 'rooms.dart';
@@ -22,11 +23,18 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
   String _selectedItems = '';
   final _nameRoomFocus = FocusNode();
   List<String> listRoom = [];
+  late String server;
 
   @override
   void initState() {
-    fetchRoomList();
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    server = ServerProvider.of(context).server;
+    fetchRoomList(server);
   }
 
   @override
@@ -80,8 +88,8 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
     FocusManager.instance.primaryFocus?.unfocus();
   }
 
-  void fetchRoomList() async {
-    final result = await fetchData();
+  void fetchRoomList(String server) async {
+    final result = await fetchData(server);
     result.removeAt(0);
     setState(() {
       listRoom = result;

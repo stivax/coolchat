@@ -296,7 +296,7 @@ void addRoomDialog(BuildContext context) async {
 
 Future<String> sendRoom(BuildContext context, String roomName, String roomImage,
     Account acc) async {
-  final token = await loginProcess(acc.email, acc.password);
+  final token = await loginProcess(context, acc.email, acc.password);
   final server = ServerProvider.of(context).server;
   var url = Uri.parse('${server}rooms/');
 
@@ -322,14 +322,14 @@ Future<String> sendRoom(BuildContext context, String roomName, String roomImage,
   }
 }
 
-Future<http.Response> _getData() async {
-  var url = 'http://35.228.45.65:8800/images/Home';
+Future<http.Response> _getData(String server) async {
+  var url = '${server}images/Home';
   return await http.get(Uri.parse(url));
 }
 
-Future<List<String>> fetchData() async {
+Future<List<String>> fetchData(String server) async {
   try {
-    http.Response response = await _getData();
+    http.Response response = await _getData(server);
     if (response.statusCode == 200) {
       String responseBody = utf8.decode(response.bodyBytes);
       List<dynamic> jsonList = jsonDecode(responseBody);

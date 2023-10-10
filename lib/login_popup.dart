@@ -45,10 +45,10 @@ class _LoginDialogState extends State<LoginDialog> {
 
   void _saveDataAndClosePopup() async {
     if (_formKey.currentState!.validate()) {
-      final token =
-          await loginProcess(_emailController.text, _passwordController.text);
+      final token = await loginProcess(
+          context, _emailController.text, _passwordController.text);
       Account acc = await readAccountFromServer(
-          _emailController.text, _passwordController.text);
+          context, _emailController.text, _passwordController.text);
       if (acc.userName.isNotEmpty &&
           token["access_token"].toString().isNotEmpty) {
         await writeAccount(acc);

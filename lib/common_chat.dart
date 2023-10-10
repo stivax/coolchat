@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 import 'login_popup.dart';
 import 'menu.dart';
 import 'my_appbar.dart';
+import 'server.dart';
 import 'theme_provider.dart';
 import 'members.dart';
 import 'messages.dart';
@@ -35,17 +36,14 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
 
   @override
   void dispose() {
-    //print('dispose chat ${widget.topicName}');
-    //print(scrollRoomsListKey.currentState!.roomsList);
-    //scrollRoomsListKey.currentState!.fetchData();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     var paddingTop = MediaQuery.of(context).padding.top;
-    var screenWidth = MediaQuery.of(context).size.width;
     var screenHeight = MediaQuery.of(context).size.height - 56 - paddingTop;
+    String server = ServerProvider.of(context).server;
 
     return MaterialApp(
       home: BlocProvider(
@@ -70,12 +68,19 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
                             child: TopicName(topicName: widget.topicName)),
                         SizedBox(
                             height: 140,
-                            child: ChatMembers(topicName: widget.topicName)),
+                            child: ChatMembers(
+                              topicName: widget.topicName,
+                              server: server,
+                            )),
                         SizedBox(
                             height: (screenHeight - 248) * 1,
-                            child: BlockMasseges(topicName: widget.topicName)),
+                            child: BlockMasseges(
+                              topicName: widget.topicName,
+                              server: server,
+                            )),
                         TextAndSend(
                           topicName: widget.topicName,
+                          server: server,
                         ),
                       ]),
                 ),
@@ -182,8 +187,9 @@ class _TopicNameState extends State<TopicName> {
 
 class ChatMembers extends StatefulWidget {
   final topicName;
+  String server;
 
-  const ChatMembers({super.key, required this.topicName});
+  ChatMembers({super.key, required this.topicName, required this.server});
 
   @override
   _ChatMembersState createState() => _ChatMembersState();
@@ -217,7 +223,7 @@ class _ChatMembersState extends State<ChatMembers> {
   }
 
   Future<http.Response> _getData() async {
-    var url = 'http://35.228.45.65:8800/messagesDev/${widget.topicName}';
+    var url = '${widget.server}messagesDev/${widget.topicName}';
     return await http.get(Uri.parse(url));
   }
 
@@ -325,8 +331,9 @@ class _ChatMembersState extends State<ChatMembers> {
 class BlockMasseges extends StatefulWidget {
   // ignore: prefer_typing_uninitialized_variables
   final topicName;
+  String server;
 
-  const BlockMasseges({super.key, required this.topicName});
+  BlockMasseges({super.key, required this.topicName, required this.server});
 
   @override
   _BlockMassegesState createState() => _BlockMassegesState();
@@ -358,7 +365,7 @@ class _BlockMassegesState extends State<BlockMasseges>
   }
 
   Future<http.Response> _getData() async {
-    var url = 'http://35.228.45.65:8800/messagesDev/${widget.topicName}';
+    var url = '${widget.server}messagesDev/${widget.topicName}';
     return await http.get(Uri.parse(url));
   }
 
@@ -424,7 +431,8 @@ class _BlockMassegesState extends State<BlockMasseges>
 class TextAndSend extends StatefulWidget {
   // ignore: prefer_typing_uninitialized_variables
   final topicName;
-  const TextAndSend({super.key, required this.topicName});
+  String server;
+  TextAndSend({super.key, required this.topicName, required this.server});
 
   @override
   _TextAndSendState createState() => _TextAndSendState();
@@ -444,7 +452,7 @@ class _TextAndSendState extends State<TextAndSend> {
   void initState() {
     super.initState();
     _readAccount();
-    _makeToken();
+    _makeToken(context);
     _startTimer();
   }
 
@@ -471,8 +479,7 @@ class _TextAndSendState extends State<TextAndSend> {
       });
     }
     if (account.userName.isNotEmpty) {
-      final url =
-          Uri.parse('http://35.228.45.65:8800/user_status/${account.id}');
+      final url = Uri.parse('${widget.server}user_status/${account.id}');
       final jsonBody = {"room_name": widget.topicName, "status": !isWriting};
       final response = await http.put(
         url,
@@ -491,13 +498,13 @@ class _TextAndSendState extends State<TextAndSend> {
     });
   }
 
-  Future<void> _makeToken() async {
+  Future<void> _makeToken(BuildContext context) async {
     account = await readAccountFuture();
-    token = await loginProcess(account.email, account.password);
+    token = await loginProcess(context, account.email, account.password);
   }
 
   void _sendMessage(String message) async {
-    final url = Uri.parse('http://35.228.45.65:8800/messagesDev/');
+    final url = Uri.parse('${widget.server}messagesDev/');
 
     final jsonBody = {
       'message': message,
@@ -593,7 +600,7 @@ class _TextAndSendState extends State<TextAndSend> {
                         );
                         _blockMassegesState?.fetchData();
                         await _readAccount();
-                        await _makeToken();
+                        await _makeToken(context);
                         setState(() {});
                       } else {
                         FocusScope.of(context)

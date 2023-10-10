@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 import 'error_answer.dart';
 
 import 'main.dart';
+import 'server.dart';
 import 'theme_provider.dart';
 
 class Account {
@@ -101,7 +102,8 @@ Future<Account> readAccountFuture() async {
 }
 
 Future<String> sendUser(Account account, BuildContext context) async {
-  final url = Uri.parse('http://35.228.45.65:8800/users/');
+  String server = ServerProvider.of(context).server;
+  final url = Uri.parse('${server}users/');
 
   final jsonBody = {
     "email": account.email,
@@ -126,13 +128,15 @@ Future<String> sendUser(Account account, BuildContext context) async {
   }
 }
 
-Future<Account> readAccountFromServer(String emailUser, String password) async {
-  final url = Uri.parse('http://35.228.45.65:8800/users/$emailUser');
+Future<Account> readAccountFromServer(
+    BuildContext context, String emailUser, String password) async {
+  String server = ServerProvider.of(context).server;
+  final url = Uri.parse('${server}users/$emailUser');
 
   final response = await http.get(url);
 
   if (response.statusCode == 200) {
-    final responseData = json.decode(response.body);
+    final responseData = json.decode(utf8.decode(response.bodyBytes));
     final acc = Account.fromJsonWithPassword(responseData, password);
     return Account(
         email: acc.email,
@@ -153,15 +157,16 @@ Future<Account> readAccountFromServer(String emailUser, String password) async {
 }
 
 Future<Map<String, dynamic>> loginProcess(
-    String emailUser, String passwordUser) async {
+    BuildContext context, String emailUser, String passwordUser) async {
   String email = Uri.encodeComponent(emailUser);
   String password = Uri.encodeComponent(passwordUser);
+  String server = ServerProvider.of(context).server;
 
   String body = 'username=$email&password=$password';
 
   try {
     final response = await http.post(
-      Uri.parse('http://35.228.45.65:8800/login'),
+      Uri.parse('${server}login'),
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
