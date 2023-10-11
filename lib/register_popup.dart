@@ -77,7 +77,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
             context, _emailController.text, _passwordController.text);
         Account acc = await readAccountFromServer(
             context, _emailController.text, _passwordController.text);
-        writeAccount(acc);
+        await writeAccount(acc);
         final answer = await _showPopupWelcome(acc, context);
         Navigator.pop(context, token);
         if (widget.addRoom == 'add') {
@@ -411,6 +411,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
                         TextFormField(
                           textCapitalization: TextCapitalization.sentences,
                           keyboardType: TextInputType.name,
+                          validator: _nameValidate,
                           maxLength: 25,
                           focusNode: _nickNameFocus,
                           controller: _nicknameController,
@@ -796,7 +797,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
   }
 
   String? _nameValidate(String? value) {
-    final _nameExp = RegExp(r'^[a-zA-Z ]+$');
+    final _nameExp = RegExp(r'^[a-zA-Z\u0430-\u044F\u0410-\u042F ()_.]+$');
     if (value!.isEmpty) {
       return 'Name is reqired';
     } else if (!_nameExp.hasMatch(value)) {

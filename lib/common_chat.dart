@@ -353,7 +353,7 @@ class _BlockMassegesState extends State<BlockMasseges>
   }
 
   void _startTimer() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
       fetchData();
     });
   }
@@ -453,12 +453,12 @@ class _TextAndSendState extends State<TextAndSend> {
     super.initState();
     _readAccount();
     _makeToken(context);
-    _startTimer();
+    //_startTimer();
   }
 
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      _sendStatus();
+      //_sendStatus();
     });
   }
 
@@ -499,8 +499,11 @@ class _TextAndSendState extends State<TextAndSend> {
   }
 
   Future<void> _makeToken(BuildContext context) async {
-    account = await readAccountFuture();
-    token = await loginProcess(context, account.email, account.password);
+    //account = await readAccountFuture();
+    var tok = await loginProcess(context, account.email, account.password);
+    setState(() {
+      token = tok;
+    });
   }
 
   void _sendMessage(String message) async {
@@ -598,7 +601,6 @@ class _TextAndSendState extends State<TextAndSend> {
                             return LoginDialog();
                           },
                         );
-                        _blockMassegesState?.fetchData();
                         await _readAccount();
                         await _makeToken(context);
                         setState(() {});

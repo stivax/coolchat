@@ -279,7 +279,7 @@ void addRoomDialog(BuildContext context) async {
       context: context,
       builder: (BuildContext context) {
         return LoginDialog(
-          addRoom: 'add',
+          parametr: 'add',
         );
       },
     );

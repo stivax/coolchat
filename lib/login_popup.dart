@@ -10,9 +10,9 @@ import 'register_popup.dart';
 import 'add_room_popup.dart';
 
 class LoginDialog extends StatefulWidget {
-  String addRoom = '';
+  String parametr = '';
 
-  LoginDialog({super.key, this.addRoom = ''});
+  LoginDialog({super.key, this.parametr = ''});
   @override
   _LoginDialogState createState() => _LoginDialogState();
 }
@@ -55,7 +55,7 @@ class _LoginDialogState extends State<LoginDialog> {
         //Navigator.pop(context);
         final answer = await showPopupWelcome(acc, context);
         Navigator.pop(context);
-        if (widget.addRoom == 'add') {
+        if (widget.parametr == 'add') {
           await showDialog(
             context: context,
             builder: (BuildContext context) {
@@ -316,16 +316,16 @@ class _LoginDialogState extends State<LoginDialog> {
                             ),
                           ),
                         ),
-                        onPressed: () {
-                          Navigator.pop(context);
-                          showDialog(
+                        onPressed: () async {
+                          await showDialog(
                             context: context,
                             builder: (BuildContext context) {
                               return RegisterDialog(
-                                addRoom: widget.addRoom,
+                                addRoom: widget.parametr,
                               );
                             },
                           );
+                          Navigator.pop(context);
                         },
                         child: Text(
                           'Register',
