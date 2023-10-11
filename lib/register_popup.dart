@@ -797,11 +797,12 @@ class _RegisterDialogState extends State<RegisterDialog> {
   }
 
   String? _nameValidate(String? value) {
-    final _nameExp = RegExp(r'^[a-zA-Z\u0430-\u044F\u0410-\u042F ()_.]+$');
+    final nameExp = RegExp(
+        r'^[a-zA-Z\u0430-\u044F\u0410-\u042F\u0456\u0406\u0457\u0407\u0491\u0490\u0454\u0404\u04E7\u04E6 ()_.]+$');
     if (value!.isEmpty) {
       return 'Name is reqired';
-    } else if (!_nameExp.hasMatch(value)) {
-      return 'Please input correct Name (char, number and _)';
+    } else if (!nameExp.hasMatch(value)) {
+      return 'Please input correct Name';
     } else {
       return null;
     }
