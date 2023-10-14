@@ -167,7 +167,8 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
                         ),
                         // room name form
                         TextFormField(
-                          keyboardType: TextInputType.emailAddress,
+                          keyboardType: TextInputType.name,
+                          textCapitalization: TextCapitalization.sentences,
                           maxLength: 50,
                           validator: _roomNameValidate,
                           autofocus: true,
@@ -254,41 +255,31 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
               ],
             ),
           ),
+          actionsAlignment: MainAxisAlignment.center,
+          actionsPadding: const EdgeInsets.only(bottom: 20),
           actions: [
-            Container(
-              margin: const EdgeInsets.only(bottom: 0),
-              width: screenSize.width * 0.8,
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 30, vertical: 10),
-                        backgroundColor: themeProvider.currentTheme.shadowColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      onPressed: () {
-                        handlePopupOpen();
-                        _saveDataAndClosePopup();
-                      },
-                      child: Text(
-                        'Approve',
-                        textScaleFactor: 1,
-                        style: TextStyle(
-                          color: Color(0xFFF5FBFF),
-                          fontSize: screenSize.height * 0.03,
-                          fontFamily: 'Manrope',
-                          fontWeight: FontWeight.w500,
-                          height: 1.24,
-                        ),
-                      ),
-                    ),
-                  ],
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                backgroundColor: themeProvider.currentTheme.shadowColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onPressed: () {
+                handlePopupOpen();
+                _saveDataAndClosePopup();
+              },
+              child: Text(
+                'Approve',
+                textScaleFactor: 1,
+                style: TextStyle(
+                  color: Color(0xFFF5FBFF),
+                  fontSize: screenSize.height * 0.03,
+                  fontFamily: 'Manrope',
+                  fontWeight: FontWeight.w500,
+                  height: 1.24,
                 ),
               ),
             ),
@@ -391,7 +382,8 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
   }
 
   String? _roomNameValidate(String? value) {
-    final _nameExp = RegExp(r'^[a-zA-Z ]+$');
+    final _nameExp = RegExp(
+        r'^[a-zA-Z\u0430-\u044F\u0410-\u042F\u0456\u0406\u0457\u0407\u0491\u0490\u0454\u0404\u04E7\u04E6 ()_.]+$');
     if (value!.isEmpty) {
       return 'Name is reqired';
     } else if (!_nameExp.hasMatch(value)) {

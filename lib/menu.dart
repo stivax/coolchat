@@ -4,6 +4,8 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 import 'account.dart';
 import 'login_popup.dart';
@@ -92,9 +94,11 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
               offset: const Offset(0, kToolbarHeight),
               onSelected: (value) {
                 FocusScope.of(context).unfocus();
-                if (value == 'item5') {
+                if (value == 'item7') {
                   handleLogIn(_account, context);
-                } else {}
+                } else if (value == 'item6') {
+                  openUrl('cool-chat.club');
+                }
               },
               icon: Icon(Icons.menu_rounded,
                   color: themeProvider.currentTheme.primaryColor),
@@ -126,13 +130,29 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                 PopupMenuItem<String>(
                   value: 'item4',
                   child: Text(
-                    'Rools of the chat',
+                    'Rules of the chat',
                     style: TextStyle(
                         color: themeProvider.currentTheme.primaryColor),
                   ),
                 ),
                 PopupMenuItem<String>(
                   value: 'item5',
+                  child: Text(
+                    'Privacy Policy',
+                    style: TextStyle(
+                        color: themeProvider.currentTheme.primaryColor),
+                  ),
+                ),
+                PopupMenuItem<String>(
+                  value: 'item6',
+                  child: Text(
+                    'Go to our website',
+                    style: TextStyle(
+                        color: themeProvider.currentTheme.primaryColor),
+                  ),
+                ),
+                PopupMenuItem<String>(
+                  value: 'item7',
                   child: _account.userName != ''
                       ? Text(
                           'Log out: ${_account.userName}',
@@ -149,7 +169,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
               //
               color: themeProvider.currentTheme.primaryColorDark,
               elevation: 8,
-              shape: RoundedRectangleBorder(
+              shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(8),
                     bottomRight: Radius.circular(8)),
@@ -159,5 +179,13 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
         );
       },
     );
+  }
+}
+
+void openUrl(String url) async {
+  if (await canLaunchUrl(Uri.https(url))) {
+    await launchUrl(Uri.https(url), mode: LaunchMode.externalApplication);
+  } else {
+    throw 'Could not launch $url';
   }
 }

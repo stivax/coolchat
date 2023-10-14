@@ -298,7 +298,7 @@ Future<String> sendRoom(BuildContext context, String roomName, String roomImage,
     Account acc) async {
   final token = await loginProcess(context, acc.email, acc.password);
   final server = ServerProvider.of(context).server;
-  var url = Uri.parse('${server}rooms/');
+  final url = Uri.https(server, '/rooms/');
 
   final jsonBody = {
     "name_room": roomName,
@@ -323,8 +323,8 @@ Future<String> sendRoom(BuildContext context, String roomName, String roomImage,
 }
 
 Future<http.Response> _getData(String server) async {
-  var url = '${server}images/Home';
-  return await http.get(Uri.parse(url));
+  final url = Uri.https(server, '/images/Home');
+  return await http.get(url);
 }
 
 Future<List<String>> fetchData(String server) async {

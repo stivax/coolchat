@@ -103,7 +103,7 @@ Future<Account> readAccountFuture() async {
 
 Future<String> sendUser(Account account, BuildContext context) async {
   String server = ServerProvider.of(context).server;
-  final url = Uri.parse('${server}users/');
+  final url = Uri.https(server, '/users/');
 
   final jsonBody = {
     "email": account.email,
@@ -131,7 +131,7 @@ Future<String> sendUser(Account account, BuildContext context) async {
 Future<Account> readAccountFromServer(
     BuildContext context, String emailUser, String password) async {
   String server = ServerProvider.of(context).server;
-  final url = Uri.parse('${server}users/$emailUser');
+  final url = Uri.https(server, '/users/$emailUser');
 
   final response = await http.get(url);
 
@@ -166,7 +166,7 @@ Future<Map<String, dynamic>> loginProcess(
 
   try {
     final response = await http.post(
-      Uri.parse('${server}login'),
+      Uri.https(server, '/login'),
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },

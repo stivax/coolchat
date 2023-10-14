@@ -1,21 +1,21 @@
-import 'dart:convert';
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:http/http.dart' as http;
 import 'package:marquee/marquee.dart';
 import 'package:provider/provider.dart';
-import 'package:http/http.dart' as http;
 
+import 'account.dart';
 import 'login_popup.dart';
+import 'main.dart';
+import 'members.dart';
 import 'menu.dart';
+import 'messages.dart';
 import 'my_appbar.dart';
 import 'server.dart';
 import 'theme_provider.dart';
-import 'members.dart';
-import 'messages.dart';
-import 'account.dart';
-import 'main.dart';
 
 class CommonChatScreen extends StatefulWidget {
   // ignore: prefer_typing_uninitialized_variables
@@ -29,14 +29,27 @@ class CommonChatScreen extends StatefulWidget {
 }
 
 class _CommonChatScreenState extends State<CommonChatScreen> {
+  GlobalKey<_BlockMassegesState> _blockMassegesKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _overloadMain();
+  }
+
+  @override
   void dispose() {
     super.dispose();
+  }
+
+  _overloadMain() async {
+    await myHomePageStateKey.currentState
+        ?.fetchData(ServerProvider.of(context).server);
   }
 
   @override
@@ -75,10 +88,12 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
                         SizedBox(
                             height: (screenHeight - 248) * 1,
                             child: BlockMasseges(
+                              key: _blockMassegesKey,
                               topicName: widget.topicName,
                               server: server,
                             )),
                         TextAndSend(
+                          blockMessageKey: _blockMassegesKey,
                           topicName: widget.topicName,
                           server: server,
                         ),
@@ -223,8 +238,8 @@ class _ChatMembersState extends State<ChatMembers> {
   }
 
   Future<http.Response> _getData() async {
-    var url = '${widget.server}messagesDev/${widget.topicName}';
-    return await http.get(Uri.parse(url));
+    final url = Uri.https(widget.server, '/messagesDev/${widget.topicName}');
+    return await http.get(url);
   }
 
   Future<void> fetchData() async {
@@ -330,10 +345,13 @@ class _ChatMembersState extends State<ChatMembers> {
 
 class BlockMasseges extends StatefulWidget {
   // ignore: prefer_typing_uninitialized_variables
+  @override
+  final Key key;
   final topicName;
   String server;
 
-  BlockMasseges({super.key, required this.topicName, required this.server});
+  BlockMasseges(
+      {required this.key, required this.topicName, required this.server});
 
   @override
   _BlockMassegesState createState() => _BlockMassegesState();
@@ -365,8 +383,8 @@ class _BlockMassegesState extends State<BlockMasseges>
   }
 
   Future<http.Response> _getData() async {
-    var url = '${widget.server}messagesDev/${widget.topicName}';
-    return await http.get(Uri.parse(url));
+    var url = Uri.https(widget.server, '/messagesDev/${widget.topicName}');
+    return await http.get(url);
   }
 
   Future<void> fetchData() async {
@@ -430,9 +448,14 @@ class _BlockMassegesState extends State<BlockMasseges>
 
 class TextAndSend extends StatefulWidget {
   // ignore: prefer_typing_uninitialized_variables
+  final GlobalKey<_BlockMassegesState> blockMessageKey;
   final topicName;
   String server;
-  TextAndSend({super.key, required this.topicName, required this.server});
+  TextAndSend(
+      {super.key,
+      required this.blockMessageKey,
+      required this.topicName,
+      required this.server});
 
   @override
   _TextAndSendState createState() => _TextAndSendState();
@@ -446,14 +469,17 @@ class _TextAndSendState extends State<TextAndSend> {
   late Timer _timer;
   final _textFieldFocusNode = FocusNode();
   bool isWriting = false;
-  final _blockMassegesState = GlobalKey<_BlockMassegesState>().currentState;
 
   @override
   void initState() {
     super.initState();
-    _readAccount();
-    _makeToken(context);
-    //_startTimer();
+    _onStart();
+    _startTimer();
+  }
+
+  void _onStart() async {
+    await _readAccount();
+    await _makeToken(context);
   }
 
   void _startTimer() {
@@ -479,7 +505,7 @@ class _TextAndSendState extends State<TextAndSend> {
       });
     }
     if (account.userName.isNotEmpty) {
-      final url = Uri.parse('${widget.server}user_status/${account.id}');
+      final url = Uri.https(widget.server, '/user_status/${account.id}');
       final jsonBody = {"room_name": widget.topicName, "status": !isWriting};
       final response = await http.put(
         url,
@@ -499,15 +525,14 @@ class _TextAndSendState extends State<TextAndSend> {
   }
 
   Future<void> _makeToken(BuildContext context) async {
-    //account = await readAccountFuture();
     var tok = await loginProcess(context, account.email, account.password);
     setState(() {
       token = tok;
     });
   }
 
-  void _sendMessage(String message) async {
-    final url = Uri.parse('${widget.server}messagesDev/');
+  Future<String> _sendMessage(String message) async {
+    final url = Uri.https(widget.server, '/messagesDev/');
 
     final jsonBody = {
       'message': message,
@@ -527,6 +552,7 @@ class _TextAndSendState extends State<TextAndSend> {
 
     if (response.statusCode == 201) {
     } else {}
+    return '';
   }
 
   void _onTapOutside(BuildContext context) {
@@ -601,9 +627,8 @@ class _TextAndSendState extends State<TextAndSend> {
                             return LoginDialog();
                           },
                         );
-                        await _readAccount();
-                        await _makeToken(context);
-                        setState(() {});
+                        _onStart();
+                        widget.blockMessageKey.currentState?.fetchData();
                       } else {
                         FocusScope.of(context)
                             .requestFocus(_textFieldFocusNode);
@@ -616,14 +641,14 @@ class _TextAndSendState extends State<TextAndSend> {
               Expanded(
                 flex: 1,
                 child: GestureDetector(
-                  onTap: () {
+                  onTap: () async {
                     final message = messageController.text;
                     if (message.isNotEmpty && account.userName.isNotEmpty) {
-                      _sendMessage(message);
+                      await _sendMessage(message);
                       messageController.clear();
 
                       // Оновлення BlockMasseges після відправлення повідомлення
-                      _blockMassegesState?.fetchData();
+                      widget.blockMessageKey.currentState?.fetchData();
                     }
                   },
                   child: Container(

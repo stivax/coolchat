@@ -17,10 +17,11 @@ import 'server.dart';
 void main() => runApp(
       ChangeNotifierProvider(
         create: (context) => ThemeProvider(),
-        child: const ServerProvider(
-            server: 'http://35.228.45.65:8800/', child: MyApp()),
+        child: const ServerProvider(server: 'cool-chat.club', child: MyApp()),
       ),
     );
+
+final myHomePageStateKey = GlobalKey<_MyHomePageState>();
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -44,7 +45,7 @@ class MyApp extends StatelessWidget {
               child: SplashScreen(),
             );
           } else {
-            return const MyHomePage();
+            return MyHomePage(key: myHomePageStateKey);
           }
         },
       ),
@@ -53,7 +54,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+  MyHomePage({super.key});
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -79,11 +80,12 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<http.Response> _getData(String server) async {
-    var url = '${server}rooms/';
-    return await http.get(Uri.parse(url));
+    final url = Uri.https(server, '/rooms/');
+    return await http.get(url);
   }
 
   Future<void> fetchData(String server) async {
+    print('fetch main');
     try {
       http.Response response = await _getData(server);
       if (response.statusCode == 200) {
@@ -156,8 +158,6 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
-
-final myHomePageStateKey = GlobalKey<_MyHomePageState>();
 
 class ChatListWidget extends StatelessWidget {
   final ScrollController scrollController;

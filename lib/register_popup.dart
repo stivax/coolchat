@@ -545,7 +545,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
                         textScaleFactor: 1,
                         style: TextStyle(
                           color: themeProvider.currentTheme.shadowColor,
-                          fontSize: screenSize.height * 0.03,
+                          fontSize: 16,
                           fontFamily: 'Manrope',
                           fontWeight: FontWeight.w400,
                           height: 0,
