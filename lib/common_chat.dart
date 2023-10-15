@@ -34,25 +34,26 @@ class CommonChatScreen extends StatefulWidget {
 
 class _CommonChatScreenState extends State<CommonChatScreen> {
   late String server;
-  late MessageProvider messageProvider;
-  //late var token;
+  late Future<MessageProvider> messageProviderFuture;
 
   @override
   void initState() {
     super.initState();
-    //server = ServerProvider.of(context).server;
-    //messageProvider = MessageProvider(
-    //    'wss://$server/ws/${widget.topicName}?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo4NiwiZXhwIjoxNjk3MzU4MzMyfQ.dwysRmQcdpLwg8t8d-baKv9fZWR-4lU8hwB9fntubIQ');
   }
 
   @override
-  Future<void> didChangeDependencies() async {
+  void didChangeDependencies() {
     super.didChangeDependencies();
     _overloadMain();
-    //token = await _makeToken(context);
     server = ServerProvider.of(context).server;
-    messageProvider = MessageProvider(
-        'wss://$server/ws/${widget.topicName}?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo4NiwiZXhwIjoxNjk3MzU4MzMyfQ.dwysRmQcdpLwg8t8d-baKv9fZWR-4lU8hwB9fntubIQ');
+    messageProviderFuture = _setupChat();
+  }
+
+  Future<MessageProvider> _setupChat() async {
+    var token = await _getToken();
+    return MessageProvider(
+      'wss://$server/ws/${widget.topicName}?token=${token["access_token"]}',
+    );
   }
 
   @override
@@ -65,15 +66,14 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
         ?.fetchData(ServerProvider.of(context).server);
   }
 
+  Future<Map<String, dynamic>> _getToken() async {
+    final acc = await _readAccount();
+    return await loginProcess(context, acc.email, acc.password);
+  }
+
   Future<Account> _readAccount() async {
     Account acc = await readAccountFuture();
     return acc;
-  }
-
-  Future<Map<String, dynamic>> _makeToken(BuildContext context) async {
-    final acc = await _readAccount();
-    final token = await loginProcess(context, acc.email, acc.password);
-    return token;
   }
 
   @override
@@ -110,10 +110,27 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
                               server: server,
                             )),
                         SizedBox(
-                            height: (screenHeight - 248) * 1,
-                            child: BlockMessages(
-                              messageProvider: messageProvider,
-                            )),
+                          height: (screenHeight - 248) * 1,
+                          child: FutureBuilder<MessageProvider>(
+                            future: messageProviderFuture,
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return Center(
+                                    child: CircularProgressIndicator());
+                              } else if (snapshot.hasError) {
+                                return Text('Error: ${snapshot.error}');
+                              } else {
+                                return SizedBox(
+                                  height: (screenHeight - 248) * 1,
+                                  child: BlockMessages(
+                                    messageProvider: snapshot.data!,
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                        ),
                         TextAndSend(
                           topicName: widget.topicName,
                           server: server,
