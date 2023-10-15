@@ -58,6 +58,7 @@ class Room extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final server = ServerProvider.of(context).server;
     return GestureDetector(
       onTap: () {
         id == 999
@@ -65,10 +66,8 @@ class Room extends StatelessWidget {
             : Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => CommonChatScreen(
-                    topicName: name,
-                    id: id,
-                  ),
+                  builder: (context) =>
+                      CommonChatScreen(topicName: name, id: id, server: server),
                 ),
               );
       },

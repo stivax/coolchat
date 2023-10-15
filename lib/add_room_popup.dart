@@ -57,6 +57,7 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
   }
 
   Future<void> _saveDataAndClosePopup() async {
+    final server = ServerProvider.of(context).server;
     if (_formKey.currentState!.validate() && _selectedItems != '') {
       final acc = await readAccountFuture();
       // ignore: use_build_context_synchronously
@@ -71,6 +72,7 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
           MaterialPageRoute(
             builder: (context) => CommonChatScreen(
               topicName: _nameRoomController.text,
+              server: server,
             ),
           ),
         );

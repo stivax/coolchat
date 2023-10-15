@@ -26,7 +26,9 @@ class CommonChatScreen extends StatefulWidget {
   final topicName;
   // ignore: prefer_typing_uninitialized_variables
   final id;
-  const CommonChatScreen({super.key, required this.topicName, this.id});
+  final server;
+  const CommonChatScreen(
+      {super.key, required this.topicName, this.id, required this.server});
 
   @override
   State<CommonChatScreen> createState() => _CommonChatScreenState();
@@ -39,14 +41,14 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
   @override
   void initState() {
     super.initState();
+    server = widget.server;
+    messageProviderFuture = _setupChat();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _overloadMain();
-    server = ServerProvider.of(context).server;
-    messageProviderFuture = _setupChat();
   }
 
   Future<MessageProvider> _setupChat() async {
@@ -80,7 +82,6 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
   Widget build(BuildContext context) {
     var paddingTop = MediaQuery.of(context).padding.top;
     var screenHeight = MediaQuery.of(context).size.height - 56 - paddingTop;
-    String server = ServerProvider.of(context).server;
 
     return MaterialApp(
       home: BlocProvider(
@@ -111,29 +112,32 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
                             )),
                         SizedBox(
                           height: (screenHeight - 248) * 1,
-                          child: FutureBuilder<MessageProvider>(
-                            future: messageProviderFuture,
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return Center(
-                                    child: CircularProgressIndicator());
-                              } else if (snapshot.hasError) {
-                                return Text('Error: ${snapshot.error}');
-                              } else {
-                                return SizedBox(
-                                  height: (screenHeight - 248) * 1,
-                                  child: BlockMessages(
-                                    messageProvider: snapshot.data!,
-                                  ),
-                                );
-                              }
-                            },
+                          child: BlockMessages(
+                            messageViev: FutureBuilder<MessageProvider>(
+                              future: messageProviderFuture,
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return Center(
+                                      child: CircularProgressIndicator());
+                                } else if (snapshot.hasError) {
+                                  return Text('Error: ${snapshot.error}');
+                                } else {
+                                  return SizedBox(
+                                    height: (screenHeight - 248) * 1,
+                                    child: BlockMessagesViev(
+                                      messageProvider: snapshot.data!,
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
                           ),
                         ),
                         TextAndSend(
                           topicName: widget.topicName,
                           server: server,
+                          messageProviderFuture: messageProviderFuture,
                         ),
                       ]),
                 ),
@@ -382,10 +386,10 @@ class _ChatMembersState extends State<ChatMembers> {
 }
 
 class BlockMessages extends StatelessWidget {
-  MessageProvider messageProvider;
+  Widget messageViev;
   BlockMessages({
     Key? key,
-    required this.messageProvider,
+    required this.messageViev,
   }) : super(key: key);
 
   @override
@@ -412,34 +416,47 @@ class BlockMessages extends StatelessWidget {
                 )
               ],
             ),
-            child: StreamBuilder(
-              stream: messageProvider
-                  .messagesStream, // Підключення до потоку повідомлень з сокет-сервера
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  // Отримання та відображення вхідних повідомлень
-                  String responseBody = snapshot.data;
-                  List<dynamic> jsonList = jsonDecode(responseBody);
-                  List<Messages> messages =
-                      Messages.fromJsonList(jsonList).reversed.toList();
-                  return ListView.builder(
-                    reverse: true,
-                    itemCount: messages.length,
-                    itemBuilder: (context, index) {
-                      Messages message = messages[index];
-                      // Відображення повідомлення в інтерфейсі
-                      return message;
-                    },
-                  );
-                } else {
-                  return Center(
-                      child:
-                          CircularProgressIndicator()); // Якщо дані ще не завантажені, відображаємо індикатор завантаження
-                }
-              },
-            ),
+            child: messageViev,
           ),
         );
+      },
+    );
+  }
+}
+
+class BlockMessagesViev extends StatelessWidget {
+  MessageProvider messageProvider;
+  BlockMessagesViev({
+    Key? key,
+    required this.messageProvider,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+      stream: messageProvider
+          .messagesStream, // Підключення до потоку повідомлень з сокет-сервера
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          // Отримання та відображення вхідних повідомлень
+          String responseBody = snapshot.data;
+          List<dynamic> jsonList = jsonDecode(responseBody);
+          List<Messages> messages =
+              Messages.fromJsonList(jsonList).reversed.toList();
+          return ListView.builder(
+            reverse: true,
+            itemCount: messages.length,
+            itemBuilder: (context, index) {
+              Messages message = messages[index];
+              // Відображення повідомлення в інтерфейсі
+              return message;
+            },
+          );
+        } else {
+          return Center(
+              child:
+                  CircularProgressIndicator()); // Якщо дані ще не завантажені, відображаємо індикатор завантаження
+        }
       },
     );
   }
@@ -449,7 +466,12 @@ class TextAndSend extends StatefulWidget {
   // ignore: prefer_typing_uninitialized_variables
   final topicName;
   String server;
-  TextAndSend({super.key, required this.topicName, required this.server});
+  Future<MessageProvider> messageProviderFuture;
+  TextAndSend(
+      {super.key,
+      required this.topicName,
+      required this.server,
+      required this.messageProviderFuture});
 
   @override
   _TextAndSendState createState() => _TextAndSendState();
@@ -463,10 +485,16 @@ class _TextAndSendState extends State<TextAndSend> {
   late Timer _timer;
   final _textFieldFocusNode = FocusNode();
   bool isWriting = false;
+  late MessageProvider messageProvider;
 
   @override
   void initState() {
     super.initState();
+    widget.messageProviderFuture.then(
+      (value) {
+        messageProvider = value;
+      },
+    );
     _onStart();
     _startTimer();
   }
@@ -525,28 +553,14 @@ class _TextAndSendState extends State<TextAndSend> {
     });
   }
 
-  Future<String> _sendMessage(String message) async {
-    final url = Uri.https(widget.server, '/messagesDev/');
-
-    final jsonBody = {
+  _sendMessage(String message) {
+    messageProvider.sendMessage(json.encode({
       'message': message,
-      "is_privat": false,
-      "receiver": 0,
-      "rooms": widget.topicName
-    };
-
-    final response = await http.post(
-      url,
-      headers: {
-        'Authorization': 'Bearer ${token["access_token"]}',
-        'Content-Type': 'application/json'
-      },
-      body: json.encode(jsonBody),
-    );
-
-    if (response.statusCode == 201) {
-    } else {}
-    return '';
+      'is_privat': false,
+      'receiver': 0,
+      'rooms': widget.topicName,
+    }));
+    messageController.clear();
   }
 
   void _onTapOutside(BuildContext context) {
@@ -634,14 +648,11 @@ class _TextAndSendState extends State<TextAndSend> {
               Expanded(
                 flex: 1,
                 child: GestureDetector(
-                  onTap: () async {
+                  onTap: () {
                     final message = messageController.text;
                     if (message.isNotEmpty && account.userName.isNotEmpty) {
-                      await _sendMessage(message);
+                      _sendMessage(message);
                       messageController.clear();
-
-                      // Оновлення BlockMasseges після відправлення повідомлення
-                      // widget.blockMessageKey.currentState?.fetchData();
                     }
                   },
                   child: Container(
