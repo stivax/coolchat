@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
 import 'dart:convert';
 
@@ -6,12 +7,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
 import 'package:marquee/marquee.dart';
 import 'package:provider/provider.dart';
+import 'package:web_socket_channel/io.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 import 'account.dart';
 import 'login_popup.dart';
 import 'main.dart';
 import 'members.dart';
 import 'menu.dart';
+import 'message_provider.dart';
 import 'messages.dart';
 import 'my_appbar.dart';
 import 'server.dart';
@@ -29,17 +33,26 @@ class CommonChatScreen extends StatefulWidget {
 }
 
 class _CommonChatScreenState extends State<CommonChatScreen> {
-  GlobalKey<_BlockMassegesState> _blockMassegesKey = GlobalKey();
+  late String server;
+  late MessageProvider messageProvider;
+  //late var token;
 
   @override
   void initState() {
     super.initState();
+    //server = ServerProvider.of(context).server;
+    //messageProvider = MessageProvider(
+    //    'wss://$server/ws/${widget.topicName}?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo4NiwiZXhwIjoxNjk3MzU4MzMyfQ.dwysRmQcdpLwg8t8d-baKv9fZWR-4lU8hwB9fntubIQ');
   }
 
   @override
-  void didChangeDependencies() {
+  Future<void> didChangeDependencies() async {
     super.didChangeDependencies();
     _overloadMain();
+    //token = await _makeToken(context);
+    server = ServerProvider.of(context).server;
+    messageProvider = MessageProvider(
+        'wss://$server/ws/${widget.topicName}?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo4NiwiZXhwIjoxNjk3MzU4MzMyfQ.dwysRmQcdpLwg8t8d-baKv9fZWR-4lU8hwB9fntubIQ');
   }
 
   @override
@@ -50,6 +63,17 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
   _overloadMain() async {
     await myHomePageStateKey.currentState
         ?.fetchData(ServerProvider.of(context).server);
+  }
+
+  Future<Account> _readAccount() async {
+    Account acc = await readAccountFuture();
+    return acc;
+  }
+
+  Future<Map<String, dynamic>> _makeToken(BuildContext context) async {
+    final acc = await _readAccount();
+    final token = await loginProcess(context, acc.email, acc.password);
+    return token;
   }
 
   @override
@@ -87,13 +111,10 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
                             )),
                         SizedBox(
                             height: (screenHeight - 248) * 1,
-                            child: BlockMasseges(
-                              key: _blockMassegesKey,
-                              topicName: widget.topicName,
-                              server: server,
+                            child: BlockMessages(
+                              messageProvider: messageProvider,
                             )),
                         TextAndSend(
-                          blockMessageKey: _blockMassegesKey,
                           topicName: widget.topicName,
                           server: server,
                         ),
@@ -343,69 +364,12 @@ class _ChatMembersState extends State<ChatMembers> {
   }
 }
 
-class BlockMasseges extends StatefulWidget {
-  // ignore: prefer_typing_uninitialized_variables
-  @override
-  final Key key;
-  final topicName;
-  String server;
-
-  BlockMasseges(
-      {required this.key, required this.topicName, required this.server});
-
-  @override
-  _BlockMassegesState createState() => _BlockMassegesState();
-}
-
-class _BlockMassegesState extends State<BlockMasseges>
-    with SingleTickerProviderStateMixin {
-  List<Messages> messageList = [];
-  String localResponseBody = '';
-  late Timer _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    fetchData();
-    _startTimer();
-  }
-
-  void _startTimer() {
-    _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      fetchData();
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer.cancel();
-    super.dispose();
-  }
-
-  Future<http.Response> _getData() async {
-    var url = Uri.https(widget.server, '/messagesDev/${widget.topicName}');
-    return await http.get(url);
-  }
-
-  Future<void> fetchData() async {
-    try {
-      http.Response response = await _getData();
-      if (response.statusCode == 200) {
-        String responseBody = utf8.decode(response.bodyBytes);
-        if (responseBody != localResponseBody) {
-          localResponseBody = responseBody;
-          List<dynamic> jsonList = jsonDecode(responseBody);
-          List<Messages> messages =
-              Messages.fromJsonList(jsonList).reversed.toList();
-          if (mounted) {
-            setState(() {
-              messageList = messages;
-            });
-          }
-        }
-      }
-    } catch (error) {}
-  }
+class BlockMessages extends StatelessWidget {
+  MessageProvider messageProvider;
+  BlockMessages({
+    Key? key,
+    required this.messageProvider,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -431,12 +395,30 @@ class _BlockMassegesState extends State<BlockMasseges>
                 )
               ],
             ),
-            child: ListView.builder(
-              reverse: true,
-              itemCount: messageList.length,
-              itemBuilder: (context, index) {
-                final List<Widget> chatWidgets = messageList;
-                return chatWidgets[index];
+            child: StreamBuilder(
+              stream: messageProvider
+                  .messagesStream, // Підключення до потоку повідомлень з сокет-сервера
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  // Отримання та відображення вхідних повідомлень
+                  String responseBody = snapshot.data;
+                  List<dynamic> jsonList = jsonDecode(responseBody);
+                  List<Messages> messages =
+                      Messages.fromJsonList(jsonList).reversed.toList();
+                  return ListView.builder(
+                    reverse: true,
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) {
+                      Messages message = messages[index];
+                      // Відображення повідомлення в інтерфейсі
+                      return message;
+                    },
+                  );
+                } else {
+                  return Center(
+                      child:
+                          CircularProgressIndicator()); // Якщо дані ще не завантажені, відображаємо індикатор завантаження
+                }
               },
             ),
           ),
@@ -448,14 +430,9 @@ class _BlockMassegesState extends State<BlockMasseges>
 
 class TextAndSend extends StatefulWidget {
   // ignore: prefer_typing_uninitialized_variables
-  final GlobalKey<_BlockMassegesState> blockMessageKey;
   final topicName;
   String server;
-  TextAndSend(
-      {super.key,
-      required this.blockMessageKey,
-      required this.topicName,
-      required this.server});
+  TextAndSend({super.key, required this.topicName, required this.server});
 
   @override
   _TextAndSendState createState() => _TextAndSendState();
@@ -628,7 +605,6 @@ class _TextAndSendState extends State<TextAndSend> {
                           },
                         );
                         _onStart();
-                        widget.blockMessageKey.currentState?.fetchData();
                       } else {
                         FocusScope.of(context)
                             .requestFocus(_textFieldFocusNode);
@@ -648,7 +624,7 @@ class _TextAndSendState extends State<TextAndSend> {
                       messageController.clear();
 
                       // Оновлення BlockMasseges після відправлення повідомлення
-                      widget.blockMessageKey.currentState?.fetchData();
+                      // widget.blockMessageKey.currentState?.fetchData();
                     }
                   },
                   child: Container(

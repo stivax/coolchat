@@ -43,26 +43,26 @@ class Messages extends StatelessWidget {
     int previousMemberID = 0;
 
     return jsonList.map((json) {
-      bool isSameMember = json['Message']['owner_id'] == previousMemberID;
-      previousMemberID = json['Message']['owner_id'];
+      bool isSameMember = json['message']['owner_id'] == previousMemberID;
+      previousMemberID = json['message']['owner_id'];
 
       // Отримати поточний часовий пояс пристрою
       final timeZone = DateTime.now().timeZoneOffset;
 
       // Додати цю різницю до created_at
-      DateTime createdAt = DateTime.parse(json['Message']['created_at']);
+      DateTime createdAt = DateTime.parse(json['message']['created_at']);
       createdAt = createdAt.add(timeZone);
 
       return Messages(
-        message: json['Message']['message'],
-        isPrivate: json['Message']['is_privat'],
-        receiverId: json['Message']['receiver_id'],
-        rooms: json['Message']['rooms'],
-        id: json['Message']['id'],
+        message: json['message']['message'],
+        isPrivate: json['message']['is_privat'],
+        receiverId: json['message']['receiver_id'],
+        rooms: json['message']['rooms'],
+        id: json['message']['id'],
         createdAt: createdAt,
-        ownerId: json['Message']['owner']['id'],
-        owner: User.fromJson(json['Message']['owner']),
-        receiver: User.fromJson(json['Message']['receiver']),
+        ownerId: json['message']['owner_id'],
+        owner: User.fromJson(json['message']['owner']),
+        receiver: User.fromJson(json['message']['receiver']),
         votes: json['votes'],
         isPreviousSameMember: isSameMember,
       );
