@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
 
+import 'account.dart';
 import 'menu.dart';
 import 'my_appbar.dart';
 import 'theme_provider.dart';
@@ -64,11 +65,13 @@ class _MyHomePageState extends State<MyHomePage> {
   final _scrollController = ScrollController();
   List<Room> roomsList = [];
   late String server;
+  late Map<dynamic, dynamic> token;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    getToken();
     requestPermissions();
   }
 
@@ -77,6 +80,19 @@ class _MyHomePageState extends State<MyHomePage> {
     super.didChangeDependencies();
     server = ServerProvider.of(context).server;
     fetchData(server);
+  }
+
+  getToken() async {
+    final acc = await _readAccount();
+    var tok = await loginProcess(context, acc.email, acc.password);
+    setState(() {
+      token = tok;
+    });
+  }
+
+  Future<Account> _readAccount() async {
+    Account acc = await readAccountFuture();
+    return acc;
   }
 
   Future<http.Response> _getData(String server) async {

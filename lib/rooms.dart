@@ -277,9 +277,13 @@ void addRoomDialog(BuildContext context) async {
     await showDialog(
       context: context,
       builder: (BuildContext context) {
-        return LoginDialog(
-          parametr: 'add',
-        );
+        return LoginDialog();
+      },
+    );
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return RoomAddDialog();
       },
     );
   } else {

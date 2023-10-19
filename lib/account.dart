@@ -281,9 +281,12 @@ void showPopupLogOut(Account acc, BuildContext context) {
                           password: '',
                           avatar: '',
                           id: 0));
-                      Navigator.of(context).pushReplacement(MaterialPageRoute(
-                        builder: (context) => MyHomePage(),
-                      ));
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (context) => MyHomePage(),
+                        ),
+                      );
+                      myHomePageStateKey.currentState?.token = {};
                     },
                   ),
                 )

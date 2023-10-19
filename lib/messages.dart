@@ -69,6 +69,31 @@ class Messages extends StatelessWidget {
     }).toList();
   }
 
+  static Messages fromJsonMessage(dynamic jsonMessage, int previousMemberID) {
+    bool isSameMember = jsonMessage['message']['owner_id'] == previousMemberID;
+
+    // Отримати поточний часовий пояс пристрою
+    final timeZone = DateTime.now().timeZoneOffset;
+
+    // Додати цю різницю до created_at
+    DateTime createdAt = DateTime.parse(jsonMessage['message']['created_at']);
+    createdAt = createdAt.add(timeZone);
+
+    return Messages(
+      message: jsonMessage['message']['message'],
+      isPrivate: jsonMessage['message']['is_privat'],
+      receiverId: jsonMessage['message']['receiver_id'],
+      rooms: jsonMessage['message']['rooms'],
+      id: jsonMessage['message']['id'],
+      createdAt: createdAt,
+      ownerId: jsonMessage['message']['owner_id'],
+      owner: User.fromJson(jsonMessage['message']['owner']),
+      receiver: User.fromJson(jsonMessage['message']['receiver']),
+      votes: jsonMessage['votes'],
+      isPreviousSameMember: isSameMember,
+    );
+  }
+
   static String formatTime(String created) {
     DateTime dateTime = DateTime.parse(created);
     DateTime now = DateTime.now();

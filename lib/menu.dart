@@ -183,9 +183,5 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
 }
 
 void openUrl(String url) async {
-  if (await canLaunchUrl(Uri.https(url))) {
-    await launchUrl(Uri.https(url));
-  } else {
-    throw 'Could not launch $url';
-  }
+  await launchUrlString(url, mode: LaunchMode.externalApplication);
 }

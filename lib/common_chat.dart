@@ -21,13 +21,26 @@ import 'my_appbar.dart';
 import 'server.dart';
 import 'theme_provider.dart';
 
+final commonChatScreenStateKey = GlobalKey<_CommonChatScreenState>();
+
+class MessageData {
+  List<Messages> messages = [];
+  int previousMemberID = 0;
+  String responseBody;
+
+  MessageData(this.messages, this.previousMemberID, this.responseBody);
+}
+
 class CommonChatScreen extends StatefulWidget {
+  // ignore: annotate_overrides, overridden_fields
+  Key key = commonChatScreenStateKey;
   // ignore: prefer_typing_uninitialized_variables
   final topicName;
   // ignore: prefer_typing_uninitialized_variables
   final id;
+  // ignore: prefer_typing_uninitialized_variables
   final server;
-  const CommonChatScreen(
+  CommonChatScreen(
       {super.key, required this.topicName, this.id, required this.server});
 
   @override
@@ -37,12 +50,26 @@ class CommonChatScreen extends StatefulWidget {
 class _CommonChatScreenState extends State<CommonChatScreen> {
   late String server;
   late Future<MessageProvider> messageProviderFuture;
+  late MessageProvider messageProvider;
+  late Map<dynamic, dynamic> token;
+  late WebSocketChannel channel;
+  late MessageData messageData;
 
   @override
   void initState() {
     super.initState();
+    token = myHomePageStateKey.currentState!.token;
     server = widget.server;
-    messageProviderFuture = _setupChat();
+    messageData = MessageData([], 0, '');
+    messageProvider = MessageProvider(
+      'wss://$server/ws/${widget.topicName}?token=${token["access_token"]}',
+    );
+    socketConnect();
+  }
+
+  socketConnect() {
+    channel = IOWebSocketChannel.connect(
+        'wss://$server/ws/${widget.topicName}?token=${token["access_token"]}');
   }
 
   @override
@@ -51,31 +78,19 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
     _overloadMain();
   }
 
-  Future<MessageProvider> _setupChat() async {
-    var token = await _getToken();
-    return MessageProvider(
-      'wss://$server/ws/${widget.topicName}?token=${token["access_token"]}',
-    );
-  }
-
   @override
   void dispose() {
+    channel.sink.close();
     super.dispose();
+  }
+
+  void updateScreen() {
+    setState(() {});
   }
 
   _overloadMain() async {
     await myHomePageStateKey.currentState
         ?.fetchData(ServerProvider.of(context).server);
-  }
-
-  Future<Map<String, dynamic>> _getToken() async {
-    final acc = await _readAccount();
-    return await loginProcess(context, acc.email, acc.password);
-  }
-
-  Future<Account> _readAccount() async {
-    Account acc = await readAccountFuture();
-    return acc;
   }
 
   @override
@@ -113,31 +128,14 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
                         SizedBox(
                           height: (screenHeight - 248) * 1,
                           child: BlockMessages(
-                            messageViev: FutureBuilder<MessageProvider>(
-                              future: messageProviderFuture,
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return Center(
-                                      child: CircularProgressIndicator());
-                                } else if (snapshot.hasError) {
-                                  return Text('Error: ${snapshot.error}');
-                                } else {
-                                  return SizedBox(
-                                    height: (screenHeight - 248) * 1,
-                                    child: BlockMessagesViev(
-                                      messageProvider: snapshot.data!,
-                                    ),
-                                  );
-                                }
-                              },
-                            ),
+                            channel: channel,
+                            messageData: messageData,
                           ),
                         ),
                         TextAndSend(
                           topicName: widget.topicName,
                           server: server,
-                          messageProviderFuture: messageProviderFuture,
+                          channel: channel,
                         ),
                       ]),
                 ),
@@ -197,7 +195,6 @@ class _TopicNameState extends State<TopicName> {
 
   @override
   Widget build(BuildContext context) {
-    var screenWidth = MediaQuery.of(context).size.width;
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return Container(
@@ -339,7 +336,7 @@ class _ChatMembersState extends State<ChatMembers> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                Container(
+                SizedBox(
                   height: screenWidth * 0.07,
                   child: Padding(
                     padding: const EdgeInsets.only(
@@ -386,11 +383,15 @@ class _ChatMembersState extends State<ChatMembers> {
 }
 
 class BlockMessages extends StatelessWidget {
-  Widget messageViev;
+  final WebSocketChannel channel;
+  MessageData messageData;
   BlockMessages({
     Key? key,
-    required this.messageViev,
+    required this.channel,
+    required this.messageData,
   }) : super(key: key);
+
+  late List<Messages> messages;
 
   @override
   Widget build(BuildContext context) {
@@ -416,47 +417,81 @@ class BlockMessages extends StatelessWidget {
                 )
               ],
             ),
-            child: messageViev,
+            child: StreamBuilder(
+              stream: channel.stream,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  String responseBody = snapshot.data;
+                  try {
+                    if (jsonDecode(responseBody).runtimeType == List<dynamic>) {
+                      List<dynamic> jsonList = jsonDecode(responseBody);
+                      messageData.messages =
+                          Messages.fromJsonList(jsonList).toList();
+                      messageData.previousMemberID = messageData.messages != []
+                          ? messageData.messages.last.ownerId.toInt()
+                          : 0;
+                    } else if (messageData.responseBody != responseBody) {
+                      messageData.responseBody = responseBody;
+                      dynamic jsonMessage = jsonDecode(responseBody);
+                      Messages message = Messages.fromJsonMessage(
+                          jsonMessage, messageData.previousMemberID);
+                      messageData.previousMemberID = message.ownerId.toInt();
+                      messageData.messages.add(message);
+                    } else {}
+                    messages = messageData.messages.reversed.toList();
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      reverse: true,
+                      itemCount: messages.length,
+                      itemBuilder: (context, index) {
+                        Messages message = messages[index];
+                        return message;
+                      },
+                    );
+                  } catch (e) {
+                    return Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.max,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Image(
+                            image: AssetImage(
+                                'assets/images/clear_block_messages.png'),
+                            fit: BoxFit.cover,
+                          ),
+                          const SizedBox(
+                            height: 16,
+                          ),
+                          Container(
+                            height: 50,
+                            child: Text(
+                              'Oops.. there are no messages here yet \nWrite first!',
+                              textAlign: TextAlign.center,
+                              textScaleFactor: 1,
+                              style: TextStyle(
+                                color: themeProvider.currentTheme.primaryColor
+                                    .withOpacity(0.5),
+                                fontSize: 16,
+                                fontFamily: 'Manrope',
+                                fontWeight: FontWeight.w500,
+                                height: 1.16,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                } else {
+                  return const Center(
+                      child:
+                          CircularProgressIndicator()); // Якщо дані ще не завантажені, відображаємо індикатор завантаження
+                }
+              },
+            ),
           ),
         );
-      },
-    );
-  }
-}
-
-class BlockMessagesViev extends StatelessWidget {
-  MessageProvider messageProvider;
-  BlockMessagesViev({
-    Key? key,
-    required this.messageProvider,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder(
-      stream: messageProvider
-          .messagesStream, // Підключення до потоку повідомлень з сокет-сервера
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          // Отримання та відображення вхідних повідомлень
-          String responseBody = snapshot.data;
-          List<dynamic> jsonList = jsonDecode(responseBody);
-          List<Messages> messages =
-              Messages.fromJsonList(jsonList).reversed.toList();
-          return ListView.builder(
-            reverse: true,
-            itemCount: messages.length,
-            itemBuilder: (context, index) {
-              Messages message = messages[index];
-              // Відображення повідомлення в інтерфейсі
-              return message;
-            },
-          );
-        } else {
-          return Center(
-              child:
-                  CircularProgressIndicator()); // Якщо дані ще не завантажені, відображаємо індикатор завантаження
-        }
       },
     );
   }
@@ -466,12 +501,14 @@ class TextAndSend extends StatefulWidget {
   // ignore: prefer_typing_uninitialized_variables
   final topicName;
   String server;
-  Future<MessageProvider> messageProviderFuture;
+  //MessageProvider messageProvider;
+  WebSocketChannel channel;
   TextAndSend(
       {super.key,
       required this.topicName,
       required this.server,
-      required this.messageProviderFuture});
+      //required this.messageProvider,
+      required this.channel});
 
   @override
   _TextAndSendState createState() => _TextAndSendState();
@@ -486,20 +523,18 @@ class _TextAndSendState extends State<TextAndSend> {
   final _textFieldFocusNode = FocusNode();
   bool isWriting = false;
   late MessageProvider messageProvider;
+  late WebSocketChannel channel;
 
   @override
   void initState() {
     super.initState();
-    widget.messageProviderFuture.then(
-      (value) {
-        messageProvider = value;
-      },
-    );
+    //messageProvider = widget.messageProvider;
+    channel = widget.channel;
     _onStart();
     _startTimer();
   }
 
-  void _onStart() async {
+  _onStart() async {
     await _readAccount();
     await _makeToken(context);
   }
@@ -554,10 +589,10 @@ class _TextAndSendState extends State<TextAndSend> {
   }
 
   _sendMessage(String message) {
-    messageProvider.sendMessage(json.encode({
+    channel.sink.add(json.encode({
       'message': message,
       'is_privat': false,
-      'receiver': 0,
+      'receiver': 1,
       'rooms': widget.topicName,
     }));
     messageController.clear();
@@ -635,7 +670,13 @@ class _TextAndSendState extends State<TextAndSend> {
                             return LoginDialog();
                           },
                         );
-                        _onStart();
+                        commonChatScreenStateKey.currentState?.channel.sink
+                            .close();
+                        await _onStart();
+                        myHomePageStateKey.currentState?.token = token;
+                        commonChatScreenStateKey.currentState?.token = token;
+                        commonChatScreenStateKey.currentState?.socketConnect();
+                        commonChatScreenStateKey.currentState?.updateScreen();
                       } else {
                         FocusScope.of(context)
                             .requestFocus(_textFieldFocusNode);

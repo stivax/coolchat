@@ -385,7 +385,7 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
 
   String? _roomNameValidate(String? value) {
     final _nameExp = RegExp(
-        r'^[a-zA-Z\u0430-\u044F\u0410-\u042F\u0456\u0406\u0457\u0407\u0491\u0490\u0454\u0404\u04E7\u04E6 ()_.]+$');
+        r'^[0-9a-zA-Z\u0430-\u044F\u0410-\u042F\u0456\u0406\u0457\u0407\u0491\u0490\u0454\u0404\u04E7\u04E6 ()_.]+$');
     if (value!.isEmpty) {
       return 'Name is reqired';
     } else if (!_nameExp.hasMatch(value)) {
