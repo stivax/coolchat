@@ -10,6 +10,8 @@ import 'common_chat.dart';
 import 'error_answer.dart';
 import 'image.dart';
 import 'login_popup.dart';
+import 'main.dart';
+import 'message_provider.dart';
 import 'theme_provider.dart';
 import 'account.dart';
 
@@ -54,6 +56,14 @@ class Room extends StatelessWidget {
     return jsonList.map((json) {
       return '${json["images"]}';
     }).toList();
+  }
+
+  MessageProvider socketConnect(BuildContext context) {
+    final server = ServerProvider.of(context).server;
+    Map<dynamic, dynamic> token = myHomePageStateKey.currentState!.token;
+    MessageProvider messageProvider = MessageProvider(
+        'wss://$server/ws/$name?token=${token["access_token"]}');
+    return messageProvider;
   }
 
   @override

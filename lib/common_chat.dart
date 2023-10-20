@@ -49,7 +49,6 @@ class CommonChatScreen extends StatefulWidget {
 
 class _CommonChatScreenState extends State<CommonChatScreen> {
   late String server;
-  late Future<MessageProvider> messageProviderFuture;
   late MessageProvider messageProvider;
   late Map<dynamic, dynamic> token;
   late WebSocketChannel channel;
@@ -61,14 +60,11 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
     token = myHomePageStateKey.currentState!.token;
     server = widget.server;
     messageData = MessageData([], 0, '');
-    messageProvider = MessageProvider(
-      'wss://$server/ws/${widget.topicName}?token=${token["access_token"]}',
-    );
     socketConnect();
   }
 
   socketConnect() {
-    channel = IOWebSocketChannel.connect(
+    messageProvider = MessageProvider(
         'wss://$server/ws/${widget.topicName}?token=${token["access_token"]}');
   }
 
@@ -128,14 +124,14 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
                         SizedBox(
                           height: (screenHeight - 248) * 1,
                           child: BlockMessages(
-                            channel: channel,
+                            messageProvider: messageProvider,
                             messageData: messageData,
                           ),
                         ),
                         TextAndSend(
                           topicName: widget.topicName,
                           server: server,
-                          channel: channel,
+                          messageProvider: messageProvider,
                         ),
                       ]),
                 ),
@@ -383,11 +379,11 @@ class _ChatMembersState extends State<ChatMembers> {
 }
 
 class BlockMessages extends StatelessWidget {
-  final WebSocketChannel channel;
+  final MessageProvider messageProvider;
   MessageData messageData;
   BlockMessages({
     Key? key,
-    required this.channel,
+    required this.messageProvider,
     required this.messageData,
   }) : super(key: key);
 
@@ -418,11 +414,11 @@ class BlockMessages extends StatelessWidget {
               ],
             ),
             child: StreamBuilder(
-              stream: channel.stream,
+              stream: messageProvider.messagesStream,
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   String responseBody = snapshot.data;
-                  try {
+                  if (jsonDecode(responseBody) != []) {
                     if (jsonDecode(responseBody).runtimeType == List<dynamic>) {
                       List<dynamic> jsonList = jsonDecode(responseBody);
                       messageData.messages =
@@ -448,7 +444,7 @@ class BlockMessages extends StatelessWidget {
                         return message;
                       },
                     );
-                  } catch (e) {
+                  } else {
                     return Center(
                       child: Column(
                         mainAxisSize: MainAxisSize.max,
@@ -501,14 +497,12 @@ class TextAndSend extends StatefulWidget {
   // ignore: prefer_typing_uninitialized_variables
   final topicName;
   String server;
-  //MessageProvider messageProvider;
-  WebSocketChannel channel;
+  final MessageProvider messageProvider;
   TextAndSend(
       {super.key,
       required this.topicName,
       required this.server,
-      //required this.messageProvider,
-      required this.channel});
+      required this.messageProvider});
 
   @override
   _TextAndSendState createState() => _TextAndSendState();
@@ -523,13 +517,11 @@ class _TextAndSendState extends State<TextAndSend> {
   final _textFieldFocusNode = FocusNode();
   bool isWriting = false;
   late MessageProvider messageProvider;
-  late WebSocketChannel channel;
 
   @override
   void initState() {
     super.initState();
-    //messageProvider = widget.messageProvider;
-    channel = widget.channel;
+    messageProvider = widget.messageProvider;
     _onStart();
     _startTimer();
   }
@@ -589,7 +581,7 @@ class _TextAndSendState extends State<TextAndSend> {
   }
 
   _sendMessage(String message) {
-    channel.sink.add(json.encode({
+    messageProvider.sendMessage(json.encode({
       'message': message,
       'is_privat': false,
       'receiver': 1,
