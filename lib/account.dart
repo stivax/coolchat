@@ -10,7 +10,7 @@ import 'package:http/http.dart' as http;
 import 'error_answer.dart';
 
 import 'main.dart';
-import 'server.dart';
+import 'server_provider.dart';
 import 'theme_provider.dart';
 
 class Account {

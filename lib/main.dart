@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:coolchat/servises/token_provider.dart';
+import 'package:coolchat/servises/token_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -13,12 +15,15 @@ import 'my_appbar.dart';
 import 'theme_provider.dart';
 import 'splashScreen.dart';
 import 'rooms.dart';
-import 'server.dart';
+import 'server_provider.dart';
 
 void main() => runApp(
       ChangeNotifierProvider(
         create: (context) => ThemeProvider(),
-        child: const ServerProvider(server: 'cool-chat.club', child: MyApp()),
+        child: RepositoryProvider(
+            create: (context) => TokenRepository(),
+            child:
+                const ServerProvider(server: 'cool-chat.club', child: MyApp())),
       ),
     );
 

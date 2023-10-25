@@ -2,15 +2,16 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:coolchat/bloc/token_blok.dart';
+import 'package:coolchat/servises/token_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
 import 'package:marquee/marquee.dart';
 import 'package:provider/provider.dart';
-import 'package:web_socket_channel/io.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 
 import 'account.dart';
+import 'bloc/token_state.dart';
 import 'login_popup.dart';
 import 'main.dart';
 import 'members.dart';
@@ -18,7 +19,7 @@ import 'menu.dart';
 import 'message_provider.dart';
 import 'messages.dart';
 import 'my_appbar.dart';
-import 'server.dart';
+import 'server_provider.dart';
 import 'theme_provider.dart';
 
 final commonChatScreenStateKey = GlobalKey<_CommonChatScreenState>();
@@ -32,40 +33,29 @@ class MessageData {
 }
 
 class CommonChatScreen extends StatefulWidget {
-  // ignore: annotate_overrides, overridden_fields
   Key key = commonChatScreenStateKey;
-  // ignore: prefer_typing_uninitialized_variables
-  final topicName;
-  // ignore: prefer_typing_uninitialized_variables
-  final id;
-  // ignore: prefer_typing_uninitialized_variables
-  final server;
+  String topicName;
+  int? id;
+  MessageProvider messageProvider;
+  String server;
   CommonChatScreen(
-      {super.key, required this.topicName, this.id, required this.server});
+      {super.key,
+      required this.topicName,
+      this.id,
+      required this.messageProvider,
+      required this.server});
 
   @override
   State<CommonChatScreen> createState() => _CommonChatScreenState();
 }
 
 class _CommonChatScreenState extends State<CommonChatScreen> {
-  late String server;
-  late MessageProvider messageProvider;
-  late Map<dynamic, dynamic> token;
-  late WebSocketChannel channel;
   late MessageData messageData;
 
   @override
   void initState() {
     super.initState();
-    token = myHomePageStateKey.currentState!.token;
-    server = widget.server;
-    messageData = MessageData([], 0, '');
-    socketConnect();
-  }
-
-  socketConnect() {
-    messageProvider = MessageProvider(
-        'wss://$server/ws/${widget.topicName}?token=${token["access_token"]}');
+    messageData = MessageData([], 0, '[]');
   }
 
   @override
@@ -76,7 +66,6 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
 
   @override
   void dispose() {
-    channel.sink.close();
     super.dispose();
   }
 
@@ -95,8 +84,17 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
     var screenHeight = MediaQuery.of(context).size.height - 56 - paddingTop;
 
     return MaterialApp(
-      home: BlocProvider(
-        create: (context) => MenuBloc(),
+      home: MultiBlocProvider(
+        providers: [
+          BlocProvider<MenuBloc>(
+            create: (context) => MenuBloc(),
+          ),
+          BlocProvider<TokenBloc>(
+            create: (context) => TokenBloc(
+              tokenRepository: context.read<TokenRepository>(),
+            ),
+          )
+        ],
         child: Consumer<ThemeProvider>(
           builder: (context, themeProvider, child) {
             return Scaffold(
@@ -119,19 +117,19 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
                             height: 140,
                             child: ChatMembers(
                               topicName: widget.topicName,
-                              server: server,
+                              server: widget.server,
                             )),
                         SizedBox(
                           height: (screenHeight - 248) * 1,
                           child: BlockMessages(
-                            messageProvider: messageProvider,
+                            messageProvider: widget.messageProvider,
                             messageData: messageData,
                           ),
                         ),
                         TextAndSend(
                           topicName: widget.topicName,
-                          server: server,
-                          messageProvider: messageProvider,
+                          server: widget.server,
+                          messageProvider: widget.messageProvider,
                         ),
                       ]),
                 ),
@@ -380,14 +378,12 @@ class _ChatMembersState extends State<ChatMembers> {
 
 class BlockMessages extends StatelessWidget {
   final MessageProvider messageProvider;
-  MessageData messageData;
-  BlockMessages({
+  final MessageData messageData;
+  const BlockMessages({
     Key? key,
     required this.messageProvider,
     required this.messageData,
   }) : super(key: key);
-
-  late List<Messages> messages;
 
   @override
   Widget build(BuildContext context) {
@@ -413,76 +409,90 @@ class BlockMessages extends StatelessWidget {
                 )
               ],
             ),
-            child: StreamBuilder(
-              stream: messageProvider.messagesStream,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  String responseBody = snapshot.data;
-                  if (jsonDecode(responseBody) != []) {
-                    if (jsonDecode(responseBody).runtimeType == List<dynamic>) {
-                      List<dynamic> jsonList = jsonDecode(responseBody);
-                      messageData.messages =
-                          Messages.fromJsonList(jsonList).toList();
-                      messageData.previousMemberID = messageData.messages != []
-                          ? messageData.messages.last.ownerId.toInt()
-                          : 0;
-                    } else if (messageData.responseBody != responseBody) {
-                      messageData.responseBody = responseBody;
-                      dynamic jsonMessage = jsonDecode(responseBody);
-                      Messages message = Messages.fromJsonMessage(
-                          jsonMessage, messageData.previousMemberID);
-                      messageData.previousMemberID = message.ownerId.toInt();
-                      messageData.messages.add(message);
-                    } else {}
-                    messages = messageData.messages.reversed.toList();
-                    return ListView.builder(
-                      shrinkWrap: true,
-                      reverse: true,
-                      itemCount: messages.length,
-                      itemBuilder: (context, index) {
-                        Messages message = messages[index];
-                        return message;
-                      },
-                    );
-                  } else {
-                    return Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.max,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Image(
-                            image: AssetImage(
-                                'assets/images/clear_block_messages.png'),
-                            fit: BoxFit.cover,
-                          ),
-                          const SizedBox(
-                            height: 16,
-                          ),
-                          Container(
-                            height: 50,
-                            child: Text(
-                              'Oops.. there are no messages here yet \nWrite first!',
-                              textAlign: TextAlign.center,
-                              textScaleFactor: 1,
-                              style: TextStyle(
-                                color: themeProvider.currentTheme.primaryColor
-                                    .withOpacity(0.5),
-                                fontSize: 16,
-                                fontFamily: 'Manrope',
-                                fontWeight: FontWeight.w500,
-                                height: 1.16,
-                              ),
+            child: BlocConsumer<TokenBloc, TokenState>(
+              listener: (context, state) {},
+              builder: (context, state) {
+                if (state is TokenLoadingState) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (state is TokenLoadedState) {
+                  return StreamBuilder(
+                    stream: messageProvider.messagesStream,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        String responseBody = snapshot.data;
+                        if (responseBody != '[]') {
+                          if (jsonDecode(responseBody).runtimeType ==
+                              List<dynamic>) {
+                            List<dynamic> jsonList = jsonDecode(responseBody);
+                            messageData.messages =
+                                Messages.fromJsonList(jsonList).toList();
+                            messageData.previousMemberID =
+                                messageData.messages != []
+                                    ? messageData.messages.last.ownerId.toInt()
+                                    : 0;
+                          } else {
+                            //if (messageData.responseBody != responseBody) {
+                            messageData.responseBody = responseBody;
+                            dynamic jsonMessage = jsonDecode(responseBody);
+                            Messages message = Messages.fromJsonMessage(
+                                jsonMessage, messageData.previousMemberID);
+                            messageData.previousMemberID =
+                                message.ownerId.toInt();
+                            messageData.messages.add(message);
+                          } //else {}
+                          return ListView.builder(
+                            reverse: true,
+                            itemCount:
+                                messageData.messages.reversed.toList().length,
+                            itemBuilder: (context, index) {
+                              return messageData.messages.reversed
+                                  .toList()[index];
+                            },
+                          );
+                        } else {
+                          return Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.max,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                const Image(
+                                  image: AssetImage(
+                                      'assets/images/clear_block_messages.png'),
+                                  fit: BoxFit.cover,
+                                ),
+                                const SizedBox(
+                                  height: 16,
+                                ),
+                                SizedBox(
+                                  height: 50,
+                                  child: Text(
+                                    'Oops.. there are no messages here yet \nWrite first!',
+                                    textAlign: TextAlign.center,
+                                    textScaleFactor: 1,
+                                    style: TextStyle(
+                                      color: themeProvider
+                                          .currentTheme.primaryColor
+                                          .withOpacity(0.5),
+                                      fontSize: 16,
+                                      fontFamily: 'Manrope',
+                                      fontWeight: FontWeight.w500,
+                                      height: 1.16,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
+                          );
+                        }
+                      } else {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                    },
+                  );
                 } else {
-                  return const Center(
-                      child:
-                          CircularProgressIndicator()); // Якщо дані ще не завантажені, відображаємо індикатор завантаження
+                  return Container();
                 }
               },
             ),
@@ -494,11 +504,10 @@ class BlockMessages extends StatelessWidget {
 }
 
 class TextAndSend extends StatefulWidget {
-  // ignore: prefer_typing_uninitialized_variables
-  final topicName;
-  String server;
+  final String topicName;
+  final String server;
   final MessageProvider messageProvider;
-  TextAndSend(
+  const TextAndSend(
       {super.key,
       required this.topicName,
       required this.server,
@@ -516,12 +525,10 @@ class _TextAndSendState extends State<TextAndSend> {
   late Timer _timer;
   final _textFieldFocusNode = FocusNode();
   bool isWriting = false;
-  late MessageProvider messageProvider;
 
   @override
   void initState() {
     super.initState();
-    messageProvider = widget.messageProvider;
     _onStart();
     _startTimer();
   }
@@ -580,14 +587,13 @@ class _TextAndSendState extends State<TextAndSend> {
     });
   }
 
-  _sendMessage(String message) {
-    messageProvider.sendMessage(json.encode({
+  void _sendMessage(String message) {
+    widget.messageProvider.sendMessage(json.encode({
       'message': message,
       'is_privat': false,
       'receiver': 1,
       'rooms': widget.topicName,
     }));
-    messageController.clear();
   }
 
   void _onTapOutside(BuildContext context) {
@@ -662,13 +668,9 @@ class _TextAndSendState extends State<TextAndSend> {
                             return LoginDialog();
                           },
                         );
-                        commonChatScreenStateKey.currentState?.channel.sink
-                            .close();
-                        await _onStart();
-                        myHomePageStateKey.currentState?.token = token;
-                        commonChatScreenStateKey.currentState?.token = token;
-                        commonChatScreenStateKey.currentState?.socketConnect();
-                        commonChatScreenStateKey.currentState?.updateScreen();
+                        //await _onStart();
+                        //myHomePageStateKey.currentState?.token = token;
+                        //commonChatScreenStateKey.currentState?.updateScreen();
                       } else {
                         FocusScope.of(context)
                             .requestFocus(_textFieldFocusNode);

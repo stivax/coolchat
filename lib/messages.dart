@@ -41,17 +41,11 @@ class Messages extends StatelessWidget {
 
   static List<Messages> fromJsonList(List<dynamic> jsonList) {
     int previousMemberID = 0;
+    final timeZone = DateTime.now().timeZoneOffset;
 
     return jsonList.map((json) {
       bool isSameMember = json['message']['owner_id'] == previousMemberID;
       previousMemberID = json['message']['owner_id'];
-
-      // Отримати поточний часовий пояс пристрою
-      final timeZone = DateTime.now().timeZoneOffset;
-
-      // Додати цю різницю до created_at
-      DateTime createdAt = DateTime.parse(json['message']['created_at']);
-      createdAt = createdAt.add(timeZone);
 
       return Messages(
         message: json['message']['message'],
@@ -59,7 +53,7 @@ class Messages extends StatelessWidget {
         receiverId: json['message']['receiver_id'],
         rooms: json['message']['rooms'],
         id: json['message']['id'],
-        createdAt: createdAt,
+        createdAt: DateTime.parse(json['message']['created_at']).add(timeZone),
         ownerId: json['message']['owner_id'],
         owner: User.fromJson(json['message']['owner']),
         receiver: User.fromJson(json['message']['receiver']),

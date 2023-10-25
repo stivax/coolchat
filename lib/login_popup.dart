@@ -1,9 +1,13 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:coolchat/bloc/token_blok.dart';
+import 'package:coolchat/bloc/token_event.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 
 import 'main.dart';
+import 'servises/token_repository.dart';
 import 'theme_provider.dart';
 import 'account.dart';
 import 'register_popup.dart';
@@ -52,8 +56,7 @@ class _LoginDialogState extends State<LoginDialog> {
       if (acc.userName.isNotEmpty &&
           token["access_token"].toString().isNotEmpty) {
         await writeAccount(acc);
-        //Navigator.pop(context);
-        final answer = await showPopupWelcome(acc, context);
+        await showPopupWelcome(acc, context);
         Navigator.pop(context);
         if (widget.parametr == 'add') {
           await showDialog(
@@ -80,149 +83,84 @@ class _LoginDialogState extends State<LoginDialog> {
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
-        return AlertDialog(
-          scrollable: true,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-          backgroundColor: themeProvider.currentTheme.primaryColorDark,
-          content: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Center(
-                  child: Text(
-                    'Login \nin TeamChat',
-                    textAlign: TextAlign.center,
+    final TokenBloc tokenBloc = context.read<TokenBloc>();
+    return BlocProvider<TokenBloc>(
+      create: (context) => TokenBloc(
+        tokenRepository: context.read<TokenRepository>(),
+      ),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return AlertDialog(
+            scrollable: true,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20.0),
+            ),
+            backgroundColor: themeProvider.currentTheme.primaryColorDark,
+            content: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Center(
+                    child: Text(
+                      'Login \nin TeamChat',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: themeProvider.currentTheme.primaryColor,
+                        fontSize: 20,
+                        fontFamily: 'Manrope',
+                        fontWeight: FontWeight.w500,
+                        height: 1.24,
+                      ),
+                      textScaleFactor: 1,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 15, bottom: 5),
+                    child: Text(
+                      'Write your e-mail',
+                      style: TextStyle(
+                        color: themeProvider.currentTheme.primaryColor
+                            .withOpacity(0.9),
+                        fontSize: 16,
+                        fontFamily: 'Manrope',
+                        fontWeight: FontWeight.w400,
+                      ),
+                      textScaleFactor: 1,
+                    ),
+                  ),
+                  // email form
+                  TextFormField(
+                    keyboardType: TextInputType.emailAddress,
+                    validator: _emailValidate,
+                    autofocus: true,
+                    focusNode: _emailFocus,
+                    controller: _emailController,
+                    onTapOutside: (_) {
+                      FocusScope.of(context).unfocus();
+                    },
+                    onFieldSubmitted: (_) {
+                      _fieldFocusChange(context, _emailFocus, _passFocus);
+                    },
                     style: TextStyle(
                       color: themeProvider.currentTheme.primaryColor,
-                      fontSize: 20,
-                      fontFamily: 'Manrope',
-                      fontWeight: FontWeight.w500,
-                      height: 1.24,
-                    ),
-                    textScaleFactor: 1,
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 15, bottom: 5),
-                  child: Text(
-                    'Write your e-mail',
-                    style: TextStyle(
-                      color: themeProvider.currentTheme.primaryColor
-                          .withOpacity(0.9),
                       fontSize: 16,
                       fontFamily: 'Manrope',
                       fontWeight: FontWeight.w400,
                     ),
-                    textScaleFactor: 1,
-                  ),
-                ),
-                // email form
-                TextFormField(
-                  keyboardType: TextInputType.emailAddress,
-                  validator: _emailValidate,
-                  autofocus: true,
-                  focusNode: _emailFocus,
-                  controller: _emailController,
-                  onTapOutside: (_) {
-                    FocusScope.of(context).unfocus();
-                  },
-                  onFieldSubmitted: (_) {
-                    _fieldFocusChange(context, _emailFocus, _passFocus);
-                  },
-                  style: TextStyle(
-                    color: themeProvider.currentTheme.primaryColor,
-                    fontSize: 16,
-                    fontFamily: 'Manrope',
-                    fontWeight: FontWeight.w400,
-                  ),
-                  decoration: InputDecoration(
-                    helperText: 'E-mail format xxxxx@xxx.xx',
-                    helperStyle: TextStyle(
-                      color: themeProvider.currentTheme.primaryColor
-                          .withOpacity(0.5),
-                    ),
-                    suffixIcon: Icon(Icons.person),
-                    counterStyle: TextStyle(
-                        color: themeProvider.currentTheme.primaryColor
-                            .withOpacity(0.5)),
-                    border: InputBorder.none,
-                    hintText: 'E-mail *',
-                    hintStyle: TextStyle(
-                        color: themeProvider.currentTheme.primaryColor
-                            .withOpacity(0.6)),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius:
-                          const BorderRadius.all(Radius.circular(10.0)),
-                      borderSide: BorderSide(
-                          width: 0.50,
-                          color: themeProvider.currentTheme.shadowColor),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius:
-                          const BorderRadius.all(Radius.circular(10.0)),
-                      borderSide: BorderSide(
-                          width: 0.50,
-                          color: themeProvider.currentTheme.shadowColor),
-                    ),
-                    errorBorder: const OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                      borderSide: BorderSide(width: 0.50, color: Colors.red),
-                    ),
-                    focusedErrorBorder: const OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                      borderSide: BorderSide(width: 0.50, color: Colors.red),
-                    ),
-                  ),
-                ),
-                // password form
-                Padding(
-                  padding: const EdgeInsets.only(top: 15, bottom: 5),
-                  child: Text(
-                    'Write your password',
-                    style: TextStyle(
-                      color: themeProvider.currentTheme.primaryColor
-                          .withOpacity(0.9),
-                      fontSize: 16,
-                      fontFamily: 'Manrope',
-                      fontWeight: FontWeight.w400,
-                    ),
-                    textScaleFactor: 1,
-                  ),
-                ),
-                TextFormField(
-                  obscureText: _hidePass,
-                  maxLength: 8,
-                  focusNode: _passFocus,
-                  controller: _passwordController,
-                  onTapOutside: (_) {
-                    FocusScope.of(context).unfocus();
-                  },
-                  onFieldSubmitted: (_) {
-                    FocusScope.of(context).unfocus();
-                  },
-                  style: TextStyle(
-                    color: themeProvider.currentTheme.primaryColor,
-                    fontSize: 16,
-                    fontFamily: 'Manrope',
-                    fontWeight: FontWeight.w400,
-                  ),
-                  decoration: InputDecoration(
-                      helperText: 'Remember your password',
+                    decoration: InputDecoration(
+                      helperText: 'E-mail format xxxxx@xxx.xx',
                       helperStyle: TextStyle(
                         color: themeProvider.currentTheme.primaryColor
                             .withOpacity(0.5),
                       ),
+                      suffixIcon: Icon(Icons.person),
                       counterStyle: TextStyle(
                           color: themeProvider.currentTheme.primaryColor
                               .withOpacity(0.5)),
                       border: InputBorder.none,
-                      hintText: 'Password *',
+                      hintText: 'E-mail *',
                       hintStyle: TextStyle(
                           color: themeProvider.currentTheme.primaryColor
                               .withOpacity(0.6)),
@@ -248,110 +186,185 @@ class _LoginDialogState extends State<LoginDialog> {
                         borderRadius: BorderRadius.all(Radius.circular(10.0)),
                         borderSide: BorderSide(width: 0.50, color: Colors.red),
                       ),
-                      suffixIcon: IconButton(
-                        icon: Icon(_hidePass
-                            ? Icons.visibility
-                            : Icons.visibility_off),
-                        onPressed: () {
-                          setState(() {
-                            _hidePass = !_hidePass;
-                          });
-                        },
-                      )),
-                ),
-              ],
+                    ),
+                  ),
+                  // password form
+                  Padding(
+                    padding: const EdgeInsets.only(top: 15, bottom: 5),
+                    child: Text(
+                      'Write your password',
+                      style: TextStyle(
+                        color: themeProvider.currentTheme.primaryColor
+                            .withOpacity(0.9),
+                        fontSize: 16,
+                        fontFamily: 'Manrope',
+                        fontWeight: FontWeight.w400,
+                      ),
+                      textScaleFactor: 1,
+                    ),
+                  ),
+                  TextFormField(
+                    obscureText: _hidePass,
+                    maxLength: 8,
+                    focusNode: _passFocus,
+                    controller: _passwordController,
+                    onTapOutside: (_) {
+                      FocusScope.of(context).unfocus();
+                    },
+                    onFieldSubmitted: (_) {
+                      FocusScope.of(context).unfocus();
+                    },
+                    style: TextStyle(
+                      color: themeProvider.currentTheme.primaryColor,
+                      fontSize: 16,
+                      fontFamily: 'Manrope',
+                      fontWeight: FontWeight.w400,
+                    ),
+                    decoration: InputDecoration(
+                        helperText: 'Remember your password',
+                        helperStyle: TextStyle(
+                          color: themeProvider.currentTheme.primaryColor
+                              .withOpacity(0.5),
+                        ),
+                        counterStyle: TextStyle(
+                            color: themeProvider.currentTheme.primaryColor
+                                .withOpacity(0.5)),
+                        border: InputBorder.none,
+                        hintText: 'Password *',
+                        hintStyle: TextStyle(
+                            color: themeProvider.currentTheme.primaryColor
+                                .withOpacity(0.6)),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(10.0)),
+                          borderSide: BorderSide(
+                              width: 0.50,
+                              color: themeProvider.currentTheme.shadowColor),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(10.0)),
+                          borderSide: BorderSide(
+                              width: 0.50,
+                              color: themeProvider.currentTheme.shadowColor),
+                        ),
+                        errorBorder: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                          borderSide:
+                              BorderSide(width: 0.50, color: Colors.red),
+                        ),
+                        focusedErrorBorder: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                          borderSide:
+                              BorderSide(width: 0.50, color: Colors.red),
+                        ),
+                        suffixIcon: IconButton(
+                          icon: Icon(_hidePass
+                              ? Icons.visibility
+                              : Icons.visibility_off),
+                          onPressed: () {
+                            setState(() {
+                              _hidePass = !_hidePass;
+                            });
+                          },
+                        )),
+                  ),
+                ],
+              ),
             ),
-          ),
-          actions: [
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 8, top: 8),
-                width: screenSize.width * 0.5,
-                height: screenSize.height * 0.17,
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 30, vertical: 10),
-                          backgroundColor:
-                              themeProvider.currentTheme.shadowColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+            actions: [
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 8, top: 8),
+                  width: screenSize.width * 0.5,
+                  height: screenSize.height * 0.17,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 30, vertical: 10),
+                            backgroundColor:
+                                themeProvider.currentTheme.shadowColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
-                        ),
-                        onPressed: () {
-                          handlePopupOpen();
-                          _saveDataAndClosePopup();
-                        },
-                        child: Text(
-                          'Log in',
-                          textScaleFactor: 1,
-                          style: TextStyle(
-                            color: Color(0xFFF5FBFF),
-                            fontSize: screenSize.height * 0.03,
-                            fontFamily: 'Manrope',
-                            fontWeight: FontWeight.w500,
-                            height: 1.24,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 8,
-                      ),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 30, vertical: 10),
-                          backgroundColor:
-                              themeProvider.currentTheme.primaryColorDark,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            side: BorderSide(
-                              color: themeProvider.currentTheme.shadowColor,
-                              width: 1,
+                          onPressed: () {
+                            handlePopupOpen();
+                            tokenBloc.add(TokenLoadEvent(
+                                email: _emailController.text,
+                                password: _passwordController.text));
+                            _saveDataAndClosePopup();
+                          },
+                          child: Text(
+                            'Log in',
+                            textScaleFactor: 1,
+                            style: TextStyle(
+                              color: Color(0xFFF5FBFF),
+                              fontSize: screenSize.height * 0.03,
+                              fontFamily: 'Manrope',
+                              fontWeight: FontWeight.w500,
+                              height: 1.24,
                             ),
                           ),
                         ),
-                        onPressed: () async {
-                          await showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return RegisterDialog(
-                                addRoom: widget.parametr,
-                              );
-                            },
-                          );
-                          Navigator.pop(context);
-                        },
-                        child: Text(
-                          'Register',
-                          textScaleFactor: 1,
-                          style: TextStyle(
-                            color: themeProvider.currentTheme.primaryColor,
-                            fontSize: screenSize.height * 0.03,
-                            fontFamily: 'Manrope',
-                            fontWeight: FontWeight.w500,
-                            height: 1.24,
+                        const SizedBox(
+                          height: 8,
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 30, vertical: 10),
+                            backgroundColor:
+                                themeProvider.currentTheme.primaryColorDark,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              side: BorderSide(
+                                color: themeProvider.currentTheme.shadowColor,
+                                width: 1,
+                              ),
+                            ),
+                          ),
+                          onPressed: () async {
+                            await showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return RegisterDialog(
+                                  addRoom: widget.parametr,
+                                );
+                              },
+                            );
+                            Navigator.pop(context);
+                          },
+                          child: Text(
+                            'Register',
+                            textScaleFactor: 1,
+                            style: TextStyle(
+                              color: themeProvider.currentTheme.primaryColor,
+                              fontSize: screenSize.height * 0.03,
+                              fontFamily: 'Manrope',
+                              fontWeight: FontWeight.w500,
+                              height: 1.24,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
-        );
-      },
+            ],
+          );
+        },
+      ),
     );
   }
 
-  Future<String> showPopupWelcome(Account account, BuildContext context) async {
-    String answer = '';
+  showPopupWelcome(Account account, BuildContext context) async {
     await showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -469,7 +482,6 @@ class _LoginDialogState extends State<LoginDialog> {
         );
       },
     );
-    return answer;
   }
 
   void _showPopupErrorInput(String text, BuildContext context) {

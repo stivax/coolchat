@@ -5,7 +5,9 @@ import 'package:provider/provider.dart';
 
 import 'common_chat.dart';
 import 'image.dart';
-import 'server.dart';
+import 'main.dart';
+import 'message_provider.dart';
+import 'server_provider.dart';
 import 'theme_provider.dart';
 import 'account.dart';
 import 'rooms.dart';
@@ -56,8 +58,17 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
     });
   }
 
+  MessageProvider socketConnect(BuildContext context) {
+    final server = ServerProvider.of(context).server;
+    Map<dynamic, dynamic> token = myHomePageStateKey.currentState!.token;
+    MessageProvider messageProvider = MessageProvider(
+        'wss://$server/ws/${_nameRoomController.text}?token=${token["access_token"]}');
+    return messageProvider;
+  }
+
   Future<void> _saveDataAndClosePopup() async {
     final server = ServerProvider.of(context).server;
+    MessageProvider messageProvider = socketConnect(context);
     if (_formKey.currentState!.validate() && _selectedItems != '') {
       final acc = await readAccountFuture();
       // ignore: use_build_context_synchronously
@@ -73,6 +84,7 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
             builder: (context) => CommonChatScreen(
               topicName: _nameRoomController.text,
               server: server,
+              messageProvider: messageProvider,
             ),
           ),
         );

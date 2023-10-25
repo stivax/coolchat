@@ -6,18 +6,19 @@ class MessageProvider {
   late WebSocketChannel channel;
 
   MessageProvider(this.serverUrl) {
-    channel = IOWebSocketChannel.connect(serverUrl);
+    channel = IOWebSocketChannel.connect(
+      serverUrl,
+    );
+    print(serverUrl);
   }
 
-  // Метод для відправлення повідомлення через сокет
   void sendMessage(String message) {
     channel.sink.add(message);
+    print(message);
   }
 
-  // Метод для слухання вхідних повідомлень з сокет-сервера
   Stream<dynamic> get messagesStream => channel.stream;
 
-  // Не забудьте закрити з'єднання при завершенні використання
   void dispose() {
     channel.sink.close();
   }

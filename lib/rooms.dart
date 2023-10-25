@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:coolchat/add_room_popup.dart';
-import 'package:coolchat/server.dart';
+import 'package:coolchat/server_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -68,16 +68,20 @@ class Room extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final server = ServerProvider.of(context).server;
     return GestureDetector(
       onTap: () {
+        MessageProvider messageProvider = socketConnect(context);
+        final server = ServerProvider.of(context).server;
         id == 999
             ? addRoomDialog(context)
             : Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      CommonChatScreen(topicName: name, id: id, server: server),
+                  builder: (context) => CommonChatScreen(
+                      topicName: name,
+                      id: id,
+                      messageProvider: messageProvider,
+                      server: server),
                 ),
               );
       },
