@@ -106,7 +106,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> fetchData(String server) async {
-    print('fetch main');
     try {
       http.Response response = await _getData(server);
       if (response.statusCode == 200) {

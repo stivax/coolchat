@@ -30,7 +30,6 @@ void parseJson(String jsonString) {
     var detailList = jsonData['detail'];
     for (var item in detailList) {
       ErrorAnswer errorAnswer = ErrorAnswer.fromJson(item);
-      // Ви можете використовувати об'єкт errorAnswer за потреби у вашому додатку.
     }
   }
 }

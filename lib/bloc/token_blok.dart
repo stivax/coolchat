@@ -7,11 +7,9 @@ import 'token_state.dart';
 
 class TokenBloc extends Bloc<TokenEvent, TokenState> {
   final TokenRepository tokenRepository;
-  TokenBloc({required this.tokenRepository}) : super(TokenLoadingState()) {
+  TokenBloc({required this.tokenRepository}) : super(TokenEmptyState()) {
     on<TokenLoadEvent>(
       (event, emit) async {
-        emit(TokenLoadingState());
-
         try {
           final Token token =
               await tokenRepository.getToken(event.email, event.password);

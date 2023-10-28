@@ -9,12 +9,10 @@ class MessageProvider {
     channel = IOWebSocketChannel.connect(
       serverUrl,
     );
-    print(serverUrl);
   }
 
   void sendMessage(String message) {
     channel.sink.add(message);
-    print(message);
   }
 
   Stream<dynamic> get messagesStream => channel.stream;

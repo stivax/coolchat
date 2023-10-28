@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:convert';
 
 import 'package:coolchat/add_room_popup.dart';
@@ -12,6 +14,7 @@ import 'image.dart';
 import 'login_popup.dart';
 import 'main.dart';
 import 'message_provider.dart';
+import 'server/server.dart';
 import 'theme_provider.dart';
 import 'account.dart';
 
@@ -69,19 +72,21 @@ class Room extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        MessageProvider messageProvider = socketConnect(context);
-        final server = ServerProvider.of(context).server;
+      onTap: () async {
+        //MessageProvider messageProvider = socketConnect(context);
+        const server = Server.server;
+        final account = await readAccountFuture();
         id == 999
             ? addRoomDialog(context)
             : Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => CommonChatScreen(
-                      topicName: name,
-                      id: id,
-                      messageProvider: messageProvider,
-                      server: server),
+                  builder: (context) => ChatScreen(
+                    topicName: name,
+                    id: id,
+                    server: server,
+                    account: account,
+                  ),
                 ),
               );
       },

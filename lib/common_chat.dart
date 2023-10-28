@@ -11,6 +11,7 @@ import 'package:marquee/marquee.dart';
 import 'package:provider/provider.dart';
 
 import 'account.dart';
+import 'bloc/token_event.dart';
 import 'bloc/token_state.dart';
 import 'login_popup.dart';
 import 'main.dart';
@@ -32,18 +33,73 @@ class MessageData {
   MessageData(this.messages, this.previousMemberID, this.responseBody);
 }
 
-class CommonChatScreen extends StatefulWidget {
-  Key key = commonChatScreenStateKey;
+class ChatScreen extends StatelessWidget {
   String topicName;
   int? id;
-  MessageProvider messageProvider;
   String server;
-  CommonChatScreen(
+  Account account;
+  MessageProvider messageProvider;
+  ChatScreen(
       {super.key,
       required this.topicName,
       this.id,
+      required this.server,
+      required this.account})
+      : messageProvider = MessageProvider('wss://$server/ws/$topicName?token=');
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<MenuBloc>(
+          create: (context) => MenuBloc(),
+        ),
+        BlocProvider<TokenBloc>(
+          create: (context) => TokenBloc(
+            tokenRepository: context.read<TokenRepository>(),
+          ),
+        )
+      ],
+      child: BlocBuilder<TokenBloc, TokenState>(
+        //buildWhen: (previousState, currentState) {
+        //  return previousState is! TokenLoadedState;
+        // },
+        builder: (context, state) {
+          if (state is TokenEmptyState) {
+            return CommonChatScreen(
+                topicName: topicName,
+                messageProvider: messageProvider,
+                server: server,
+                account: account);
+          }
+          if (state is TokenLoadedState) {
+            messageProvider = MessageProvider(
+                'wss://$server/ws/$topicName?token=${state.token.token["access_token"]}');
+            return CommonChatScreen(
+                topicName: topicName,
+                messageProvider: messageProvider,
+                server: server,
+                account: account);
+          } else {
+            return const Center(child: LinearProgressIndicator());
+          }
+        },
+      ),
+    );
+  }
+}
+
+class CommonChatScreen extends StatefulWidget {
+  String topicName;
+  MessageProvider messageProvider;
+  String server;
+  Account account;
+  CommonChatScreen(
+      {super.key,
+      required this.topicName,
       required this.messageProvider,
-      required this.server});
+      required this.server,
+      required this.account});
 
   @override
   State<CommonChatScreen> createState() => _CommonChatScreenState();
@@ -56,6 +112,9 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
   void initState() {
     super.initState();
     messageData = MessageData([], 0, '[]');
+    final TokenBloc tokenBloc = context.read<TokenBloc>();
+    tokenBloc.add(TokenLoadEvent(
+        email: widget.account.email, password: widget.account.password));
   }
 
   @override
@@ -84,59 +143,47 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
     var screenHeight = MediaQuery.of(context).size.height - 56 - paddingTop;
 
     return MaterialApp(
-      home: MultiBlocProvider(
-        providers: [
-          BlocProvider<MenuBloc>(
-            create: (context) => MenuBloc(),
-          ),
-          BlocProvider<TokenBloc>(
-            create: (context) => TokenBloc(
-              tokenRepository: context.read<TokenRepository>(),
-            ),
-          )
-        ],
-        child: Consumer<ThemeProvider>(
-          builder: (context, themeProvider, child) {
-            return Scaffold(
-              appBar: MyAppBar(),
-              body: Container(
-                height: screenHeight,
-                padding: const EdgeInsets.only(
-                    left: 16, right: 16, top: 8, bottom: 16),
-                clipBehavior: Clip.antiAlias,
-                decoration: BoxDecoration(
-                    color: themeProvider.currentTheme.primaryColorDark),
-                child: SingleChildScrollView(
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                            height: 27,
-                            child: TopicName(topicName: widget.topicName)),
-                        SizedBox(
-                            height: 140,
-                            child: ChatMembers(
-                              topicName: widget.topicName,
-                              server: widget.server,
-                            )),
-                        SizedBox(
-                          height: (screenHeight - 248) * 1,
-                          child: BlockMessages(
-                            messageProvider: widget.messageProvider,
-                            messageData: messageData,
-                          ),
-                        ),
-                        TextAndSend(
-                          topicName: widget.topicName,
-                          server: widget.server,
+      home: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return Scaffold(
+            appBar: MyAppBar(),
+            body: Container(
+              height: screenHeight,
+              padding: const EdgeInsets.only(
+                  left: 16, right: 16, top: 8, bottom: 16),
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                  color: themeProvider.currentTheme.primaryColorDark),
+              child: SingleChildScrollView(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                          height: 27,
+                          child: TopicName(topicName: widget.topicName)),
+                      SizedBox(
+                          height: 140,
+                          child: ChatMembers(
+                            topicName: widget.topicName,
+                            server: widget.server,
+                          )),
+                      SizedBox(
+                        height: (screenHeight - 248) * 1,
+                        child: BlockMessages(
                           messageProvider: widget.messageProvider,
+                          messageData: messageData,
                         ),
-                      ]),
-                ),
+                      ),
+                      TextAndSend(
+                        topicName: widget.topicName,
+                        server: widget.server,
+                        messageProvider: widget.messageProvider,
+                      ),
+                    ]),
               ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -409,90 +456,70 @@ class BlockMessages extends StatelessWidget {
                 )
               ],
             ),
-            child: BlocConsumer<TokenBloc, TokenState>(
-              listener: (context, state) {},
-              builder: (context, state) {
-                if (state is TokenLoadingState) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (state is TokenLoadedState) {
-                  return StreamBuilder(
-                    stream: messageProvider.messagesStream,
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        String responseBody = snapshot.data;
-                        if (responseBody != '[]') {
-                          if (jsonDecode(responseBody).runtimeType ==
-                              List<dynamic>) {
-                            List<dynamic> jsonList = jsonDecode(responseBody);
-                            messageData.messages =
-                                Messages.fromJsonList(jsonList).toList();
-                            messageData.previousMemberID =
-                                messageData.messages != []
-                                    ? messageData.messages.last.ownerId.toInt()
-                                    : 0;
-                          } else {
-                            //if (messageData.responseBody != responseBody) {
-                            messageData.responseBody = responseBody;
-                            dynamic jsonMessage = jsonDecode(responseBody);
-                            Messages message = Messages.fromJsonMessage(
-                                jsonMessage, messageData.previousMemberID);
-                            messageData.previousMemberID =
-                                message.ownerId.toInt();
-                            messageData.messages.add(message);
-                          } //else {}
-                          return ListView.builder(
-                            reverse: true,
-                            itemCount:
-                                messageData.messages.reversed.toList().length,
-                            itemBuilder: (context, index) {
-                              return messageData.messages.reversed
-                                  .toList()[index];
-                            },
-                          );
-                        } else {
-                          return Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.max,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                const Image(
-                                  image: AssetImage(
-                                      'assets/images/clear_block_messages.png'),
-                                  fit: BoxFit.cover,
-                                ),
-                                const SizedBox(
-                                  height: 16,
-                                ),
-                                SizedBox(
-                                  height: 50,
-                                  child: Text(
-                                    'Oops.. there are no messages here yet \nWrite first!',
-                                    textAlign: TextAlign.center,
-                                    textScaleFactor: 1,
-                                    style: TextStyle(
-                                      color: themeProvider
-                                          .currentTheme.primaryColor
-                                          .withOpacity(0.5),
-                                      fontSize: 16,
-                                      fontFamily: 'Manrope',
-                                      fontWeight: FontWeight.w500,
-                                      height: 1.16,
-                                    ),
-                                  ),
-                                ),
-                              ],
+            child: StreamBuilder(
+              stream: messageProvider.messagesStream,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  String responseBody = snapshot.data;
+                  if (responseBody != '[]') {
+                    if (jsonDecode(responseBody).runtimeType == List<dynamic>) {
+                      List<dynamic> jsonList = jsonDecode(responseBody);
+                      messageData.messages = Messages.fromJsonList(jsonList);
+                      messageData.previousMemberID = messageData.messages != []
+                          ? messageData.messages.last.ownerId.toInt()
+                          : 0;
+                    } else if (messageData.responseBody != responseBody) {
+                      messageData.responseBody = responseBody;
+                      dynamic jsonMessage = jsonDecode(responseBody);
+                      Messages message = Messages.fromJsonMessage(
+                          jsonMessage, messageData.previousMemberID);
+                      messageData.previousMemberID = message.ownerId.toInt();
+                      messageData.messages.add(message);
+                    } //else {}
+                    return ListView.builder(
+                      reverse: true,
+                      itemCount: messageData.messages.reversed.toList().length,
+                      itemBuilder: (context, index) {
+                        return messageData.messages.reversed.toList()[index];
+                      },
+                    );
+                  } else {
+                    return Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.max,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Image(
+                            image: AssetImage(
+                                'assets/images/clear_block_messages.png'),
+                            fit: BoxFit.cover,
+                          ),
+                          const SizedBox(
+                            height: 16,
+                          ),
+                          SizedBox(
+                            height: 50,
+                            child: Text(
+                              'Oops.. there are no messages here yet \nWrite first!',
+                              textAlign: TextAlign.center,
+                              textScaleFactor: 1,
+                              style: TextStyle(
+                                color: themeProvider.currentTheme.primaryColor
+                                    .withOpacity(0.5),
+                                fontSize: 16,
+                                fontFamily: 'Manrope',
+                                fontWeight: FontWeight.w500,
+                                height: 1.16,
+                              ),
                             ),
-                          );
-                        }
-                      } else {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                    },
-                  );
+                          ),
+                        ],
+                      ),
+                    );
+                  }
                 } else {
-                  return Container();
+                  return const Center(child: CircularProgressIndicator());
                 }
               },
             ),
@@ -668,9 +695,10 @@ class _TextAndSendState extends State<TextAndSend> {
                             return LoginDialog();
                           },
                         );
-                        //await _onStart();
-                        //myHomePageStateKey.currentState?.token = token;
-                        //commonChatScreenStateKey.currentState?.updateScreen();
+                        await _readAccount();
+                        final TokenBloc tokenBloc = context.read<TokenBloc>();
+                        tokenBloc.add(TokenLoadEvent(
+                            email: account.email, password: account.password));
                       } else {
                         FocusScope.of(context)
                             .requestFocus(_textFieldFocusNode);

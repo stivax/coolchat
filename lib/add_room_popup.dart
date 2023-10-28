@@ -7,6 +7,7 @@ import 'common_chat.dart';
 import 'image.dart';
 import 'main.dart';
 import 'message_provider.dart';
+import 'server/server.dart';
 import 'server_provider.dart';
 import 'theme_provider.dart';
 import 'account.dart';
@@ -67,7 +68,7 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
   }
 
   Future<void> _saveDataAndClosePopup() async {
-    final server = ServerProvider.of(context).server;
+    const server = Server.server;
     MessageProvider messageProvider = socketConnect(context);
     if (_formKey.currentState!.validate() && _selectedItems != '') {
       final acc = await readAccountFuture();
@@ -81,10 +82,10 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => CommonChatScreen(
+            builder: (context) => ChatScreen(
               topicName: _nameRoomController.text,
               server: server,
-              messageProvider: messageProvider,
+              account: acc,
             ),
           ),
         );

@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:coolchat/model/token.dart';
 import 'package:http/http.dart' as http;
 
-import '../account.dart';
 import '../server/server.dart';
 
 class TokenProvider {

@@ -11,10 +11,8 @@ import 'login_popup.dart';
 import 'theme_provider.dart';
 
 class RegisterDialog extends StatefulWidget {
-  String addRoom = '';
   RegisterDialog({
     Key? key,
-    this.addRoom = '',
   }) : super(key: key);
 
   @override
@@ -80,15 +78,6 @@ class _RegisterDialogState extends State<RegisterDialog> {
         await writeAccount(acc);
         final answer = await _showPopupWelcome(acc, context);
         Navigator.pop(context, token);
-        if (widget.addRoom == 'add') {
-          await showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return RoomAddDialog();
-            },
-          );
-          Navigator.pop(context);
-        }
       } else {
         _showPopupErrorInput(answer, context);
       }

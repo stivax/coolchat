@@ -4,7 +4,6 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import 'account.dart';
@@ -183,5 +182,5 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
 }
 
 void openUrl(String url) async {
-  await launchUrlString(url, mode: LaunchMode.externalApplication);
+  await launchUrlString(url);
 }
