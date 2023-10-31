@@ -6,6 +6,7 @@ class MessageProvider {
   late WebSocketChannel channel;
 
   MessageProvider(this.serverUrl) {
+    print('connect $serverUrl');
     channel = IOWebSocketChannel.connect(
       serverUrl,
     );
@@ -18,6 +19,7 @@ class MessageProvider {
   Stream<dynamic> get messagesStream => channel.stream;
 
   void dispose() {
+    print('dispose!!!!!!!!!!!!!!!');
     channel.sink.close();
   }
 }

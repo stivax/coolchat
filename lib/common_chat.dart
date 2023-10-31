@@ -23,8 +23,6 @@ import 'my_appbar.dart';
 import 'server_provider.dart';
 import 'theme_provider.dart';
 
-final commonChatScreenStateKey = GlobalKey<_CommonChatScreenState>();
-
 class MessageData {
   List<Messages> messages = [];
   int previousMemberID = 0;
@@ -66,6 +64,8 @@ class ChatScreen extends StatelessWidget {
         // },
         builder: (context, state) {
           if (state is TokenEmptyState) {
+            messageProvider =
+                MessageProvider('wss://$server/ws/$topicName?token=null');
             return CommonChatScreen(
                 topicName: topicName,
                 messageProvider: messageProvider,
@@ -178,6 +178,7 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
                         topicName: widget.topicName,
                         server: widget.server,
                         messageProvider: widget.messageProvider,
+                        account: widget.account,
                       ),
                     ]),
               ),
@@ -461,6 +462,7 @@ class BlockMessages extends StatelessWidget {
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   String responseBody = snapshot.data;
+                  print('response ${jsonDecode(responseBody).toString()}');
                   if (responseBody != '[]') {
                     if (jsonDecode(responseBody).runtimeType == List<dynamic>) {
                       List<dynamic> jsonList = jsonDecode(responseBody);
@@ -468,7 +470,8 @@ class BlockMessages extends StatelessWidget {
                       messageData.previousMemberID = messageData.messages != []
                           ? messageData.messages.last.ownerId.toInt()
                           : 0;
-                    } else if (messageData.responseBody != responseBody) {
+                      // } else if (messageData.responseBody != responseBody) {
+                    } else {
                       messageData.responseBody = responseBody;
                       dynamic jsonMessage = jsonDecode(responseBody);
                       Messages message = Messages.fromJsonMessage(
@@ -534,11 +537,13 @@ class TextAndSend extends StatefulWidget {
   final String topicName;
   final String server;
   final MessageProvider messageProvider;
+  final Account account;
   const TextAndSend(
       {super.key,
       required this.topicName,
       required this.server,
-      required this.messageProvider});
+      required this.messageProvider,
+      required this.account});
 
   @override
   _TextAndSendState createState() => _TextAndSendState();
@@ -546,72 +551,18 @@ class TextAndSend extends StatefulWidget {
 
 class _TextAndSendState extends State<TextAndSend> {
   final TextEditingController messageController = TextEditingController();
-  Account account =
-      Account(email: '', userName: '', password: '', avatar: '', id: 0);
   var token = {};
-  late Timer _timer;
   final _textFieldFocusNode = FocusNode();
   bool isWriting = false;
 
   @override
   void initState() {
     super.initState();
-    _onStart();
-    _startTimer();
-  }
-
-  _onStart() async {
-    await _readAccount();
-    await _makeToken(context);
-  }
-
-  void _startTimer() {
-    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      //_sendStatus();
-    });
   }
 
   @override
   void dispose() {
-    _timer.cancel();
     super.dispose();
-  }
-
-  void _sendStatus() async {
-    if (messageController.text.isNotEmpty) {
-      setState(() {
-        isWriting = true;
-      });
-    } else {
-      setState(() {
-        isWriting = false;
-      });
-    }
-    if (account.userName.isNotEmpty) {
-      final url = Uri.https(widget.server, '/user_status/${account.id}');
-      final jsonBody = {"room_name": widget.topicName, "status": !isWriting};
-      final response = await http.put(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(jsonBody),
-      );
-      if (response.statusCode == 200) {
-      } else {}
-    }
-  }
-
-  Future<void> _readAccount() async {
-    Account acc = await readAccountFuture();
-    setState(() {
-      account = acc;
-    });
-  }
-
-  Future<void> _makeToken(BuildContext context) async {
-    var tok = await loginProcess(context, account.email, account.password);
-    setState(() {
-      token = tok;
-    });
   }
 
   void _sendMessage(String message) {
@@ -687,15 +638,18 @@ class _TextAndSendState extends State<TextAndSend> {
                     ),
                     maxLines: null,
                     onTap: () async {
-                      if (account.userName == '') {
+                      //if (widget.account.userName == '') {
+                      print(widget.messageProvider.serverUrl);
+                      if (widget.messageProvider.serverUrl
+                          .toString()
+                          .endsWith('l')) {
                         FocusScope.of(context).unfocus();
-                        await showDialog(
+                        final account = await showDialog(
                           context: context,
                           builder: (BuildContext context) {
                             return LoginDialog();
                           },
                         );
-                        await _readAccount();
                         final TokenBloc tokenBloc = context.read<TokenBloc>();
                         tokenBloc.add(TokenLoadEvent(
                             email: account.email, password: account.password));
@@ -713,7 +667,10 @@ class _TextAndSendState extends State<TextAndSend> {
                 child: GestureDetector(
                   onTap: () {
                     final message = messageController.text;
-                    if (message.isNotEmpty && account.userName.isNotEmpty) {
+                    if (message.isNotEmpty &&
+                        !widget.messageProvider.serverUrl
+                            .toString()
+                            .endsWith('l')) {
                       _sendMessage(message);
                       messageController.clear();
                     }

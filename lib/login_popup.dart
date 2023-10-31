@@ -55,7 +55,7 @@ class _LoginDialogState extends State<LoginDialog> {
           token["access_token"].toString().isNotEmpty) {
         await writeAccount(acc);
         await showPopupWelcome(acc, context);
-        Navigator.pop(context);
+        Navigator.pop(context, acc);
       } else if (acc.userName.isNotEmpty &&
           token["access_token"].toString().isEmpty) {
         _showPopupErrorInput('Email or password is not valid', context);

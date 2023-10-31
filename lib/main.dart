@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
 
 import 'account.dart';
+import 'bloc/token_blok.dart';
 import 'menu.dart';
 import 'my_appbar.dart';
 import 'theme_provider.dart';
@@ -150,8 +151,17 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: BlocProvider(
-        create: (context) => MenuBloc(),
+      home: MultiBlocProvider(
+        providers: [
+          BlocProvider<MenuBloc>(
+            create: (context) => MenuBloc(),
+          ),
+          BlocProvider<TokenBloc>(
+            create: (context) => TokenBloc(
+              tokenRepository: context.read<TokenRepository>(),
+            ),
+          )
+        ],
         child: Consumer<ThemeProvider>(
           builder: (context, themeProvider, child) {
             return Scaffold(

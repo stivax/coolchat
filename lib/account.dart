@@ -1,12 +1,13 @@
 import 'dart:convert';
-import 'dart:math';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'bloc/token_blok.dart';
+import 'bloc/token_event.dart';
+import 'bloc/token_state.dart';
 import 'error_answer.dart';
 
 import 'main.dart';
@@ -281,12 +282,7 @@ void showPopupLogOut(Account acc, BuildContext context) {
                           password: '',
                           avatar: '',
                           id: 0));
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          builder: (context) => MyHomePage(),
-                        ),
-                      );
-                      myHomePageStateKey.currentState?.token = {};
+                      Navigator.pop(context);
                     },
                   ),
                 )

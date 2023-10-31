@@ -115,7 +115,7 @@ class Room extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.only(top: 0, left: 0, right: 0),
                     child: Container(
-                      padding: EdgeInsets.all(8.0),
+                      //padding: EdgeInsets.all(8.0),
                       width: double.infinity,
                       alignment: Alignment.bottomCenter,
                       decoration: ShapeDecoration(
@@ -142,28 +142,33 @@ class Room extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
+                          id == 999
+                              ? Image(
+                                  image: themeProvider.isLightMode
+                                      ? const AssetImage(
+                                          'assets/images/add_light.png')
+                                      : const AssetImage(
+                                          'assets/images/add_dark.png'),
+                                )
+                              : Container(),
                           Container(
-                            child: id == 999
-                                ? Image(
-                                    image: themeProvider.isLightMode
-                                        ? AssetImage(
-                                            'assets/images/add_light.png')
-                                        : AssetImage(
-                                            'assets/images/add_dark.png'),
-                                  )
-                                : Container(),
-                          ),
-                          Text(
-                            name,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: id == 999
-                                  ? themeProvider.currentTheme.primaryColor
-                                  : Color(0xFFF5FBFF),
-                              fontSize: 14,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w600,
-                              height: 1.30,
+                            padding: const EdgeInsets.all(8.0),
+                            width: 200,
+                            decoration: BoxDecoration(
+                                color:
+                                    const Color(0xFF0F1E28).withOpacity(0.40)),
+                            child: Text(
+                              name,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: id == 999
+                                    ? themeProvider.currentTheme.primaryColor
+                                    : const Color(0xFFF5FBFF),
+                                fontSize: 14,
+                                fontFamily: 'Manrope',
+                                fontWeight: FontWeight.w600,
+                                height: 1.30,
+                              ),
                             ),
                           ),
                         ],
