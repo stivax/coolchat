@@ -7,9 +7,8 @@ class MessageProvider {
 
   MessageProvider(this.serverUrl) {
     print('connect $serverUrl');
-    channel = IOWebSocketChannel.connect(
-      serverUrl,
-    );
+    channel = IOWebSocketChannel.connect(serverUrl,
+        pingInterval: const Duration(minutes: 1));
   }
 
   void sendMessage(String message) {
@@ -19,7 +18,6 @@ class MessageProvider {
   Stream<dynamic> get messagesStream => channel.stream;
 
   void dispose() {
-    print('dispose!!!!!!!!!!!!!!!');
     channel.sink.close();
   }
 }

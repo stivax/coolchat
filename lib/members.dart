@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import 'theme_provider.dart';
 import 'messages.dart';
 
-class Member extends StatefulWidget {
+class Member extends StatelessWidget {
   ImageProvider avatar;
   String name;
   int memberID;
@@ -16,11 +16,31 @@ class Member extends StatefulWidget {
       required this.name,
       required this.isOnline,
       required this.memberID});
-  @override
-  _MemberState createState() => _MemberState();
-}
 
-class _MemberState extends State<Member> {
+  factory Member.fromJson(Map<String, dynamic> json) {
+    return Member(
+      avatar: NetworkImage(json['avatar']),
+      name: json['user_name'],
+      memberID: json['user_id'],
+      isOnline: true,
+    );
+  }
+
+  static Set<Member> fromJsonSet(Map<String, dynamic> json) {
+    Set<Member> members = {};
+    if (json['type'] == 'active_users' && json['data'] != null) {
+      var memberList = json['data'] as List;
+      memberList.forEach((memberJson) {
+        var member = Member.fromJson(memberJson);
+        if (!members.any(
+            (existingMember) => existingMember.memberID == member.memberID)) {
+          members.add(member);
+        }
+      });
+    }
+    return members;
+  }
+
   @override
   Widget build(BuildContext context) {
     var screenWidth = MediaQuery.of(context).size.width;
@@ -72,14 +92,14 @@ class _MemberState extends State<Member> {
                           left: 1,
                           bottom: 0,
                           child: Image(
-                            image: widget.avatar,
+                            image: avatar,
                             fit: BoxFit.fitHeight,
                           ),
                         ),
                         Positioned(
                           top: 1,
                           right: 10,
-                          child: widget.isOnline
+                          child: isOnline
                               ? Container(
                                   width: 12,
                                   height: 12,
@@ -98,7 +118,7 @@ class _MemberState extends State<Member> {
                     padding: const EdgeInsets.only(top: 2),
                     height: screenWidth * 0.04,
                     child: Text(
-                      widget.name,
+                      name,
                       textScaleFactor: 0.99,
                       style: TextStyle(
                         color: themeProvider.currentTheme.primaryColor,
@@ -129,8 +149,8 @@ List<Member> getLastHourAndWeekMembers(List<Messages> messages) {
     final DateTime messageDate = DateTime.parse(message.createdAt.toString());
     if (messageDate.isAfter(lastWeek)) {
       final Member member = Member(
-        avatar: NetworkImage(message.owner.avatar),
-        name: message.owner.userName,
+        avatar: NetworkImage(message.avatar),
+        name: message.userName,
         memberID: message.ownerId,
         isOnline: messageDate
             .isAfter(lastHour), // Определяємо isOnline відповідно до умови

@@ -10,15 +10,17 @@ import 'account.dart';
 // ignore: must_be_immutable
 class Messages extends StatelessWidget {
   final String message;
-  final bool isPrivate;
-  final int receiverId;
-  final String rooms;
-  final int id;
+  //final bool isPrivate;
+  //final int receiverId;
+  //final String rooms;
+  //final int id;
   final DateTime createdAt;
+  final String avatar;
+  final String userName;
   final int ownerId;
-  final User owner;
-  final User receiver;
-  final int votes;
+  //final User owner;
+  //final User receiver;
+  //final int votes;
   final bool isPreviousSameMember;
 
   Account _account =
@@ -28,15 +30,17 @@ class Messages extends StatelessWidget {
   Messages(
       {super.key,
       required this.message,
-      required this.isPrivate,
-      required this.receiverId,
-      required this.rooms,
-      required this.id,
+      //required this.isPrivate,
+      //required this.receiverId,
+      //required this.rooms,
+      //required this.id,
       required this.createdAt,
+      required this.avatar,
+      required this.userName,
       required this.ownerId,
-      required this.owner,
-      required this.receiver,
-      required this.votes,
+      //required this.owner,
+      //required this.receiver,
+      //required this.votes,
       required this.isPreviousSameMember});
 
   static List<Messages> fromJsonList(List<dynamic> jsonList) {
@@ -44,46 +48,44 @@ class Messages extends StatelessWidget {
     final timeZone = DateTime.now().timeZoneOffset;
 
     return jsonList.map((json) {
-      bool isSameMember = json['message']['owner_id'] == previousMemberID;
-      previousMemberID = json['message']['owner_id'];
+      bool isSameMember = json['owner_id'] == previousMemberID;
+      previousMemberID = json['owner_id'];
 
       return Messages(
-        message: json['message']['message'],
-        isPrivate: json['message']['is_privat'],
-        receiverId: json['message']['receiver_id'],
-        rooms: json['message']['rooms'],
-        id: json['message']['id'],
-        createdAt: DateTime.parse(json['message']['created_at']).add(timeZone),
-        ownerId: json['message']['owner_id'],
-        owner: User.fromJson(json['message']['owner']),
-        receiver: User.fromJson(json['message']['receiver']),
-        votes: json['votes'],
+        message: json['message'],
+        //: json['message']['is_privat'],
+        //receiverId: json['receiver_id'],
+        //rooms: json['message']['rooms'],
+        //id: json['message']['id'],
+        createdAt: DateTime.parse(json['created_at']).add(timeZone),
+        avatar: json['avatar'],
+        userName: json['user_name'],
+        ownerId: json['receiver_id'],
+        //owner: User.fromJson(json['message']['owner']),
+        //receiver: User.fromJson(json['message']['receiver']),
+        //votes: json['votes'],
         isPreviousSameMember: isSameMember,
       );
     }).toList();
   }
 
   static Messages fromJsonMessage(dynamic jsonMessage, int previousMemberID) {
-    bool isSameMember = jsonMessage['message']['owner_id'] == previousMemberID;
-
-    // Отримати поточний часовий пояс пристрою
+    bool isSameMember = jsonMessage['receiver_id'] == previousMemberID;
     final timeZone = DateTime.now().timeZoneOffset;
 
-    // Додати цю різницю до created_at
-    DateTime createdAt = DateTime.parse(jsonMessage['message']['created_at']);
-    createdAt = createdAt.add(timeZone);
-
     return Messages(
-      message: jsonMessage['message']['message'],
-      isPrivate: jsonMessage['message']['is_privat'],
-      receiverId: jsonMessage['message']['receiver_id'],
-      rooms: jsonMessage['message']['rooms'],
-      id: jsonMessage['message']['id'],
-      createdAt: createdAt,
-      ownerId: jsonMessage['message']['owner_id'],
-      owner: User.fromJson(jsonMessage['message']['owner']),
-      receiver: User.fromJson(jsonMessage['message']['receiver']),
-      votes: jsonMessage['votes'],
+      message: jsonMessage['message'],
+      //: json['message']['is_privat'],
+      //receiverId: jsonMessage['receiver_id'],
+      //rooms: json['message']['rooms'],
+      //id: json['message']['id'],
+      createdAt: DateTime.parse(jsonMessage['created_at']).add(timeZone),
+      avatar: jsonMessage['avatar'],
+      userName: jsonMessage['user_name'],
+      ownerId: jsonMessage['receiver_id'],
+      //owner: User.fromJson(json['message']['owner']),
+      //receiver: User.fromJson(json['message']['receiver']),
+      //votes: json['votes'],
       isPreviousSameMember: isSameMember,
     );
   }
@@ -126,29 +128,33 @@ class Messages extends StatelessWidget {
               ? MyMessege(
                   screenWidth: screenWidth,
                   message: message,
-                  isPrivate: isPrivate,
-                  receiverId: receiverId,
-                  rooms: rooms,
-                  id: id,
+                  //isPrivate: isPrivate,
+                  //receiverId: receiverId,
+                  //rooms: rooms,
+                  //id: id,
                   createdAt: formatTime(createdAt.toString()),
                   ownerId: ownerId,
-                  owner: owner,
-                  receiver: receiver,
-                  votes: votes,
+                  avatar: avatar,
+                  userName: userName,
+                  //owner: owner,
+                  //receiver: receiver,
+                  //votes: votes,
                   isPreviousSameMember: isPreviousSameMember,
                 )
               : TheirMessege(
                   screenWidth: screenWidth,
                   message: message,
-                  isPrivate: isPrivate,
-                  receiverId: receiverId,
-                  rooms: rooms,
-                  id: id,
+                  //isPrivate: isPrivate,
+                  //receiverId: receiverId,
+                  //rooms: rooms,
+                  //id: id,
                   createdAt: formatTime(createdAt.toString()),
                   ownerId: ownerId,
-                  owner: owner,
-                  receiver: receiver,
-                  votes: votes,
+                  avatar: avatar,
+                  userName: userName,
+                  //owner: owner,
+                  //receiver: receiver,
+                  //votes: votes,
                   isPreviousSameMember: isPreviousSameMember,
                 );
         } else {
@@ -162,30 +168,34 @@ class Messages extends StatelessWidget {
 class TheirMessege extends StatelessWidget {
   final double screenWidth;
   final String message;
-  final bool isPrivate;
-  final int receiverId;
-  final String rooms;
-  final int id;
+  //final bool isPrivate;
+  //final int receiverId;
+  //final String rooms;
+  //final int id;
   final String createdAt;
   final int ownerId;
-  final User owner;
-  final User receiver;
-  final int votes;
+  final String avatar;
+  final String userName;
+  //final User owner;
+  //final User receiver;
+  //final int votes;
   final bool isPreviousSameMember;
 
   const TheirMessege(
       {super.key,
       required this.screenWidth,
       required this.message,
-      required this.isPrivate,
-      required this.receiverId,
-      required this.rooms,
-      required this.id,
+      //required this.isPrivate,
+      //required this.receiverId,
+      //required this.rooms,
+      //required this.id,
       required this.createdAt,
       required this.ownerId,
-      required this.owner,
-      required this.receiver,
-      required this.votes,
+      required this.avatar,
+      required this.userName,
+      //required this.owner,
+      //required this.receiver,
+      //required this.votes,
       required this.isPreviousSameMember});
 
   @override
@@ -251,7 +261,7 @@ class TheirMessege extends StatelessWidget {
                                   width: 24,
                                   height: 32,
                                   child: Image(
-                                    image: NetworkImage(owner.avatar),
+                                    image: NetworkImage(avatar),
                                     fit: BoxFit.fitHeight,
                                   ),
                                 ),
@@ -273,7 +283,7 @@ class TheirMessege extends StatelessWidget {
                                 child: isPreviousSameMember
                                     ? Container()
                                     : Text(
-                                        owner.userName,
+                                        userName,
                                         style: TextStyle(
                                           color: themeProvider
                                               .currentTheme.primaryColor,
@@ -373,30 +383,34 @@ class TheirMessege extends StatelessWidget {
 class MyMessege extends StatelessWidget {
   final double screenWidth;
   final String message;
-  final bool isPrivate;
-  final int receiverId;
-  final String rooms;
-  final int id;
+  //final bool isPrivate;
+  //final int receiverId;
+  //final String rooms;
+  //final int id;
   final String createdAt;
   final int ownerId;
-  final User owner;
-  final User receiver;
-  final int votes;
+  final String avatar;
+  final String userName;
+  //final User owner;
+  //final User receiver;
+  //final int votes;
   final bool isPreviousSameMember;
 
   const MyMessege(
       {super.key,
       required this.screenWidth,
       required this.message,
-      required this.isPrivate,
-      required this.receiverId,
-      required this.rooms,
-      required this.id,
+      //required this.isPrivate,
+      //required this.receiverId,
+      //required this.rooms,
+      //required this.id,
       required this.createdAt,
       required this.ownerId,
-      required this.owner,
-      required this.receiver,
-      required this.votes,
+      required this.avatar,
+      required this.userName,
+      //required this.owner,
+      //required this.receiver,
+      //required this.votes,
       required this.isPreviousSameMember});
 
   @override
@@ -447,7 +461,7 @@ class MyMessege extends StatelessWidget {
                                       padding: EdgeInsets.only(bottom: 5),
                                       alignment: Alignment.centerRight,
                                       child: Text(
-                                        owner.userName,
+                                        userName,
                                         style: TextStyle(
                                           color: themeProvider
                                               .currentTheme.primaryColor,
@@ -565,7 +579,7 @@ class MyMessege extends StatelessWidget {
                                   width: 24,
                                   height: 32,
                                   child: Image(
-                                    image: NetworkImage(owner.avatar),
+                                    image: NetworkImage(avatar),
                                     fit: BoxFit.fitHeight,
                                   ),
                                 ),
@@ -577,29 +591,6 @@ class MyMessege extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class User {
-  final int id;
-  final String userName;
-  final String avatar;
-  final DateTime createdAt;
-
-  User({
-    required this.id,
-    required this.userName,
-    required this.avatar,
-    required this.createdAt,
-  });
-
-  factory User.fromJson(Map<String, dynamic> json) {
-    return User(
-      id: json['id'],
-      userName: json['user_name'],
-      avatar: json['avatar'],
-      createdAt: DateTime.parse(json['created_at']),
     );
   }
 }

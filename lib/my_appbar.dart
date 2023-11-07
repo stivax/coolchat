@@ -1,9 +1,16 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import 'menu.dart';
 import 'theme_provider.dart';
 
 class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
+  String? roomName;
+  MyAppBar({
+    Key? key,
+    this.roomName,
+  }) : super(key: key);
   @override
   Size get preferredSize => Size.fromHeight(kToolbarHeight);
 
@@ -22,7 +29,7 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
                   : AssetImage('assets/images/logo_dark_tema.png'),
             ),
           ),
-          leading: MainDropdownMenu(),
+          leading: MainDropdownMenu(roomName: roomName),
           actions: [
             Row(
               children: [

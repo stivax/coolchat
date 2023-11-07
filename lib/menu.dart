@@ -1,11 +1,13 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
 
-import 'package:coolchat/server/server.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+
+import 'package:coolchat/server/server.dart';
 
 import 'account.dart';
 import 'bloc/token_blok.dart';
@@ -48,6 +50,11 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
 }
 
 class MainDropdownMenu extends StatefulWidget {
+  String? roomName;
+  MainDropdownMenu({
+    Key? key,
+    this.roomName,
+  }) : super(key: key);
   @override
   State<MainDropdownMenu> createState() => _MainDropdownMenuState();
 }
@@ -107,7 +114,9 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                     final TokenBloc tokenBloc = context.read<TokenBloc>();
                     if (_account.id != 0) {
                       tokenBloc.add(TokenLoadEvent(
-                          email: _account.email, password: _account.password));
+                          email: _account.email,
+                          password: _account.password,
+                          roomName: widget.roomName));
                     } else {
                       tokenBloc.add(TokenClearEvent());
                     }
