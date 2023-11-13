@@ -103,387 +103,417 @@ class _RegisterDialogState extends State<RegisterDialog> {
             borderRadius: BorderRadius.circular(20.0),
           ),
           backgroundColor: themeProvider.currentTheme.primaryColorDark,
-          content: Container(
-            height: screenSize.height * 0.6,
-            width: screenSize.width * 0.8,
-            child: CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Center(
-                          child: Text(
-                            'Register \nin TeamChat',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor,
-                              fontSize: 20,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w500,
-                              height: 1.24,
-                            ),
-                            textScaleFactor: 1,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 15, bottom: 5),
-                          child: Text(
-                            'Write your e-mail',
-                            style: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor
-                                  .withOpacity(0.9),
-                              fontSize: 16,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w400,
-                            ),
-                            textScaleFactor: 1,
-                          ),
-                        ),
-                        // email form
-                        TextFormField(
-                          keyboardType: TextInputType.emailAddress,
-                          validator: _emailValidate,
-                          autofocus: true,
-                          focusNode: _emailFocus,
-                          controller: _emailController,
-                          onTapOutside: (_) {
-                            FocusScope.of(context).unfocus();
-                          },
-                          onFieldSubmitted: (_) {
-                            _fieldFocusChange(context, _emailFocus, _passFocus);
-                          },
-                          style: TextStyle(
-                            color: themeProvider.currentTheme.primaryColor,
-                            fontSize: 16,
-                            fontFamily: 'Manrope',
-                            fontWeight: FontWeight.w400,
-                          ),
-                          decoration: InputDecoration(
-                            helperText: 'E-mail format xxxxx@xxx.xx',
-                            helperStyle: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor
-                                  .withOpacity(0.5),
-                            ),
-                            suffixIcon: Icon(Icons.person),
-                            counterStyle: TextStyle(
-                                color: themeProvider.currentTheme.primaryColor
-                                    .withOpacity(0.5)),
-                            border: InputBorder.none,
-                            hintText: 'E-mail *',
-                            hintStyle: TextStyle(
-                                color: themeProvider.currentTheme.primaryColor
-                                    .withOpacity(0.6)),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(10.0)),
-                              borderSide: BorderSide(
-                                  width: 0.50,
+          content: Stack(
+            alignment: Alignment.topRight,
+            children: [
+              Container(
+                height: screenSize.height * 0.6,
+                width: screenSize.width * 0.8,
+                child: CustomScrollView(
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Center(
+                              child: Text(
+                                'Register \nin TeamChat',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
                                   color:
-                                      themeProvider.currentTheme.shadowColor),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(10.0)),
-                              borderSide: BorderSide(
-                                  width: 0.50,
-                                  color:
-                                      themeProvider.currentTheme.shadowColor),
-                            ),
-                            errorBorder: const OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(10.0)),
-                              borderSide:
-                                  BorderSide(width: 0.50, color: Colors.red),
-                            ),
-                            focusedErrorBorder: const OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(10.0)),
-                              borderSide:
-                                  BorderSide(width: 0.50, color: Colors.red),
-                            ),
-                          ),
-                        ),
-                        // password form
-                        Padding(
-                          padding: const EdgeInsets.only(top: 15, bottom: 5),
-                          child: Text(
-                            'Write your password',
-                            style: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor
-                                  .withOpacity(0.9),
-                              fontSize: 16,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w400,
-                            ),
-                            textScaleFactor: 1,
-                          ),
-                        ),
-                        TextFormField(
-                          obscureText: _hidePass,
-                          maxLength: 8,
-                          focusNode: _passFocus,
-                          controller: _passwordController,
-                          validator: _passValidator,
-                          onTapOutside: (_) {
-                            FocusScope.of(context).unfocus();
-                          },
-                          onFieldSubmitted: (_) {
-                            _fieldFocusChange(
-                                context, _passFocus, _confirmPassFocus);
-                          },
-                          style: TextStyle(
-                            color: themeProvider.currentTheme.primaryColor,
-                            fontSize: 16,
-                            fontFamily: 'Manrope',
-                            fontWeight: FontWeight.w400,
-                          ),
-                          decoration: InputDecoration(
-                              helperText: 'Remember your password',
-                              helperStyle: TextStyle(
-                                color: themeProvider.currentTheme.primaryColor
-                                    .withOpacity(0.5),
+                                      themeProvider.currentTheme.primaryColor,
+                                  fontSize: 20,
+                                  fontFamily: 'Manrope',
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.24,
+                                ),
+                                textScaleFactor: 1,
                               ),
-                              counterStyle: TextStyle(
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(top: 15, bottom: 5),
+                              child: Text(
+                                'Write your e-mail',
+                                style: TextStyle(
                                   color: themeProvider.currentTheme.primaryColor
-                                      .withOpacity(0.5)),
-                              border: InputBorder.none,
-                              hintText: 'Password *',
-                              hintStyle: TextStyle(
-                                  color: themeProvider.currentTheme.primaryColor
-                                      .withOpacity(0.6)),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: const BorderRadius.all(
-                                    Radius.circular(10.0)),
-                                borderSide: BorderSide(
-                                    width: 0.50,
-                                    color:
-                                        themeProvider.currentTheme.shadowColor),
+                                      .withOpacity(0.9),
+                                  fontSize: 16,
+                                  fontFamily: 'Manrope',
+                                  fontWeight: FontWeight.w400,
+                                ),
+                                textScaleFactor: 1,
                               ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: const BorderRadius.all(
-                                    Radius.circular(10.0)),
-                                borderSide: BorderSide(
-                                    width: 0.50,
-                                    color:
-                                        themeProvider.currentTheme.shadowColor),
-                              ),
-                              errorBorder: const OutlineInputBorder(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(10.0)),
-                                borderSide:
-                                    BorderSide(width: 0.50, color: Colors.red),
-                              ),
-                              focusedErrorBorder: const OutlineInputBorder(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(10.0)),
-                                borderSide:
-                                    BorderSide(width: 0.50, color: Colors.red),
-                              ),
-                              suffixIcon: IconButton(
-                                icon: Icon(_hidePass
-                                    ? Icons.visibility
-                                    : Icons.visibility_off),
-                                onPressed: () {
-                                  setState(() {
-                                    _hidePass = !_hidePass;
-                                  });
-                                },
-                              )),
-                        ),
-                        // confirm password form
-                        Padding(
-                          padding: const EdgeInsets.only(top: 15, bottom: 5),
-                          child: Text(
-                            'Confirm password',
-                            style: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor
-                                  .withOpacity(0.9),
-                              fontSize: 16,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w400,
                             ),
-                            textScaleFactor: 1,
-                          ),
-                        ),
-                        TextFormField(
-                          obscureText: _hidePass,
-                          maxLength: 8,
-                          focusNode: _confirmPassFocus,
-                          controller: _confirmPasswordController,
-                          validator: _passValidator,
-                          onTapOutside: (_) {
-                            FocusScope.of(context).unfocus();
-                          },
-                          onFieldSubmitted: (_) {
-                            _fieldFocusChange(
-                                context, _confirmPassFocus, _nickNameFocus);
-                          },
-                          style: TextStyle(
-                            color: themeProvider.currentTheme.primaryColor,
-                            fontSize: 16,
-                            fontFamily: 'Manrope',
-                            fontWeight: FontWeight.w400,
-                          ),
-                          decoration: InputDecoration(
-                            helperText: 'Confirm to remember',
-                            helperStyle: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor
-                                  .withOpacity(0.5),
-                            ),
-                            counterStyle: TextStyle(
-                                color: themeProvider.currentTheme.primaryColor
-                                    .withOpacity(0.5)),
-                            border: InputBorder.none,
-                            hintText: 'Confirm password *',
-                            hintStyle: TextStyle(
-                                color: themeProvider.currentTheme.primaryColor
-                                    .withOpacity(0.6)),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(10.0)),
-                              borderSide: BorderSide(
-                                  width: 0.50,
-                                  color:
-                                      themeProvider.currentTheme.shadowColor),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(10.0)),
-                              borderSide: BorderSide(
-                                  width: 0.50,
-                                  color:
-                                      themeProvider.currentTheme.shadowColor),
-                            ),
-                            errorBorder: const OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(10.0)),
-                              borderSide:
-                                  BorderSide(width: 0.50, color: Colors.red),
-                            ),
-                            focusedErrorBorder: const OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(10.0)),
-                              borderSide:
-                                  BorderSide(width: 0.50, color: Colors.red),
-                            ),
-                            suffixIcon: IconButton(
-                              icon: Icon(_hidePass
-                                  ? Icons.visibility
-                                  : Icons.visibility_off),
-                              onPressed: () {
-                                setState(() {
-                                  _hidePass = !_hidePass;
-                                });
+                            // email form
+                            TextFormField(
+                              keyboardType: TextInputType.emailAddress,
+                              validator: _emailValidate,
+                              autofocus: true,
+                              focusNode: _emailFocus,
+                              controller: _emailController,
+                              onTapOutside: (_) {
+                                FocusScope.of(context).unfocus();
                               },
+                              onFieldSubmitted: (_) {
+                                _fieldFocusChange(
+                                    context, _emailFocus, _passFocus);
+                              },
+                              style: TextStyle(
+                                color: themeProvider.currentTheme.primaryColor,
+                                fontSize: 16,
+                                fontFamily: 'Manrope',
+                                fontWeight: FontWeight.w400,
+                              ),
+                              decoration: InputDecoration(
+                                helperText: 'E-mail format xxxxx@xxx.xx',
+                                helperStyle: TextStyle(
+                                  color: themeProvider.currentTheme.primaryColor
+                                      .withOpacity(0.5),
+                                ),
+                                suffixIcon: Icon(Icons.person),
+                                counterStyle: TextStyle(
+                                    color: themeProvider
+                                        .currentTheme.primaryColor
+                                        .withOpacity(0.5)),
+                                border: InputBorder.none,
+                                hintText: 'E-mail *',
+                                hintStyle: TextStyle(
+                                    color: themeProvider
+                                        .currentTheme.primaryColor
+                                        .withOpacity(0.6)),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: const BorderRadius.all(
+                                      Radius.circular(10.0)),
+                                  borderSide: BorderSide(
+                                      width: 0.50,
+                                      color: themeProvider
+                                          .currentTheme.shadowColor),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: const BorderRadius.all(
+                                      Radius.circular(10.0)),
+                                  borderSide: BorderSide(
+                                      width: 0.50,
+                                      color: themeProvider
+                                          .currentTheme.shadowColor),
+                                ),
+                                errorBorder: const OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(10.0)),
+                                  borderSide: BorderSide(
+                                      width: 0.50, color: Colors.red),
+                                ),
+                                focusedErrorBorder: const OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(10.0)),
+                                  borderSide: BorderSide(
+                                      width: 0.50, color: Colors.red),
+                                ),
+                              ),
                             ),
-                          ),
+                            // password form
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(top: 15, bottom: 5),
+                              child: Text(
+                                'Write your password',
+                                style: TextStyle(
+                                  color: themeProvider.currentTheme.primaryColor
+                                      .withOpacity(0.9),
+                                  fontSize: 16,
+                                  fontFamily: 'Manrope',
+                                  fontWeight: FontWeight.w400,
+                                ),
+                                textScaleFactor: 1,
+                              ),
+                            ),
+                            TextFormField(
+                              obscureText: _hidePass,
+                              maxLength: 8,
+                              focusNode: _passFocus,
+                              controller: _passwordController,
+                              validator: _passValidator,
+                              onTapOutside: (_) {
+                                FocusScope.of(context).unfocus();
+                              },
+                              onFieldSubmitted: (_) {
+                                _fieldFocusChange(
+                                    context, _passFocus, _confirmPassFocus);
+                              },
+                              style: TextStyle(
+                                color: themeProvider.currentTheme.primaryColor,
+                                fontSize: 16,
+                                fontFamily: 'Manrope',
+                                fontWeight: FontWeight.w400,
+                              ),
+                              decoration: InputDecoration(
+                                  helperText: 'Remember your password',
+                                  helperStyle: TextStyle(
+                                    color: themeProvider
+                                        .currentTheme.primaryColor
+                                        .withOpacity(0.5),
+                                  ),
+                                  counterStyle: TextStyle(
+                                      color: themeProvider
+                                          .currentTheme.primaryColor
+                                          .withOpacity(0.5)),
+                                  border: InputBorder.none,
+                                  hintText: 'Password *',
+                                  hintStyle: TextStyle(
+                                      color: themeProvider
+                                          .currentTheme.primaryColor
+                                          .withOpacity(0.6)),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: const BorderRadius.all(
+                                        Radius.circular(10.0)),
+                                    borderSide: BorderSide(
+                                        width: 0.50,
+                                        color: themeProvider
+                                            .currentTheme.shadowColor),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: const BorderRadius.all(
+                                        Radius.circular(10.0)),
+                                    borderSide: BorderSide(
+                                        width: 0.50,
+                                        color: themeProvider
+                                            .currentTheme.shadowColor),
+                                  ),
+                                  errorBorder: const OutlineInputBorder(
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(10.0)),
+                                    borderSide: BorderSide(
+                                        width: 0.50, color: Colors.red),
+                                  ),
+                                  focusedErrorBorder: const OutlineInputBorder(
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(10.0)),
+                                    borderSide: BorderSide(
+                                        width: 0.50, color: Colors.red),
+                                  ),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(_hidePass
+                                        ? Icons.visibility
+                                        : Icons.visibility_off),
+                                    onPressed: () {
+                                      setState(() {
+                                        _hidePass = !_hidePass;
+                                      });
+                                    },
+                                  )),
+                            ),
+                            // confirm password form
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(top: 15, bottom: 5),
+                              child: Text(
+                                'Confirm password',
+                                style: TextStyle(
+                                  color: themeProvider.currentTheme.primaryColor
+                                      .withOpacity(0.9),
+                                  fontSize: 16,
+                                  fontFamily: 'Manrope',
+                                  fontWeight: FontWeight.w400,
+                                ),
+                                textScaleFactor: 1,
+                              ),
+                            ),
+                            TextFormField(
+                              obscureText: _hidePass,
+                              maxLength: 8,
+                              focusNode: _confirmPassFocus,
+                              controller: _confirmPasswordController,
+                              validator: _passValidator,
+                              onTapOutside: (_) {
+                                FocusScope.of(context).unfocus();
+                              },
+                              onFieldSubmitted: (_) {
+                                _fieldFocusChange(
+                                    context, _confirmPassFocus, _nickNameFocus);
+                              },
+                              style: TextStyle(
+                                color: themeProvider.currentTheme.primaryColor,
+                                fontSize: 16,
+                                fontFamily: 'Manrope',
+                                fontWeight: FontWeight.w400,
+                              ),
+                              decoration: InputDecoration(
+                                helperText: 'Confirm to remember',
+                                helperStyle: TextStyle(
+                                  color: themeProvider.currentTheme.primaryColor
+                                      .withOpacity(0.5),
+                                ),
+                                counterStyle: TextStyle(
+                                    color: themeProvider
+                                        .currentTheme.primaryColor
+                                        .withOpacity(0.5)),
+                                border: InputBorder.none,
+                                hintText: 'Confirm password *',
+                                hintStyle: TextStyle(
+                                    color: themeProvider
+                                        .currentTheme.primaryColor
+                                        .withOpacity(0.6)),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: const BorderRadius.all(
+                                      Radius.circular(10.0)),
+                                  borderSide: BorderSide(
+                                      width: 0.50,
+                                      color: themeProvider
+                                          .currentTheme.shadowColor),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: const BorderRadius.all(
+                                      Radius.circular(10.0)),
+                                  borderSide: BorderSide(
+                                      width: 0.50,
+                                      color: themeProvider
+                                          .currentTheme.shadowColor),
+                                ),
+                                errorBorder: const OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(10.0)),
+                                  borderSide: BorderSide(
+                                      width: 0.50, color: Colors.red),
+                                ),
+                                focusedErrorBorder: const OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(10.0)),
+                                  borderSide: BorderSide(
+                                      width: 0.50, color: Colors.red),
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: Icon(_hidePass
+                                      ? Icons.visibility
+                                      : Icons.visibility_off),
+                                  onPressed: () {
+                                    setState(() {
+                                      _hidePass = !_hidePass;
+                                    });
+                                  },
+                                ),
+                              ),
+                            ),
+                            // nickname form
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(top: 15, bottom: 5),
+                              child: Text(
+                                'Write your nickname',
+                                style: TextStyle(
+                                  color: themeProvider.currentTheme.primaryColor
+                                      .withOpacity(0.9),
+                                  fontSize: 16,
+                                  fontFamily: 'Manrope',
+                                  fontWeight: FontWeight.w400,
+                                ),
+                                textScaleFactor: 1,
+                              ),
+                            ),
+                            TextFormField(
+                              textCapitalization: TextCapitalization.sentences,
+                              keyboardType: TextInputType.name,
+                              validator: _nameValidate,
+                              maxLength: 25,
+                              focusNode: _nickNameFocus,
+                              controller: _nicknameController,
+                              onTapOutside: (_) {
+                                FocusScope.of(context).unfocus();
+                              },
+                              onFieldSubmitted: (_) {
+                                _fieldFocusChange(
+                                    context, _nickNameFocus, FocusNode());
+                              },
+                              style: TextStyle(
+                                color: themeProvider.currentTheme.primaryColor,
+                                fontSize: 16,
+                                fontFamily: 'Manrope',
+                                fontWeight: FontWeight.w400,
+                              ),
+                              decoration: InputDecoration(
+                                helperText: '',
+                                helperStyle: TextStyle(
+                                  color: themeProvider.currentTheme.primaryColor
+                                      .withOpacity(0.5),
+                                ),
+                                suffixIcon: Icon(Icons.person),
+                                counterStyle: TextStyle(
+                                    color: themeProvider
+                                        .currentTheme.primaryColor
+                                        .withOpacity(0.5)),
+                                border: InputBorder.none,
+                                hintText: 'Nickname *',
+                                hintStyle: TextStyle(
+                                    color: themeProvider
+                                        .currentTheme.primaryColor
+                                        .withOpacity(0.6)),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: const BorderRadius.all(
+                                      Radius.circular(10.0)),
+                                  borderSide: BorderSide(
+                                      width: 0.50,
+                                      color: themeProvider
+                                          .currentTheme.shadowColor),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: const BorderRadius.all(
+                                      Radius.circular(10.0)),
+                                  borderSide: BorderSide(
+                                      width: 0.50,
+                                      color: themeProvider
+                                          .currentTheme.shadowColor),
+                                ),
+                                errorBorder: const OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(10.0)),
+                                  borderSide: BorderSide(
+                                      width: 0.50, color: Colors.red),
+                                ),
+                                focusedErrorBorder: const OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(10.0)),
+                                  borderSide: BorderSide(
+                                      width: 0.50, color: Colors.red),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        // nickname form
-                        Padding(
-                          padding: const EdgeInsets.only(top: 15, bottom: 5),
-                          child: Text(
-                            'Write your nickname',
-                            style: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor
-                                  .withOpacity(0.9),
-                              fontSize: 16,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w400,
-                            ),
-                            textScaleFactor: 1,
-                          ),
-                        ),
-                        TextFormField(
-                          textCapitalization: TextCapitalization.sentences,
-                          keyboardType: TextInputType.name,
-                          validator: _nameValidate,
-                          maxLength: 25,
-                          focusNode: _nickNameFocus,
-                          controller: _nicknameController,
-                          onTapOutside: (_) {
-                            FocusScope.of(context).unfocus();
-                          },
-                          onFieldSubmitted: (_) {
-                            _fieldFocusChange(
-                                context, _nickNameFocus, FocusNode());
-                          },
-                          style: TextStyle(
-                            color: themeProvider.currentTheme.primaryColor,
-                            fontSize: 16,
-                            fontFamily: 'Manrope',
-                            fontWeight: FontWeight.w400,
-                          ),
-                          decoration: InputDecoration(
-                            helperText: '',
-                            helperStyle: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor
-                                  .withOpacity(0.5),
-                            ),
-                            suffixIcon: Icon(Icons.person),
-                            counterStyle: TextStyle(
-                                color: themeProvider.currentTheme.primaryColor
-                                    .withOpacity(0.5)),
-                            border: InputBorder.none,
-                            hintText: 'Nickname *',
-                            hintStyle: TextStyle(
-                                color: themeProvider.currentTheme.primaryColor
-                                    .withOpacity(0.6)),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(10.0)),
-                              borderSide: BorderSide(
-                                  width: 0.50,
-                                  color:
-                                      themeProvider.currentTheme.shadowColor),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(10.0)),
-                              borderSide: BorderSide(
-                                  width: 0.50,
-                                  color:
-                                      themeProvider.currentTheme.shadowColor),
-                            ),
-                            errorBorder: const OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(10.0)),
-                              borderSide:
-                                  BorderSide(width: 0.50, color: Colors.red),
-                            ),
-                            focusedErrorBorder: const OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(10.0)),
-                              borderSide:
-                                  BorderSide(width: 0.50, color: Colors.red),
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                    SliverPadding(
+                      padding: const EdgeInsets.all(0.0),
+                      sliver: SliverGrid(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) => generateListAvatars()[index],
+                          childCount: generateListAvatars().length,
+                        ),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          crossAxisSpacing: 4.0,
+                          mainAxisSpacing: 8.0,
+                          childAspectRatio: 0.84,
+                        ),
+                      ),
+                    )
+                  ],
                 ),
-                SliverPadding(
-                  padding: const EdgeInsets.all(0.0),
-                  sliver: SliverGrid(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) => generateListAvatars()[index],
-                      childCount: generateListAvatars().length,
-                    ),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,
-                      crossAxisSpacing: 4.0,
-                      mainAxisSpacing: 8.0,
-                      childAspectRatio: 0.84,
-                    ),
-                  ),
-                )
-              ],
-            ),
+              ),
+              Positioned(
+                top: -16.0,
+                right: -16.0,
+                child: IconButton(
+                  icon: Icon(Icons.close),
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close the AlertDialog
+                  },
+                ),
+              ),
+            ],
           ),
           actions: [
             Container(

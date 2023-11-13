@@ -10,18 +10,18 @@ import 'package:http/http.dart' as http;
 import 'package:marquee/marquee.dart';
 import 'package:provider/provider.dart';
 
-import 'account.dart';
-import 'bloc/token_event.dart';
-import 'bloc/token_state.dart';
-import 'login_popup.dart';
-import 'main.dart';
-import 'members.dart';
-import 'menu.dart';
-import 'message_provider.dart';
-import 'messages.dart';
-import 'my_appbar.dart';
-import 'server_provider.dart';
-import 'theme_provider.dart';
+import '../account.dart';
+import '../bloc/token_event.dart';
+import '../bloc/token_state.dart';
+import '../login_popup.dart';
+import '../main.dart';
+import '../members.dart';
+import '../menu.dart';
+import '../message_provider.dart';
+import '../messages.dart';
+import '../my_appbar.dart';
+import '../server_provider.dart';
+import '../theme_provider.dart';
 
 class MessageData {
   Set<Messages> messages = {};
@@ -75,7 +75,6 @@ class _ChatScreenState extends State<ChatScreen> {
     Messages message = Messages.fromJsonMessage(
         jsonMessage, widget.messageData.previousMemberID);
     widget.messageData.previousMemberID = message.ownerId.toInt();
-    blockMessageStateKey.currentState!._messages.clear();
     blockMessageStateKey.currentState!._messages.add(message);
     blockMessageStateKey.currentState!.widget.updateState();
   }

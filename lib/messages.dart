@@ -13,7 +13,7 @@ class Messages extends StatelessWidget {
   //final bool isPrivate;
   //final int receiverId;
   //final String rooms;
-  //final int id;
+  final int? id;
   final DateTime createdAt;
   final String avatar;
   final String userName;
@@ -22,6 +22,7 @@ class Messages extends StatelessWidget {
   //final User receiver;
   //final int votes;
   final bool isPreviousSameMember;
+  final int? vote;
 
   Account _account =
       Account(email: '', userName: '', password: '', avatar: '', id: 0);
@@ -33,7 +34,7 @@ class Messages extends StatelessWidget {
       //required this.isPrivate,
       //required this.receiverId,
       //required this.rooms,
-      //required this.id,
+      this.id,
       required this.createdAt,
       required this.avatar,
       required this.userName,
@@ -41,7 +42,8 @@ class Messages extends StatelessWidget {
       //required this.owner,
       //required this.receiver,
       //required this.votes,
-      required this.isPreviousSameMember});
+      required this.isPreviousSameMember,
+      this.vote});
 
   static List<Messages> fromJsonList(List<dynamic> jsonList) {
     int previousMemberID = 0;
@@ -56,7 +58,7 @@ class Messages extends StatelessWidget {
         //: json['message']['is_privat'],
         //receiverId: json['receiver_id'],
         //rooms: json['message']['rooms'],
-        //id: json['message']['id'],
+        id: json['id']!,
         createdAt: DateTime.parse(json['created_at']).add(timeZone),
         avatar: json['avatar'],
         userName: json['user_name'],
@@ -65,6 +67,7 @@ class Messages extends StatelessWidget {
         //receiver: User.fromJson(json['message']['receiver']),
         //votes: json['votes'],
         isPreviousSameMember: isSameMember,
+        vote: json['vote']!,
       );
     }).toList();
   }
@@ -87,6 +90,7 @@ class Messages extends StatelessWidget {
       //receiver: User.fromJson(json['message']['receiver']),
       //votes: json['votes'],
       isPreviousSameMember: isSameMember,
+      vote: jsonMessage['vote'],
     );
   }
 
@@ -131,14 +135,14 @@ class Messages extends StatelessWidget {
                   //isPrivate: isPrivate,
                   //receiverId: receiverId,
                   //rooms: rooms,
-                  //id: id,
+                  id: id,
                   createdAt: formatTime(createdAt.toString()),
                   ownerId: ownerId,
                   avatar: avatar,
                   userName: userName,
                   //owner: owner,
                   //receiver: receiver,
-                  //votes: votes,
+                  vote: vote,
                   isPreviousSameMember: isPreviousSameMember,
                 )
               : TheirMessege(
@@ -147,14 +151,14 @@ class Messages extends StatelessWidget {
                   //isPrivate: isPrivate,
                   //receiverId: receiverId,
                   //rooms: rooms,
-                  //id: id,
+                  id: id,
                   createdAt: formatTime(createdAt.toString()),
                   ownerId: ownerId,
                   avatar: avatar,
                   userName: userName,
                   //owner: owner,
                   //receiver: receiver,
-                  //votes: votes,
+                  vote: vote,
                   isPreviousSameMember: isPreviousSameMember,
                 );
         } else {
@@ -171,14 +175,14 @@ class TheirMessege extends StatelessWidget {
   //final bool isPrivate;
   //final int receiverId;
   //final String rooms;
-  //final int id;
+  final int? id;
   final String createdAt;
   final int ownerId;
   final String avatar;
   final String userName;
   //final User owner;
   //final User receiver;
-  //final int votes;
+  final int? vote;
   final bool isPreviousSameMember;
 
   const TheirMessege(
@@ -188,14 +192,14 @@ class TheirMessege extends StatelessWidget {
       //required this.isPrivate,
       //required this.receiverId,
       //required this.rooms,
-      //required this.id,
+      this.id,
       required this.createdAt,
       required this.ownerId,
       required this.avatar,
       required this.userName,
       //required this.owner,
       //required this.receiver,
-      //required this.votes,
+      this.vote,
       required this.isPreviousSameMember});
 
   @override
@@ -386,14 +390,14 @@ class MyMessege extends StatelessWidget {
   //final bool isPrivate;
   //final int receiverId;
   //final String rooms;
-  //final int id;
+  final int? id;
   final String createdAt;
   final int ownerId;
   final String avatar;
   final String userName;
   //final User owner;
   //final User receiver;
-  //final int votes;
+  final int? vote;
   final bool isPreviousSameMember;
 
   const MyMessege(
@@ -403,14 +407,14 @@ class MyMessege extends StatelessWidget {
       //required this.isPrivate,
       //required this.receiverId,
       //required this.rooms,
-      //required this.id,
+      this.id,
       required this.createdAt,
       required this.ownerId,
       required this.avatar,
       required this.userName,
       //required this.owner,
       //required this.receiver,
-      //required this.votes,
+      this.vote,
       required this.isPreviousSameMember});
 
   @override
