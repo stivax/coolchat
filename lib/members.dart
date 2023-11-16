@@ -1,5 +1,10 @@
 import 'dart:collection';
 
+import 'package:coolchat/account.dart';
+import 'package:coolchat/message_provider.dart';
+import 'package:coolchat/model/token.dart';
+import 'package:coolchat/screen/common_chat.dart';
+import 'package:coolchat/screen/private_chat.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -152,23 +157,52 @@ class Member extends StatelessWidget {
         tapPosition.dx + 1,
         tapPosition.dy + 1,
       ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8.0),
+      ),
       items: [
         PopupMenuItem(
+          height: 20,
+          onTap: () async {
+            final String id = memberID.toString();
+            final account = await readAccountFuture();
+            final token =
+                await loginProcess(context, account.email, account.password);
+            final MessageProvider messageProvider = MessageProvider(
+                'wss://cool-chat.club/private/$id?token=${token["access_token"]}');
+            print('id = $id , token = $token');
+            Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => PrivateChatScreen(
+                      receiverName: name, messageProvider: messageProvider)),
+            );
+          },
           child: ListTile(
-            title: Text('Send'),
-            onTap: () {
-              // Add code for handling "Send" here
-              Navigator.pop(context);
-            },
+            title: Text(
+              'Send private message',
+              style: TextStyle(
+                color: themeProvider.currentTheme.primaryColor,
+                fontSize: 16.0,
+              ),
+            ),
           ),
         ),
         PopupMenuItem(
+          height: 20,
+          onTap: () {
+            // Add code for handling "Info" here
+            //Navigator.pop(context);
+          },
           child: ListTile(
-            title: Text('Info'),
-            onTap: () {
-              // Add code for handling "Info" here
-              Navigator.pop(context);
-            },
+            title: Text(
+              'User info',
+              style: TextStyle(
+                color: themeProvider.currentTheme.primaryColor,
+                fontSize: 16.0,
+              ),
+            ),
           ),
         ),
       ],

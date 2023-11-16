@@ -10,16 +10,16 @@ import 'token_state.dart';
 class TokenBloc extends Bloc<TokenEvent, TokenState> {
   final TokenRepository tokenRepository;
   final server = Server.server;
+  Token? token;
   TokenBloc({required this.tokenRepository}) : super(TokenEmptyState()) {
     on<TokenLoadEvent>(
       (event, emit) async {
         try {
-          final Token token =
-              await tokenRepository.getToken(event.email, event.password);
+          token = await tokenRepository.getToken(event.email, event.password);
           final MessageProvider messageProvider = MessageProvider(
-              'wss://$server/ws/${event.roomName}?token=${token.token["access_token"]}');
-          emit(
-              TokenLoadedState(token: token, messageProvider: messageProvider));
+              'wss://$server/ws/${event.roomName}?token=${token!.token["access_token"]}');
+          emit(TokenLoadedState(
+              token: token!, messageProvider: messageProvider));
         } catch (_) {
           emit(TokenErrorState());
         }

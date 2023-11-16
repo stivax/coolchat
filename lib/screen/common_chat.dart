@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:coolchat/bloc/token_blok.dart';
+import 'package:coolchat/model/token.dart';
 import 'package:coolchat/servises/token_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -33,6 +34,7 @@ class MessageData {
 
 final blockMessageStateKey = GlobalKey<_BlockMessagesState>();
 final chatMembersStateKey = GlobalKey<_ChatMembersState>();
+final chatScreenStateKey = GlobalKey<_ChatScreenState>();
 
 class ChatScreen extends StatefulWidget {
   final String topicName;
@@ -55,6 +57,7 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   bool isListening = false;
+  Token? token;
 
   void messageListen(MessageProvider messageProvider) {
     if (!isListening && !messageProvider.messagesStream.isBroadcast) {
@@ -116,6 +119,7 @@ class _ChatScreenState extends State<ChatScreen> {
             );
           } else if (state is TokenLoadedState) {
             print('loaded');
+            token = state.token;
             messageListen(state.messageProvider);
             return CommonChatScreen(
               state: 'loaded',
