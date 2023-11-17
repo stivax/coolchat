@@ -11,12 +11,12 @@ import '../bloc/token_event.dart';
 import '../login_popup.dart';
 import '../menu.dart';
 import '../message_provider.dart';
-import '../messages.dart';
+import '../messages_privat.dart';
 import '../my_appbar.dart';
 import '../theme_provider.dart';
 
 class MessageData {
-  Set<Messages> messages = {};
+  Set<MessagesPrivat> messages = {};
   int previousMemberID = 0;
   String responseBody;
 
@@ -28,11 +28,11 @@ final blockMessageStateKey = GlobalKey<_BlockMessagesState>();
 class PrivateChatScreen extends StatefulWidget {
   final String receiverName;
   final MessageProvider messageProvider;
-  MessageData messageData;
+  MessageData messagePrivatData;
 
   PrivateChatScreen(
       {super.key, required this.receiverName, required this.messageProvider})
-      : messageData = MessageData({}, 0, '[]');
+      : messagePrivatData = MessageData({}, 0, '[]');
 
   @override
   State<PrivateChatScreen> createState() => _PrivateChatScreenState();
@@ -57,9 +57,9 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
 
   void formMessage(String responseBody) {
     dynamic jsonMessage = jsonDecode(responseBody);
-    Messages message = Messages.fromJsonMessage(
-        jsonMessage, widget.messageData.previousMemberID);
-    widget.messageData.previousMemberID = message.ownerId.toInt();
+    MessagesPrivat message = MessagesPrivat.fromJsonMessage(
+        jsonMessage, widget.messagePrivatData.previousMemberID);
+    widget.messagePrivatData.previousMemberID = message.senderId.toInt();
     blockMessageStateKey.currentState!._messages.add(message);
     blockMessageStateKey.currentState!.widget.updateState();
   }
@@ -72,7 +72,7 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
       child: CommonChatScreen(
         topicName: widget.receiverName,
         messageProvider: widget.messageProvider,
-        messageData: widget.messageData,
+        messageData: widget.messagePrivatData,
       ),
     );
   }
@@ -259,7 +259,7 @@ class BlockMessages extends StatefulWidget {
 }
 
 class _BlockMessagesState extends State<BlockMessages> {
-  final Set<Messages> _messages = {};
+  final Set<MessagesPrivat> _messages = {};
 
   @override
   void didChangeDependencies() {
@@ -381,7 +381,7 @@ class _TextAndSendState extends State<TextAndSend> {
 
   void _sendMessage(String message) {
     widget.messageProvider?.sendMessage(json.encode({
-      'message': message,
+      'messages': message,
     }));
   }
 

@@ -8,64 +8,66 @@ import 'theme_provider.dart';
 import 'account.dart';
 
 // ignore: must_be_immutable
-class Messages extends StatelessWidget {
+class MessagesPrivat extends StatelessWidget {
   final String message;
-  final int? id;
+  //final int? id;
   final DateTime createdAt;
   final String avatar;
   final String userName;
-  final int ownerId;
+  final int senderId;
   final bool isPreviousSameMember;
-  final int? vote;
+  //final int? vote;
 
   Account _account =
       Account(email: '', userName: '', password: '', avatar: '', id: 0);
   late Future<Account> _accountFuture;
 
-  Messages(
-      {super.key,
-      required this.message,
-      this.id,
-      required this.createdAt,
-      required this.avatar,
-      required this.userName,
-      required this.ownerId,
-      required this.isPreviousSameMember,
-      this.vote});
+  MessagesPrivat({
+    super.key,
+    required this.message,
+    //this.id,
+    required this.createdAt,
+    required this.avatar,
+    required this.userName,
+    required this.senderId,
+    required this.isPreviousSameMember,
+    //this.vote
+  });
 
-  static List<Messages> fromJsonList(List<dynamic> jsonList) {
+  static List<MessagesPrivat> fromJsonList(List<dynamic> jsonList) {
     int previousMemberID = 0;
     final timeZone = DateTime.now().timeZoneOffset;
 
     return jsonList.map((json) {
-      bool isSameMember = json['owner_id'] == previousMemberID;
-      previousMemberID = json['owner_id'];
+      bool isSameMember = json['sender_id'] == previousMemberID;
+      previousMemberID = json['sender_id'];
 
-      return Messages(
+      return MessagesPrivat(
         message: json['message'],
-        id: json['id']!,
+        //id: json['id']!,
         createdAt: DateTime.parse(json['created_at']).add(timeZone),
         avatar: json['avatar'],
         userName: json['user_name'],
-        ownerId: json['receiver_id'],
+        senderId: json['sender_id'],
         isPreviousSameMember: isSameMember,
-        vote: json['vote']!,
+        //vote: json['vote']!,
       );
     }).toList();
   }
 
-  static Messages fromJsonMessage(dynamic jsonMessage, int previousMemberID) {
-    bool isSameMember = jsonMessage['receiver_id'] == previousMemberID;
+  static MessagesPrivat fromJsonMessage(
+      dynamic jsonMessage, int previousMemberID) {
+    bool isSameMember = jsonMessage['sender_id'] == previousMemberID;
     final timeZone = DateTime.now().timeZoneOffset;
 
-    return Messages(
+    return MessagesPrivat(
       message: jsonMessage['message'],
       createdAt: DateTime.parse(jsonMessage['created_at']).add(timeZone),
       avatar: jsonMessage['avatar'],
       userName: jsonMessage['user_name'],
-      ownerId: jsonMessage['receiver_id'],
+      senderId: jsonMessage['sender_id'],
       isPreviousSameMember: isSameMember,
-      vote: jsonMessage['vote'],
+      //vote: jsonMessage['vote'],
     );
   }
 
@@ -103,27 +105,27 @@ class Messages extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           _account = snapshot.data!;
-          return _account.id == ownerId
+          return _account.id == senderId
               ? MyMessege(
                   screenWidth: screenWidth,
                   message: message,
-                  id: id,
+                  //id: id,
                   createdAt: formatTime(createdAt.toString()),
-                  ownerId: ownerId,
+                  senderId: senderId,
                   avatar: avatar,
                   userName: userName,
-                  vote: vote,
+                  //vote: vote,
                   isPreviousSameMember: isPreviousSameMember,
                 )
               : TheirMessege(
                   screenWidth: screenWidth,
                   message: message,
-                  id: id,
+                  //id: id,
                   createdAt: formatTime(createdAt.toString()),
-                  ownerId: ownerId,
+                  senderId: senderId,
                   avatar: avatar,
                   userName: userName,
-                  vote: vote,
+                  //vote: vote,
                   isPreviousSameMember: isPreviousSameMember,
                 );
         } else {
@@ -137,24 +139,24 @@ class Messages extends StatelessWidget {
 class TheirMessege extends StatelessWidget {
   final double screenWidth;
   final String message;
-  final int? id;
+  //final int? id;
   final String createdAt;
-  final int ownerId;
   final String avatar;
   final String userName;
-  final int? vote;
+  final int senderId;
+  //final int? vote;
   final bool isPreviousSameMember;
 
   const TheirMessege(
       {super.key,
       required this.screenWidth,
       required this.message,
-      this.id,
+      //this.id,
       required this.createdAt,
-      required this.ownerId,
       required this.avatar,
       required this.userName,
-      this.vote,
+      required this.senderId,
+      //this.vote,
       required this.isPreviousSameMember});
 
   @override
@@ -342,24 +344,24 @@ class TheirMessege extends StatelessWidget {
 class MyMessege extends StatelessWidget {
   final double screenWidth;
   final String message;
-  final int? id;
+  //final int? id;
   final String createdAt;
-  final int ownerId;
   final String avatar;
   final String userName;
-  final int? vote;
+  final int senderId;
+  //final int? vote;
   final bool isPreviousSameMember;
 
   const MyMessege(
       {super.key,
       required this.screenWidth,
       required this.message,
-      this.id,
+      //this.id,
       required this.createdAt,
-      required this.ownerId,
       required this.avatar,
       required this.userName,
-      this.vote,
+      required this.senderId,
+      //this.vote,
       required this.isPreviousSameMember});
 
   @override

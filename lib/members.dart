@@ -150,7 +150,7 @@ class Member extends StatelessWidget {
       BuildContext context, ThemeProvider themeProvider, Offset tapPosition) {
     showMenu(
       context: context,
-      color: themeProvider.currentTheme.hoverColor,
+      color: themeProvider.currentTheme.primaryColorDark,
       position: RelativeRect.fromLTRB(
         tapPosition.dx,
         tapPosition.dy,
@@ -158,11 +158,17 @@ class Member extends StatelessWidget {
         tapPosition.dy + 1,
       ),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8.0),
+        side:
+            BorderSide(width: 1, color: themeProvider.currentTheme.shadowColor),
+        borderRadius: BorderRadius.only(
+          topRight: Radius.circular(14),
+          bottomLeft: Radius.circular(14),
+          bottomRight: Radius.circular(14),
+        ),
       ),
       items: [
         PopupMenuItem(
-          height: 20,
+          height: 36,
           onTap: () async {
             final String id = memberID.toString();
             final account = await readAccountFuture();
@@ -179,34 +185,39 @@ class Member extends StatelessWidget {
                       receiverName: name, messageProvider: messageProvider)),
             );
           },
-          child: ListTile(
-            title: Text(
+          child: Container(
+            child: Text(
               'Send private message',
               style: TextStyle(
                 color: themeProvider.currentTheme.primaryColor,
                 fontSize: 16.0,
+                fontFamily: 'Manrope',
+                fontWeight: FontWeight.w400,
               ),
             ),
           ),
         ),
         PopupMenuItem(
-          height: 20,
+          height: 36,
           onTap: () {
             // Add code for handling "Info" here
             //Navigator.pop(context);
           },
-          child: ListTile(
-            title: Text(
+          child: Container(
+            child: Text(
               'User info',
               style: TextStyle(
                 color: themeProvider.currentTheme.primaryColor,
                 fontSize: 16.0,
+                fontFamily: 'Manrope',
+                fontWeight: FontWeight.w400,
               ),
             ),
           ),
         ),
       ],
       elevation: 8.0,
+      shadowColor: themeProvider.currentTheme.cardColor,
     );
   }
 }
