@@ -17,6 +17,7 @@ class MessagesPrivat extends StatelessWidget {
   final int senderId;
   final bool isPreviousSameMember;
   //final int? vote;
+  final bool isRead;
 
   Account _account =
       Account(email: '', userName: '', password: '', avatar: '', id: 0);
@@ -31,6 +32,7 @@ class MessagesPrivat extends StatelessWidget {
     required this.userName,
     required this.senderId,
     required this.isPreviousSameMember,
+    required this.isRead,
     //this.vote
   });
 
@@ -43,7 +45,7 @@ class MessagesPrivat extends StatelessWidget {
       previousMemberID = json['sender_id'];
 
       return MessagesPrivat(
-        message: json['message'],
+        message: json['messages'],
         //id: json['id']!,
         createdAt: DateTime.parse(json['created_at']).add(timeZone),
         avatar: json['avatar'],
@@ -51,6 +53,7 @@ class MessagesPrivat extends StatelessWidget {
         senderId: json['sender_id'],
         isPreviousSameMember: isSameMember,
         //vote: json['vote']!,
+        isRead: json['is_read'],
       );
     }).toList();
   }
@@ -61,13 +64,14 @@ class MessagesPrivat extends StatelessWidget {
     final timeZone = DateTime.now().timeZoneOffset;
 
     return MessagesPrivat(
-      message: jsonMessage['message'],
+      message: jsonMessage['messages'],
       createdAt: DateTime.parse(jsonMessage['created_at']).add(timeZone),
       avatar: jsonMessage['avatar'],
       userName: jsonMessage['user_name'],
       senderId: jsonMessage['sender_id'],
       isPreviousSameMember: isSameMember,
       //vote: jsonMessage['vote'],
+      isRead: jsonMessage['is_read'],
     );
   }
 
@@ -116,6 +120,7 @@ class MessagesPrivat extends StatelessWidget {
                   userName: userName,
                   //vote: vote,
                   isPreviousSameMember: isPreviousSameMember,
+                  isRead: isRead,
                 )
               : TheirMessege(
                   screenWidth: screenWidth,
@@ -127,6 +132,7 @@ class MessagesPrivat extends StatelessWidget {
                   userName: userName,
                   //vote: vote,
                   isPreviousSameMember: isPreviousSameMember,
+                  isRead: isRead,
                 );
         } else {
           return Container();
@@ -146,6 +152,7 @@ class TheirMessege extends StatelessWidget {
   final int senderId;
   //final int? vote;
   final bool isPreviousSameMember;
+  final bool isRead;
 
   const TheirMessege(
       {super.key,
@@ -157,7 +164,8 @@ class TheirMessege extends StatelessWidget {
       required this.userName,
       required this.senderId,
       //this.vote,
-      required this.isPreviousSameMember});
+      required this.isPreviousSameMember,
+      required this.isRead});
 
   @override
   Widget build(BuildContext context) {
@@ -351,18 +359,21 @@ class MyMessege extends StatelessWidget {
   final int senderId;
   //final int? vote;
   final bool isPreviousSameMember;
+  final bool isRead;
 
-  const MyMessege(
-      {super.key,
-      required this.screenWidth,
-      required this.message,
-      //this.id,
-      required this.createdAt,
-      required this.avatar,
-      required this.userName,
-      required this.senderId,
-      //this.vote,
-      required this.isPreviousSameMember});
+  const MyMessege({
+    super.key,
+    required this.screenWidth,
+    required this.message,
+    //this.id,
+    required this.createdAt,
+    required this.avatar,
+    required this.userName,
+    required this.senderId,
+    //this.vote,
+    required this.isPreviousSameMember,
+    required this.isRead,
+  });
 
   @override
   Widget build(BuildContext context) {

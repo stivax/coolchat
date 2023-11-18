@@ -1,3 +1,4 @@
+import 'package:coolchat/avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -177,56 +178,11 @@ class TheirMessege extends StatelessWidget {
                     height: 32,
                     child: isPreviousSameMember
                         ? Container()
-                        : Stack(
-                            alignment: Alignment.topCenter,
-                            fit: StackFit.expand,
-                            clipBehavior: Clip.hardEdge,
-                            children: [
-                              Positioned(
-                                top: 2,
-                                right: 2,
-                                left: 2,
-                                bottom: 0,
-                                child: Container(
-                                  width: 24,
-                                  height: 32,
-                                  decoration: ShapeDecoration(
-                                    color: themeProvider
-                                        .currentTheme.primaryColorDark,
-                                    shape: RoundedRectangleBorder(
-                                      side: BorderSide(
-                                          width: 0.50,
-                                          color: themeProvider
-                                              .currentTheme.shadowColor),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    shadows: const [
-                                      BoxShadow(
-                                        color: Color(0x4C024A7A),
-                                        blurRadius: 8,
-                                        offset: Offset(2, 2),
-                                        spreadRadius: 0,
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                top: 1,
-                                right: 1,
-                                left: 1,
-                                bottom: 0,
-                                child: Container(
-                                  width: 24,
-                                  height: 32,
-                                  child: Image(
-                                    image: NetworkImage(avatar),
-                                    fit: BoxFit.fitHeight,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                        : AvatarMember(
+                            avatar: NetworkImage(avatar),
+                            name: userName,
+                            isOnline: true,
+                            memberID: ownerId),
                   ),
                   Expanded(
                     flex: 12,
@@ -485,56 +441,11 @@ class MyMessege extends StatelessWidget {
                     height: 32,
                     child: isPreviousSameMember
                         ? Container()
-                        : Stack(
-                            alignment: Alignment.topCenter,
-                            fit: StackFit.expand,
-                            clipBehavior: Clip.hardEdge,
-                            children: [
-                              Positioned(
-                                  top: 2,
-                                  right: 2,
-                                  left: 2,
-                                  bottom: 0,
-                                  child: Container(
-                                    width: 24,
-                                    height: 32,
-                                    decoration: ShapeDecoration(
-                                      color: themeProvider
-                                          .currentTheme.primaryColorDark,
-                                      shape: RoundedRectangleBorder(
-                                        side: BorderSide(
-                                            width: 0.50,
-                                            color: themeProvider
-                                                .currentTheme.shadowColor),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      shadows: [
-                                        BoxShadow(
-                                          color: themeProvider
-                                              .currentTheme.cardColor,
-                                          blurRadius: 8,
-                                          offset: Offset(2, 2),
-                                          spreadRadius: 0,
-                                        )
-                                      ],
-                                    ),
-                                  )),
-                              Positioned(
-                                top: 1,
-                                right: 1,
-                                left: 1,
-                                bottom: 0,
-                                child: SizedBox(
-                                  width: 24,
-                                  height: 32,
-                                  child: Image(
-                                    image: NetworkImage(avatar),
-                                    fit: BoxFit.fitHeight,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                        : AvatarMember(
+                            avatar: NetworkImage(avatar),
+                            name: userName,
+                            isOnline: true,
+                            memberID: ownerId),
                   ),
                 ]),
           ),
