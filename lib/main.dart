@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:coolchat/animation_start.dart';
 import 'package:coolchat/servises/token_provider.dart';
 import 'package:coolchat/servises/token_repository.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +15,7 @@ import 'bloc/token_blok.dart';
 import 'menu.dart';
 import 'my_appbar.dart';
 import 'theme_provider.dart';
-import 'splashScreen.dart';
+import 'splash_screen.dart';
 import 'rooms.dart';
 import 'server_provider.dart';
 
@@ -47,10 +48,7 @@ class MyApp extends StatelessWidget {
         builder: (context, snapshot) {
           if (themeProvider.isThemeChange &&
               snapshot.connectionState == ConnectionState.waiting) {
-            return AnimatedSwitcher(
-              duration: const Duration(milliseconds: 100),
-              child: SplashScreen(),
-            );
+            return const AnimationStart();
           } else {
             return MyHomePage(key: myHomePageStateKey);
           }
