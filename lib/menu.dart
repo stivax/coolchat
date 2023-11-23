@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
 
+import 'package:coolchat/screen/private_chat_list.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -77,7 +78,8 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
     });
   }
 
-  Future<void> handleLogIn(Account acc, BuildContext context) async {
+  Future<void> handleLogIn(
+      Account acc, TokenBloc tokenBloc, BuildContext context) async {
     if (acc.userName == '') {
       final account = await showDialog(
         context: context,
@@ -93,7 +95,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
         _account =
             Account(email: '', userName: '', password: '', avatar: '', id: 0);
       });
-      showPopupLogOut(acc, context);
+      showPopupLogOut(acc, tokenBloc, context);
     }
   }
 
@@ -110,19 +112,26 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                 onSelected: (value) async {
                   FocusScope.of(context).unfocus();
                   if (value == 'item7') {
-                    await handleLogIn(_account, context);
                     final TokenBloc tokenBloc = context.read<TokenBloc>();
+                    await handleLogIn(_account, tokenBloc, context);
                     if (_account.id != 0) {
                       tokenBloc.add(TokenLoadEvent(
                           email: _account.email,
                           password: _account.password,
                           roomName: widget.roomName));
                     } else {
-                      tokenBloc.add(TokenClearEvent());
+                      //tokenBloc.add(TokenClearEvent());
                     }
                   } else if (value == 'item6') {
                     const url = Server.server;
                     openUrl(url);
+                  } else if (value == 'item2') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PrivateChatList(),
+                      ),
+                    );
                   }
                 },
                 icon: Icon(Icons.menu_rounded,

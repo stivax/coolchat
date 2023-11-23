@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import 'screen/common_chat.dart';
-import 'image.dart';
 import 'main.dart';
 import 'message_provider.dart';
 import 'server/server.dart';
@@ -119,11 +119,11 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
         },
         child: _selectedItems == listRoom[index]
             ? RoomAvatar(
-                image: CachedImageProvider(listRoom[index]),
+                image: CachedNetworkImageProvider(listRoom[index]),
                 isChoise: true,
               )
             : RoomAvatar(
-                image: CachedImageProvider(listRoom[index]),
+                image: CachedNetworkImageProvider(listRoom[index]),
                 isChoise: false,
               ),
       );

@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:coolchat/bloc/token_blok.dart';
 import 'package:coolchat/model/token.dart';
+import 'package:coolchat/servises/message_provider_container.dart';
 import 'package:coolchat/servises/token_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -120,7 +121,9 @@ class _ChatScreenState extends State<ChatScreen> {
           } else if (state is TokenLoadedState) {
             print('loaded');
             token = state.token;
-            messageListen(state.messageProvider);
+            MessageProvider? provider =
+                MessageProviderContainer.instance.getProvider(widget.topicName);
+            messageListen(provider!);
             return CommonChatScreen(
               state: 'loaded',
               topicName: widget.topicName,
@@ -200,7 +203,9 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
       home: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
           return Scaffold(
-            appBar: MyAppBar(),
+            appBar: MyAppBar(
+              roomName: widget.topicName,
+            ),
             body: Container(
               height: screenHeight,
               padding: const EdgeInsets.only(

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:coolchat/servises/token_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
@@ -186,8 +187,8 @@ Future<Map<String, dynamic>> loginProcess(
   }
 }
 
-void showPopupLogOut(Account acc, BuildContext context) {
-  showDialog(
+showPopupLogOut(Account acc, TokenBloc tokenBloc, BuildContext context) async {
+  await showDialog(
     context: context,
     builder: (BuildContext context) {
       return Consumer<ThemeProvider>(
@@ -276,6 +277,7 @@ void showPopupLogOut(Account acc, BuildContext context) {
                     ),
                     onPressed: () {
                       FocusManager.instance.primaryFocus?.unfocus();
+                      tokenBloc.add(TokenClearEvent());
                       writeAccount(Account(
                           email: '',
                           userName: '',

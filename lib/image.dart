@@ -9,7 +9,7 @@ class CachedImageProvider extends ImageProvider<CachedImageProvider> {
   CachedImageProvider(this.imageUrl);
 
   @override
-  ImageStreamCompleter load(CachedImageProvider key, DecoderCallback decode) {
+  ImageStreamCompleter load(CachedImageProvider key, ui.Codec decode) {
     return MultiFrameImageStreamCompleter(
       codec: _loadAsync(),
       scale: 1.0,

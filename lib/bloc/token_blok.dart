@@ -1,6 +1,7 @@
 import 'package:coolchat/message_provider.dart';
 import 'package:coolchat/model/token.dart';
 import 'package:coolchat/server/server.dart';
+import 'package:coolchat/servises/message_provider_container.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../servises/token_repository.dart';
@@ -18,6 +19,8 @@ class TokenBloc extends Bloc<TokenEvent, TokenState> {
           token = await tokenRepository.getToken(event.email, event.password);
           final MessageProvider messageProvider = MessageProvider(
               'wss://$server/ws/${event.roomName}?token=${token!.token["access_token"]}');
+          MessageProviderContainer.instance
+              .addProvider(event.roomName!, messageProvider);
           emit(TokenLoadedState(
               token: token!, messageProvider: messageProvider));
         } catch (_) {

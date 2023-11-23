@@ -2,6 +2,7 @@
 import 'dart:convert';
 
 import 'package:coolchat/bloc/token_blok.dart';
+import 'package:coolchat/servises/token_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marquee/marquee.dart';
@@ -67,8 +68,17 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
   @override
   Widget build(BuildContext context) {
     messageListen(widget.messageProvider);
-    return BlocProvider<MenuBloc>(
-      create: (context) => MenuBloc(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<MenuBloc>(
+          create: (context) => MenuBloc(),
+        ),
+        BlocProvider<TokenBloc>(
+          create: (context) => TokenBloc(
+            tokenRepository: context.read<TokenRepository>(),
+          ),
+        )
+      ],
       child: CommonChatScreen(
         topicName: widget.receiverName,
         messageProvider: widget.messageProvider,

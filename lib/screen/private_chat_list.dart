@@ -1,9 +1,16 @@
 import 'dart:convert';
 
+import 'package:coolchat/account.dart';
 import 'package:coolchat/animation_start.dart';
+import 'package:coolchat/bloc/token_blok.dart';
+import 'package:coolchat/menu.dart';
+import 'package:coolchat/my_appbar.dart';
+import 'package:coolchat/private_rooms.dart';
+import 'package:coolchat/server/server.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
 import 'package:coolchat/servises/token_provider.dart';
 import 'package:coolchat/servises/token_repository.dart';
+import 'package:coolchat/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,66 +18,18 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
 
-import 'account.dart';
-import 'bloc/token_blok.dart';
-import 'menu.dart';
-import 'my_appbar.dart';
-import 'theme_provider.dart';
-import 'rooms.dart';
-import 'server_provider.dart';
-
-void main() => runApp(
-      ChangeNotifierProvider(
-        create: (context) => ThemeProvider(),
-        child: RepositoryProvider(
-            create: (context) => TokenRepository(),
-            child:
-                const ServerProvider(server: 'cool-chat.club', child: MyApp())),
-      ),
-    );
-
-final myHomePageStateKey = GlobalKey<_MyHomePageState>();
-
-class MyApp extends StatelessWidget {
-  static final MessageProviderContainer messageProviderContainer =
-      MessageProviderContainer.instance;
-  const MyApp({super.key});
+class PrivateChatList extends StatefulWidget {
+  PrivateChatList({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
-        GlobalKey<ScaffoldMessengerState>();
-
-    return MaterialApp(
-      scaffoldMessengerKey: scaffoldMessengerKey,
-      theme: themeProvider.currentTheme,
-      home: FutureBuilder(
-        future: Future.delayed(const Duration(seconds: 3)),
-        builder: (context, snapshot) {
-          if (themeProvider.isThemeChange &&
-              snapshot.connectionState == ConnectionState.waiting) {
-            return const AnimationStart();
-          } else {
-            return MyHomePage(key: myHomePageStateKey);
-          }
-        },
-      ),
-    );
-  }
+  _PrivateChatListState createState() => _PrivateChatListState();
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({super.key});
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
+class _PrivateChatListState extends State<PrivateChatList> {
   final _scrollController = ScrollController();
-  List<Room> roomsList = [];
-  late String server;
+  List<RoomPrivate> roomsList = [];
+  final server = Server.server;
+  late int id;
   late Map<dynamic, dynamic> token;
 
   @override
@@ -84,7 +43,6 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    server = ServerProvider.of(context).server;
     fetchData(server);
   }
 
@@ -93,7 +51,9 @@ class _MyHomePageState extends State<MyHomePage> {
     var tok = await loginProcess(context, acc.email, acc.password);
     setState(() {
       token = tok;
+      id = acc.id;
     });
+    fetchData(server);
   }
 
   Future<Account> _readAccount() async {
@@ -102,7 +62,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<http.Response> _getData(String server) async {
-    final url = Uri.https(server, '/rooms/');
+    print(id);
+    final url = Uri.https(server, '/direct/$id');
     return await http.get(url);
   }
 
@@ -110,9 +71,10 @@ class _MyHomePageState extends State<MyHomePage> {
     try {
       http.Response response = await _getData(server);
       if (response.statusCode == 200) {
+        print(response.body);
         String responseBody = utf8.decode(response.bodyBytes);
         List<dynamic> jsonList = jsonDecode(responseBody);
-        List<Room> rooms = Room.fromJsonList(jsonList).toList();
+        List<RoomPrivate> rooms = RoomPrivate.fromJsonList(jsonList).toList();
         if (mounted) {
           setState(() {
             roomsList = rooms;
@@ -173,7 +135,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       clipBehavior: Clip.antiAlias,
                       decoration: BoxDecoration(
                           color: themeProvider.currentTheme.primaryColorDark),
-                      child: ChatListWidget(
+                      child: ChatPrivateListWidget(
                         scrollController: _scrollController,
                         roomsList: roomsList,
                       ),
@@ -189,10 +151,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class ChatListWidget extends StatelessWidget {
+class ChatPrivateListWidget extends StatelessWidget {
   final ScrollController scrollController;
-  List<Room> roomsList;
-  ChatListWidget(
+  List<RoomPrivate> roomsList;
+  ChatPrivateListWidget(
       {super.key, required this.scrollController, required this.roomsList});
 
   @override
@@ -200,10 +162,6 @@ class ChatListWidget extends StatelessWidget {
     return CustomScrollView(
       controller: scrollController,
       slivers: [
-        const SliverToBoxAdapter(child: HeaderWidget()),
-        const SliverToBoxAdapter(
-          child: SizedBox(height: 30),
-        ),
         Consumer<ThemeProvider>(
           builder: (context, themeProvider, child) {
             return SliverToBoxAdapter(
@@ -213,7 +171,7 @@ class ChatListWidget extends StatelessWidget {
                   padding:
                       const EdgeInsets.only(left: 20, bottom: 5, right: 20),
                   child: Text(
-                    'Choose rooms for\ncommunication',
+                    'Your personal chats',
                     textScaler: const TextScaler.linear(0.97),
                     style: TextStyle(
                       color: themeProvider.currentTheme.primaryColor,
@@ -238,61 +196,8 @@ class ChatListWidget extends StatelessWidget {
   }
 }
 
-class HeaderWidget extends StatelessWidget {
-  const HeaderWidget({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    var screenWidth = MediaQuery.of(context).size.width;
-    return Container(
-      width: 393,
-      height: 428,
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/images/main.jpg'),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 20, right: 20),
-            child: Text(
-              'Welcome every\ntourist to Teamchat',
-              textScaleFactor: 0.97,
-              style: TextStyle(
-                color: const Color(0xFFF5FBFF),
-                fontSize: screenWidth * 0.095,
-                fontFamily: 'Manrope',
-                fontWeight: FontWeight.w700,
-                height: 1.16,
-              ),
-            ),
-          ),
-          Padding(
-            padding:
-                const EdgeInsets.only(left: 20, bottom: 20, top: 10, right: 20),
-            child: Text(
-              'Chat about a wide variety of tourist equipment.\nCommunicate, get good advice and choose!',
-              textScaleFactor: 0.97,
-              style: TextStyle(
-                color: const Color(0xFFF5FBFF),
-                fontSize: screenWidth * 0.042,
-                fontFamily: 'Manrope',
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class ScrollRoomsList extends StatefulWidget {
-  List<Room> roomsList;
+  List<RoomPrivate> roomsList;
   ScrollRoomsList({super.key, required this.roomsList});
 
   @override

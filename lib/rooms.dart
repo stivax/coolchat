@@ -7,10 +7,10 @@ import 'package:coolchat/server_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:cached_network_image/cached_network_image.dart';
 
 import 'screen/common_chat.dart';
 import 'error_answer.dart';
-import 'image.dart';
 import 'login_popup.dart';
 import 'main.dart';
 import 'message_provider.dart';
@@ -40,7 +40,9 @@ class Room extends StatelessWidget {
         name: json["name_room"],
         id: json["id"],
         createdAt: json["created_at"],
-        image: CachedImageProvider(json["image_room"]),
+        image: CachedNetworkImageProvider(
+          json["image_room"],
+        ),
         countPeople: 10,
         countOnline: 5,
       );
@@ -61,19 +63,10 @@ class Room extends StatelessWidget {
     }).toList();
   }
 
-  MessageProvider socketConnect(BuildContext context) {
-    final server = ServerProvider.of(context).server;
-    Map<dynamic, dynamic> token = myHomePageStateKey.currentState!.token;
-    MessageProvider messageProvider = MessageProvider(
-        'wss://$server/ws/$name?token=${token["access_token"]}');
-    return messageProvider;
-  }
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () async {
-        //MessageProvider messageProvider = socketConnect(context);
         const server = Server.server;
         final account = await readAccountFuture();
         id == 999
