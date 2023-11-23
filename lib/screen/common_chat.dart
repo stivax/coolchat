@@ -599,6 +599,10 @@ class _TextAndSendState extends State<TextAndSend> {
     }));
   }
 
+  void _sendStatus() {
+    widget.messageProvider?.sendMessage(json.encode({'type': "typing"}));
+  }
+
   void _onTapOutside(BuildContext context) {
     GestureDetector(
       onTap: () {
@@ -684,6 +688,9 @@ class _TextAndSendState extends State<TextAndSend> {
                         FocusScope.of(context)
                             .requestFocus(_textFieldFocusNode);
                       }
+                    },
+                    onChanged: (_) {
+                      _sendStatus();
                     },
                   ),
                 ),

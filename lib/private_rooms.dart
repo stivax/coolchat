@@ -24,20 +24,24 @@ class RoomPrivate extends StatelessWidget {
   String recipientName;
   String recipientAvatar;
   bool isRead;
+  Account account;
 
   RoomPrivate(
       {required this.recipientId,
       required this.recipientName,
       required this.recipientAvatar,
-      required this.isRead});
+      required this.isRead,
+      required this.account});
 
-  static List<RoomPrivate> fromJsonList(List<dynamic> jsonList) {
+  static List<RoomPrivate> fromJsonList(
+      List<dynamic> jsonList, Account account) {
     return jsonList.map((json) {
       return RoomPrivate(
         recipientId: json['recipient_id'],
         recipientName: json['recipient_name'],
         recipientAvatar: json['recipient_avatar'],
         isRead: json['is_read'],
+        account: account,
       );
     }).toList();
   }
@@ -165,7 +169,7 @@ class RoomPrivate extends StatelessWidget {
                                 ),
                                 child: Image(
                                     image: CachedNetworkImageProvider(
-                                        recipientAvatar)),
+                                        account.avatar)),
                               ),
                               Expanded(
                                 child: Container(width: double.infinity),

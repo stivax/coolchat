@@ -390,9 +390,13 @@ class _TextAndSendState extends State<TextAndSend> {
   }
 
   void _sendMessage(String message) {
-    widget.messageProvider?.sendMessage(json.encode({
+    widget.messageProvider.sendMessage(json.encode({
       'messages': message,
     }));
+  }
+
+  void _sendStatus() {
+    widget.messageProvider.sendMessage(json.encode({'type': "typing"}));
   }
 
   void _onTapOutside(BuildContext context) {
@@ -478,6 +482,9 @@ class _TextAndSendState extends State<TextAndSend> {
                         FocusScope.of(context)
                             .requestFocus(_textFieldFocusNode);
                       }
+                    },
+                    onChanged: (_) {
+                      _sendStatus();
                     },
                   ),
                 ),

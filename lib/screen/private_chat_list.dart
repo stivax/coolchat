@@ -68,13 +68,15 @@ class _PrivateChatListState extends State<PrivateChatList> {
   }
 
   Future<void> fetchData(String server) async {
+    final account = await readAccountFuture();
     try {
       http.Response response = await _getData(server);
       if (response.statusCode == 200) {
         print(response.body);
         String responseBody = utf8.decode(response.bodyBytes);
         List<dynamic> jsonList = jsonDecode(responseBody);
-        List<RoomPrivate> rooms = RoomPrivate.fromJsonList(jsonList).toList();
+        List<RoomPrivate> rooms =
+            RoomPrivate.fromJsonList(jsonList, account).toList();
         if (mounted) {
           setState(() {
             roomsList = rooms;
