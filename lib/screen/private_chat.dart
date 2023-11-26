@@ -2,6 +2,7 @@
 import 'dart:convert';
 
 import 'package:coolchat/bloc/token_blok.dart';
+import 'package:coolchat/servises/message_provider_container.dart';
 import 'package:coolchat/servises/token_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -390,13 +391,9 @@ class _TextAndSendState extends State<TextAndSend> {
   }
 
   void _sendMessage(String message) {
-    widget.messageProvider.sendMessage(json.encode({
+    widget.messageProvider?.sendMessage(json.encode({
       'messages': message,
     }));
-  }
-
-  void _sendStatus() {
-    widget.messageProvider.sendMessage(json.encode({'type': "typing"}));
   }
 
   void _onTapOutside(BuildContext context) {
@@ -462,29 +459,9 @@ class _TextAndSendState extends State<TextAndSend> {
                       border: InputBorder.none,
                     ),
                     maxLines: null,
-                    onTap: () async {
-                      if (widget.messageProvider!.serverUrl
-                          .toString()
-                          .endsWith('l')) {
-                        FocusScope.of(context).unfocus();
-                        final account = await showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return LoginDialog();
-                          },
-                        );
-                        final TokenBloc tokenBloc = context.read<TokenBloc>();
-                        tokenBloc.add(TokenLoadEvent(
-                            email: account.email,
-                            password: account.password,
-                            roomName: widget.topicName));
-                      } else {
-                        FocusScope.of(context)
-                            .requestFocus(_textFieldFocusNode);
-                      }
-                    },
-                    onChanged: (_) {
-                      _sendStatus();
+                    onTap: () {
+                      print(context.size);
+                      FocusScope.of(context).requestFocus(_textFieldFocusNode);
                     },
                   ),
                 ),
