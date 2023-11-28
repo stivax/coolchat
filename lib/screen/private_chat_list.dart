@@ -62,7 +62,6 @@ class _PrivateChatListState extends State<PrivateChatList> {
   }
 
   Future<http.Response> _getData(String server) async {
-    print(id);
     final url = Uri.https(server, '/direct/$id');
     return await http.get(url);
   }
@@ -72,7 +71,6 @@ class _PrivateChatListState extends State<PrivateChatList> {
     try {
       http.Response response = await _getData(server);
       if (response.statusCode == 200) {
-        print(response.body);
         String responseBody = utf8.decode(response.bodyBytes);
         List<dynamic> jsonList = jsonDecode(responseBody);
         List<RoomPrivate> rooms =

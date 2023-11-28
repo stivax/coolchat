@@ -48,6 +48,7 @@ class RoomPrivate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool switchColorMail = true;
     return GestureDetector(
       onTap: () async {
         const server = Server.server;
@@ -92,7 +93,6 @@ class RoomPrivate extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.only(top: 0, left: 0, right: 0),
                     child: Container(
-                      //padding: EdgeInsets.all(8.0),
                       width: double.infinity,
                       alignment: Alignment.center,
                       decoration: ShapeDecoration(
@@ -110,19 +110,40 @@ class RoomPrivate extends StatelessWidget {
                           ),
                         ),
                       ),
-                      child: Container(
-                        padding: const EdgeInsets.all(8.0),
-                        width: 200,
-                        child: Text(
-                          'Direct chat:\n$recipientName',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Color(0xFFF5FBFF),
-                            fontSize: 14,
-                            fontFamily: 'Manrope',
-                            fontWeight: FontWeight.w600,
-                            height: 1.30,
-                          ),
+                      child: SizedBox(
+                        height: 100,
+                        width: 100,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          clipBehavior: Clip.hardEdge,
+                          children: [
+                            Positioned(
+                              top: 5,
+                              right: 15,
+                              left: 15,
+                              bottom: 0,
+                              child: Container(
+                                decoration: ShapeDecoration(
+                                  shape: RoundedRectangleBorder(
+                                    side: const BorderSide(
+                                        width: 1, color: Colors.white),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              top: 1,
+                              right: 1,
+                              left: 1,
+                              bottom: 1,
+                              child: Image(
+                                image:
+                                    CachedNetworkImageProvider(recipientAvatar),
+                                fit: BoxFit.fitHeight,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -146,49 +167,54 @@ class RoomPrivate extends StatelessWidget {
                           ),
                         ),
                       ),
-                      child: Center(
-                        heightFactor: 0.5,
-                        child: Container(
-                          alignment: Alignment.bottomCenter,
-                          padding: const EdgeInsets.only(
-                              left: 8, right: 8, top: 4, bottom: 4),
-                          child: Row(
-                            verticalDirection: VerticalDirection.down,
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                clipBehavior: Clip.antiAlias,
-                                decoration: ShapeDecoration(
-                                  shape: RoundedRectangleBorder(
-                                    side: const BorderSide(
-                                        width: 0.50, color: Colors.white),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
+                      child: Container(
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.only(
+                            left: 8, right: 8, top: 4, bottom: 4),
+                        child: Row(
+                          //verticalDirection: VerticalDirection.down,
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Center(
+                              child: Text(
+                                recipientName,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Color(0xFFF5FBFF),
+                                  fontSize: 14,
+                                  fontFamily: 'Manrope',
+                                  fontWeight: FontWeight.w600,
+                                  height: 0.09,
                                 ),
-                                child: Image(
-                                    image: CachedNetworkImageProvider(
-                                        account.avatar)),
                               ),
-                              Expanded(
-                                child: Container(width: double.infinity),
+                            ),
+                            Expanded(
+                              child: Container(width: double.infinity),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(right: 3, bottom: 5),
+                              child: Icon(
+                                Icons.mail,
+                                size: 20,
+                                color: switchColorMail
+                                    ? const Color(0xFFF5FBFF)
+                                    : const Color(0xFFE02849),
                               ),
-                              Container(
-                                clipBehavior: Clip.antiAlias,
-                                decoration: ShapeDecoration(
-                                  shape: RoundedRectangleBorder(
-                                    side: const BorderSide(
-                                        width: 0.50, color: Colors.white),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
-                                child: Image(
-                                    image: CachedNetworkImageProvider(
-                                        recipientAvatar)),
+                            ),
+                            const Text(
+                              '0',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Color(0xFFF5FBFF),
+                                fontSize: 14,
+                                fontFamily: 'Manrope',
+                                fontWeight: FontWeight.w400,
                               ),
-                            ],
-                          ),
+                            )
+                          ],
                         ),
                       ),
                     ),

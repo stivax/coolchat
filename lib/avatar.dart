@@ -7,12 +7,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class AvatarMember extends StatelessWidget {
-  ImageProvider avatar;
-  String name;
-  int memberID;
+  final ImageProvider avatar;
+  final String name;
+  final int memberID;
   bool isOnline = true;
   AvatarMember(
-      {required this.avatar,
+      {super.key,
+      required this.avatar,
       required this.name,
       required this.isOnline,
       required this.memberID});
@@ -20,7 +21,6 @@ class AvatarMember extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var screenWidth = MediaQuery.of(context).size.width;
-    print(screenWidth);
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return GestureDetector(
@@ -66,23 +66,6 @@ class AvatarMember extends StatelessWidget {
                   fit: BoxFit.fitHeight,
                 ),
               ),
-              /*
-              Positioned(
-                top: 1,
-                right: 10,
-                child: isOnline
-                    ? Container(
-                        width: 12,
-                        height: 12,
-                        decoration: ShapeDecoration(
-                          color: themeProvider
-                              .currentTheme.shadowColor,
-                          shape: const OvalBorder(),
-                        ),
-                      )
-                    : Container(),
-              ),
-              */
             ],
           ),
         );

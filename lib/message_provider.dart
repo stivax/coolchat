@@ -12,6 +12,7 @@ class MessageProvider {
   }
 
   void sendMessage(String message) {
+    print(message);
     channel.sink.add(message);
   }
 

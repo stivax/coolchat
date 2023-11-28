@@ -656,7 +656,7 @@ class _TextAndSendState extends State<TextAndSend> {
                     ),
                     decoration: InputDecoration(
                       hintText: widget.state == 'empty'
-                          ? 'Please log in or registration'
+                          ? 'Please log in or register'
                           : 'Write message...',
                       hintStyle: TextStyle(
                         color: themeProvider.currentTheme.primaryColor

@@ -275,16 +275,21 @@ showPopupLogOut(Account acc, TokenBloc tokenBloc, BuildContext context) async {
                         height: 1.24,
                       ),
                     ),
-                    onPressed: () {
+                    onPressed: () async {
                       FocusManager.instance.primaryFocus?.unfocus();
                       tokenBloc.add(TokenClearEvent());
-                      writeAccount(Account(
+                      await writeAccount(Account(
                           email: '',
                           userName: '',
                           password: '',
                           avatar: '',
                           id: 0));
                       Navigator.pop(context);
+                      Navigator.pop(context);
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => MyHomePage()));
                     },
                   ),
                 )
