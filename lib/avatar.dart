@@ -11,12 +11,14 @@ class AvatarMember extends StatelessWidget {
   final String name;
   final int memberID;
   bool isOnline = true;
+  final BuildContext contextAvatarMember;
   AvatarMember(
       {super.key,
       required this.avatar,
       required this.name,
       required this.isOnline,
-      required this.memberID});
+      required this.memberID,
+      required this.contextAvatarMember});
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +27,8 @@ class AvatarMember extends StatelessWidget {
       builder: (context, themeProvider, child) {
         return GestureDetector(
           onTapDown: (details) {
-            _showPopupMenu(context, themeProvider, details.globalPosition);
+            _showPopupMenu(
+                contextAvatarMember, themeProvider, details.globalPosition);
           },
           child: Stack(
             fit: StackFit.expand,
@@ -73,10 +76,10 @@ class AvatarMember extends StatelessWidget {
     );
   }
 
-  void _showPopupMenu(
-      BuildContext context, ThemeProvider themeProvider, Offset tapPosition) {
+  void _showPopupMenu(BuildContext contextAvatarMember,
+      ThemeProvider themeProvider, Offset tapPosition) {
     showMenu(
-      context: context,
+      context: contextAvatarMember,
       color: themeProvider.currentTheme.primaryColorDark,
       position: RelativeRect.fromLTRB(
         tapPosition.dx,
@@ -100,16 +103,16 @@ class AvatarMember extends StatelessWidget {
             const server = Server.server;
             final String id = memberID.toString();
             final account = await readAccountFuture();
-            final token =
-                await loginProcess(context, account.email, account.password);
+            final token = await loginProcess(
+                contextAvatarMember, account.email, account.password);
             final MessageProvider messageProvider = MessageProvider(
                 'wss://$server/private/$id?token=${token["access_token"]}');
             print('id = $id , token = $token');
-            Navigator.pop(context);
+            //Navigator.pop(contextAvatarMember);
             Navigator.push(
-              context,
+              contextAvatarMember,
               MaterialPageRoute(
-                  builder: (context) => PrivateChatScreen(
+                  builder: (contextAvatarMember) => PrivateChatScreen(
                       receiverName: name, messageProvider: messageProvider)),
             );
           },

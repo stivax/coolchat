@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:coolchat/animation_start.dart';
+import 'package:coolchat/screen/common_chat.dart';
+import 'package:coolchat/screen/private_chat.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
 import 'package:coolchat/servises/token_provider.dart';
 import 'package:coolchat/servises/token_repository.dart';

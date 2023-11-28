@@ -460,7 +460,7 @@ class _TextAndSendState extends State<TextAndSend> {
                     ),
                     maxLines: null,
                     onTap: () {
-                      print(context.size);
+                      print(context.widget);
                       FocusScope.of(context).requestFocus(_textFieldFocusNode);
                     },
                   ),

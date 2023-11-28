@@ -1,40 +1,33 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'dart:convert';
-
-import 'package:coolchat/add_room_popup.dart';
 import 'package:coolchat/screen/private_chat.dart';
-import 'package:coolchat/server_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:http/http.dart' as http;
 import 'package:cached_network_image/cached_network_image.dart';
 
-import 'screen/common_chat.dart';
-import 'error_answer.dart';
-import 'login_popup.dart';
-import 'main.dart';
 import 'message_provider.dart';
 import 'server/server.dart';
 import 'theme_provider.dart';
 import 'account.dart';
 
 class RoomPrivate extends StatelessWidget {
-  int recipientId;
-  String recipientName;
-  String recipientAvatar;
+  final int recipientId;
+  final String recipientName;
+  final String recipientAvatar;
   bool isRead;
-  Account account;
+  final Account account;
+  final BuildContext contextPrivateRoom;
 
   RoomPrivate(
       {required this.recipientId,
       required this.recipientName,
       required this.recipientAvatar,
       required this.isRead,
-      required this.account});
+      required this.account,
+      required this.contextPrivateRoom});
 
   static List<RoomPrivate> fromJsonList(
-      List<dynamic> jsonList, Account account) {
+      List<dynamic> jsonList, Account account, BuildContext context) {
     return jsonList.map((json) {
       return RoomPrivate(
         recipientId: json['recipient_id'],
@@ -42,6 +35,7 @@ class RoomPrivate extends StatelessWidget {
         recipientAvatar: json['recipient_avatar'],
         isRead: json['is_read'],
         account: account,
+        contextPrivateRoom: context,
       );
     }).toList();
   }
@@ -59,11 +53,12 @@ class RoomPrivate extends StatelessWidget {
         final MessageProvider messageProvider = MessageProvider(
             'wss://$server/private/$id?token=${token["access_token"]}');
         print('id = $id , token = $token');
+        print('current context ${contextPrivateRoom.widget}');
         //Navigator.pop(context);
         Navigator.push(
-          context,
+          contextPrivateRoom,
           MaterialPageRoute(
-              builder: (context) => PrivateChatScreen(
+              builder: (contextPrivateRoom) => PrivateChatScreen(
                   receiverName: recipientName,
                   messageProvider: messageProvider)),
         );

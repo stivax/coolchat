@@ -77,7 +77,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void formMessage(String responseBody) {
     dynamic jsonMessage = jsonDecode(responseBody);
     Messages message = Messages.fromJsonMessage(
-        jsonMessage, widget.messageData.previousMemberID);
+        jsonMessage, widget.messageData.previousMemberID, context);
     widget.messageData.previousMemberID = message.ownerId.toInt();
     blockMessageStateKey.currentState!._messages.add(message);
     blockMessageStateKey.currentState!.widget.updateState();
@@ -85,7 +85,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void formMembersList(String responseBody) {
     dynamic jsonMemberList = jsonDecode(responseBody);
-    Set<Member> membersList = Member.fromJsonSet(jsonMemberList);
+    Set<Member> membersList = Member.fromJsonSet(jsonMemberList, context);
     chatMembersStateKey.currentState!.members.clear();
     chatMembersStateKey.currentState!.members.addAll(membersList);
     chatMembersStateKey.currentState!.widget.updateState();

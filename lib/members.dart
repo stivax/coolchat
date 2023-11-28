@@ -10,28 +10,32 @@ class Member extends StatelessWidget {
   String name;
   int memberID;
   bool isOnline = true;
+  final BuildContext contextMember;
   Member(
       {super.key,
       required this.avatar,
       required this.name,
       required this.isOnline,
-      required this.memberID});
+      required this.memberID,
+      required this.contextMember});
 
-  factory Member.fromJson(Map<String, dynamic> json) {
+  factory Member.fromJson(Map<String, dynamic> json, BuildContext context) {
     return Member(
       avatar: NetworkImage(json['avatar']),
       name: json['user_name'],
       memberID: json['user_id'],
       isOnline: true,
+      contextMember: context,
     );
   }
 
-  static Set<Member> fromJsonSet(Map<String, dynamic> json) {
+  static Set<Member> fromJsonSet(
+      Map<String, dynamic> json, BuildContext context) {
     Set<Member> members = {};
     if (json['type'] == 'active_users' && json['data'] != null) {
       var memberList = json['data'] as List;
       for (var memberJson in memberList) {
-        var member = Member.fromJson(memberJson);
+        var member = Member.fromJson(memberJson, context);
         if (!members.any(
             (existingMember) => existingMember.memberID == member.memberID)) {
           members.add(member);
@@ -57,10 +61,12 @@ class Member extends StatelessWidget {
                   Expanded(
                     flex: 5,
                     child: AvatarMember(
-                        avatar: avatar,
-                        name: name,
-                        isOnline: isOnline,
-                        memberID: memberID),
+                      avatar: avatar,
+                      name: name,
+                      isOnline: isOnline,
+                      memberID: memberID,
+                      contextAvatarMember: contextMember,
+                    ),
                   ),
                   Container(
                     padding: const EdgeInsets.only(top: 2),
@@ -85,7 +91,7 @@ class Member extends StatelessWidget {
   }
 }
 
-List<Member> getLastHourAndWeekMembers(List<Messages> messages) {
+/*List<Member> getLastHourAndWeekMembers(List<Messages> messages) {
   final Map<int, Member> membersMap = {};
   final timeZone = DateTime.now().timeZoneOffset;
 
@@ -123,4 +129,4 @@ List<Member> getLastHourAndWeekMembers(List<Messages> messages) {
   });
 
   return membersList;
-}
+}*/

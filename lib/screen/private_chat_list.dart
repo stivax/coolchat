@@ -74,7 +74,7 @@ class _PrivateChatListState extends State<PrivateChatList> {
         String responseBody = utf8.decode(response.bodyBytes);
         List<dynamic> jsonList = jsonDecode(responseBody);
         List<RoomPrivate> rooms =
-            RoomPrivate.fromJsonList(jsonList, account).toList();
+            RoomPrivate.fromJsonList(jsonList, account, context).toList();
         if (mounted) {
           setState(() {
             roomsList = rooms;

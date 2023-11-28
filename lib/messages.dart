@@ -18,6 +18,7 @@ class Messages extends StatelessWidget {
   final int ownerId;
   final bool isPreviousSameMember;
   final int? vote;
+  final BuildContext contextMessage;
 
   Account _account =
       Account(email: '', userName: '', password: '', avatar: '', id: 0);
@@ -32,9 +33,11 @@ class Messages extends StatelessWidget {
       required this.userName,
       required this.ownerId,
       required this.isPreviousSameMember,
-      this.vote});
+      this.vote,
+      required this.contextMessage});
 
-  static List<Messages> fromJsonList(List<dynamic> jsonList) {
+  static List<Messages> fromJsonList(
+      List<dynamic> jsonList, BuildContext contextMessage) {
     int previousMemberID = 0;
     final timeZone = DateTime.now().timeZoneOffset;
 
@@ -51,11 +54,13 @@ class Messages extends StatelessWidget {
         ownerId: json['receiver_id'],
         isPreviousSameMember: isSameMember,
         vote: json['vote']!,
+        contextMessage: contextMessage,
       );
     }).toList();
   }
 
-  static Messages fromJsonMessage(dynamic jsonMessage, int previousMemberID) {
+  static Messages fromJsonMessage(
+      dynamic jsonMessage, int previousMemberID, BuildContext contextMessage) {
     bool isSameMember = jsonMessage['receiver_id'] == previousMemberID;
     final timeZone = DateTime.now().timeZoneOffset;
 
@@ -67,6 +72,7 @@ class Messages extends StatelessWidget {
       ownerId: jsonMessage['receiver_id'],
       isPreviousSameMember: isSameMember,
       vote: jsonMessage['vote'],
+      contextMessage: contextMessage,
     );
   }
 
@@ -115,6 +121,7 @@ class Messages extends StatelessWidget {
                   userName: userName,
                   vote: vote,
                   isPreviousSameMember: isPreviousSameMember,
+                  contextMessage: contextMessage,
                 )
               : TheirMessege(
                   screenWidth: screenWidth,
@@ -126,6 +133,7 @@ class Messages extends StatelessWidget {
                   userName: userName,
                   vote: vote,
                   isPreviousSameMember: isPreviousSameMember,
+                  contextMessage: contextMessage,
                 );
         } else {
           return Container();
@@ -145,6 +153,7 @@ class TheirMessege extends StatelessWidget {
   final String userName;
   final int? vote;
   final bool isPreviousSameMember;
+  final BuildContext contextMessage;
 
   const TheirMessege(
       {super.key,
@@ -156,7 +165,8 @@ class TheirMessege extends StatelessWidget {
       required this.avatar,
       required this.userName,
       this.vote,
-      required this.isPreviousSameMember});
+      required this.isPreviousSameMember,
+      required this.contextMessage});
 
   @override
   Widget build(BuildContext context) {
@@ -182,7 +192,9 @@ class TheirMessege extends StatelessWidget {
                             avatar: NetworkImage(avatar),
                             name: userName,
                             isOnline: true,
-                            memberID: ownerId),
+                            memberID: ownerId,
+                            contextAvatarMember: contextMessage,
+                          ),
                   ),
                   Expanded(
                     flex: 12,
@@ -305,6 +317,7 @@ class MyMessege extends StatelessWidget {
   final String userName;
   final int? vote;
   final bool isPreviousSameMember;
+  final BuildContext contextMessage;
 
   const MyMessege(
       {super.key,
@@ -316,7 +329,8 @@ class MyMessege extends StatelessWidget {
       required this.avatar,
       required this.userName,
       this.vote,
-      required this.isPreviousSameMember});
+      required this.isPreviousSameMember,
+      required this.contextMessage});
 
   @override
   Widget build(BuildContext context) {
@@ -445,7 +459,9 @@ class MyMessege extends StatelessWidget {
                             avatar: NetworkImage(avatar),
                             name: userName,
                             isOnline: true,
-                            memberID: ownerId),
+                            memberID: ownerId,
+                            contextAvatarMember: contextMessage,
+                          ),
                   ),
                 ]),
           ),
