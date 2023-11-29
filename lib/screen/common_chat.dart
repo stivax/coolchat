@@ -6,6 +6,7 @@ import 'package:coolchat/bloc/token_blok.dart';
 import 'package:coolchat/model/token.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
 import 'package:coolchat/servises/token_repository.dart';
+import 'package:coolchat/widget/write.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
@@ -67,8 +68,10 @@ class _ChatScreenState extends State<ChatScreen> {
         print(event);
         if (event.toString().startsWith('{"created_at"')) {
           formMessage(event.toString());
-        } else {
+        } else if (event.toString().startsWith('{"type":"active_users"')) {
           formMembersList(event.toString());
+        } else {
+          showWriting(event.toString());
         }
       });
     }
@@ -89,6 +92,10 @@ class _ChatScreenState extends State<ChatScreen> {
     chatMembersStateKey.currentState!.members.clear();
     chatMembersStateKey.currentState!.members.addAll(membersList);
     chatMembersStateKey.currentState!.widget.updateState();
+  }
+
+  void showWriting(String name) {
+    blockMessageStateKey.currentState!.whenWriting(name);
   }
 
   @override
@@ -467,11 +474,23 @@ class BlockMessages extends StatefulWidget {
 
 class _BlockMessagesState extends State<BlockMessages> {
   final Set<Messages> _messages = {};
+  bool showWrite = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     setState(() {});
+  }
+
+  whenWriting(String name) {
+    setState(() {
+      showWrite = true;
+    });
+    Timer(const Duration(seconds: 3), () {
+      setState(() {
+        showWrite = false;
+      });
+    });
   }
 
   @override
@@ -499,9 +518,15 @@ class _BlockMessagesState extends State<BlockMessages> {
                   )
                 ],
               ),
-              child: widget.state == 'loaded'
-                  ? messageView(themeProvider)
-                  : const Center(child: CircularProgressIndicator()),
+              child: Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  widget.state == 'loaded'
+                      ? messageView(themeProvider)
+                      : const Center(child: CircularProgressIndicator()),
+                  showWrite ? const WriteAnimated() : Container(),
+                ],
+              ),
             ));
       },
     );
