@@ -482,7 +482,7 @@ class _BlockMessagesState extends State<BlockMessages> {
     setState(() {});
   }
 
-  whenWriting(String name) {
+  whenWriting(String name) async {
     setState(() {
       showWrite = true;
     });
@@ -522,7 +522,7 @@ class _BlockMessagesState extends State<BlockMessages> {
                 alignment: Alignment.bottomRight,
                 children: [
                   widget.state == 'loaded'
-                      ? messageView(themeProvider)
+                      ? Container(child: messageView(themeProvider))
                       : const Center(child: CircularProgressIndicator()),
                   showWrite ? const WriteAnimated() : Container(),
                 ],
@@ -541,7 +541,7 @@ class _BlockMessagesState extends State<BlockMessages> {
           return _messages.toList().reversed.toList()[index];
         },
       );
-    } else {
+    } else if (widget.state != 'loaded') {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.max,
@@ -574,6 +574,8 @@ class _BlockMessagesState extends State<BlockMessages> {
           ],
         ),
       );
+    } else {
+      return const Center(child: CircularProgressIndicator());
     }
   }
 }

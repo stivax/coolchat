@@ -18,21 +18,23 @@ import 'server/server.dart';
 import 'theme_provider.dart';
 import 'account.dart';
 
-class Room extends StatelessWidget {
+class Room extends StatefulWidget {
   String name;
   int id;
   String createdAt;
   ImageProvider image;
-  int countPeople;
-  int countOnline;
+  int countPeopleOnline;
+  int countMessages;
+  bool isFavorite;
 
   Room(
       {required this.name,
       required this.id,
       required this.createdAt,
       required this.image,
-      required this.countPeople,
-      required this.countOnline});
+      required this.countPeopleOnline,
+      required this.countMessages,
+      required this.isFavorite});
 
   static List<Room> fromJsonList(List<dynamic> jsonList) {
     return jsonList.map((json) {
@@ -43,17 +45,19 @@ class Room extends StatelessWidget {
         image: CachedNetworkImageProvider(
           json["image_room"],
         ),
-        countPeople: 10,
-        countOnline: 5,
+        countPeopleOnline: json["count_users"],
+        countMessages: json["count_messages"],
+        isFavorite: false,
       );
     }).toList()
       ..add(Room(
         id: 999,
         name: 'Add room',
         image: AssetImage('assets/images/add_room_dark.jpg'),
-        countPeople: 0,
-        countOnline: 0,
+        countPeopleOnline: 0,
+        countMessages: 0,
         createdAt: '',
+        isFavorite: false,
       ));
   }
 
@@ -64,47 +68,53 @@ class Room extends StatelessWidget {
   }
 
   @override
+  State<Room> createState() => _RoomState();
+}
+
+class _RoomState extends State<Room> {
+  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () async {
-        const server = Server.server;
-        final account = await readAccountFuture();
-        id == 999
-            ? addRoomDialog(context)
-            : Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ChatScreen(
-                    topicName: name,
-                    id: id,
-                    server: server,
-                    account: account,
-                  ),
-                ),
-              );
-      },
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, child) {
-          return Container(
-            height: 207,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: themeProvider.currentTheme.primaryColorDark,
-                  blurRadius: 0,
-                  offset: Offset(1, 1),
-                  spreadRadius: 0,
-                )
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  flex: 5,
+    bool isFavorite = widget.isFavorite;
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return Container(
+          height: 207,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            boxShadow: [
+              BoxShadow(
+                color: themeProvider.currentTheme.primaryColorDark,
+                blurRadius: 0,
+                offset: Offset(1, 1),
+                spreadRadius: 0,
+              )
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                flex: 5,
+                child: GestureDetector(
+                  onTap: () async {
+                    const server = Server.server;
+                    final account = await readAccountFuture();
+                    widget.id == 999
+                        ? addRoomDialog(context)
+                        : Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ChatScreen(
+                                topicName: widget.name,
+                                id: widget.id,
+                                server: server,
+                                account: account,
+                              ),
+                            ),
+                          );
+                  },
                   child: Padding(
                     padding: const EdgeInsets.only(top: 0, left: 0, right: 0),
                     child: Container(
@@ -113,8 +123,8 @@ class Room extends StatelessWidget {
                       alignment: Alignment.bottomCenter,
                       decoration: ShapeDecoration(
                         image: DecorationImage(
-                          image: id != 999
-                              ? image
+                          image: widget.id != 999
+                              ? widget.image
                               : themeProvider.isLightMode
                                   ? const AssetImage(
                                       'assets/images/add_room_light.jpg')
@@ -135,7 +145,7 @@ class Room extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          id == 999
+                          widget.id == 999
                               ? Image(
                                   image: themeProvider.isLightMode
                                       ? const AssetImage(
@@ -151,10 +161,10 @@ class Room extends StatelessWidget {
                                 color:
                                     const Color(0xFF0F1E28).withOpacity(0.40)),
                             child: Text(
-                              name,
+                              widget.name,
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                color: id == 999
+                                color: widget.id == 999
                                     ? themeProvider.currentTheme.primaryColor
                                     : const Color(0xFFF5FBFF),
                                 fontSize: 14,
@@ -169,36 +179,56 @@ class Room extends StatelessWidget {
                     ),
                   ),
                 ),
-                Expanded(
-                  flex: 1,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 0, right: 0),
-                    child: Container(
-                      alignment: Alignment.bottomCenter,
-                      decoration: ShapeDecoration(
-                        color: themeProvider.currentTheme.shadowColor,
-                        shape: RoundedRectangleBorder(
-                          side: BorderSide(
-                              width: 0.50,
-                              color: themeProvider.currentTheme.shadowColor),
-                          borderRadius: const BorderRadius.only(
-                            bottomLeft: Radius.circular(10),
-                            bottomRight: Radius.circular(10),
-                          ),
+              ),
+              Expanded(
+                flex: 1,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 0, right: 0),
+                  child: Container(
+                    alignment: Alignment.bottomCenter,
+                    decoration: ShapeDecoration(
+                      color: themeProvider.currentTheme.shadowColor,
+                      shape: RoundedRectangleBorder(
+                        side: BorderSide(
+                            width: 0.50,
+                            color: themeProvider.currentTheme.shadowColor),
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(10),
+                          bottomRight: Radius.circular(10),
                         ),
                       ),
-                      child: Center(
-                        heightFactor: 0.5,
-                        child: Container(
-                          padding: EdgeInsets.only(left: 8, right: 8),
-                          child: Row(
-                            verticalDirection: VerticalDirection.down,
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisSize: MainAxisSize.max,
+                    ),
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.only(left: 8, right: 8),
+                        height: 16,
+                        child: Row(
+                          verticalDirection: VerticalDirection.down,
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                widget.isFavorite = !isFavorite;
+                                setState(() {
+                                  isFavorite = isFavorite ? false : true;
+                                });
+                              },
+                              child: Icon(
+                                Icons.favorite,
+                                color: isFavorite
+                                    ? Colors.pink
+                                    : const Color(0xFFF5FBFF),
+                                size: 16,
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(width: double.infinity),
+                            ),
+                            Container(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
@@ -207,13 +237,12 @@ class Room extends StatelessWidget {
                                     height: 16,
                                     clipBehavior: Clip.antiAlias,
                                     decoration: BoxDecoration(),
-                                    child: Stack(children: [
-                                      Image.asset('assets/images/people.png'),
-                                    ]),
+                                    child:
+                                        Image.asset('assets/images/people.png'),
                                   ),
                                   const SizedBox(width: 2),
                                   Text(
-                                    countPeople.toString(),
+                                    widget.countPeopleOnline.toString(),
                                     textAlign: TextAlign.center,
                                     style: const TextStyle(
                                       color: Color(0xFFF5FBFF),
@@ -224,65 +253,18 @@ class Room extends StatelessWidget {
                                   ),
                                 ],
                               ),
-                              Expanded(
-                                child: Container(width: double.infinity),
-                              ),
-                              Container(
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Container(
-                                      width: 16,
-                                      height: 16,
-                                      clipBehavior: Clip.antiAlias,
-                                      decoration: BoxDecoration(),
-                                      child: Stack(
-                                        children: [
-                                          Image.asset(
-                                              'assets/images/people.png'),
-                                          Positioned(
-                                            left: 13,
-                                            top: 1,
-                                            child: Container(
-                                              width: 3,
-                                              height: 3,
-                                              decoration: const ShapeDecoration(
-                                                color: Color(0xFFF5FBFF),
-                                                shape: OvalBorder(),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(width: 2),
-                                    Text(
-                                      countOnline.toString(),
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        color: Color(0xFFF5FBFF),
-                                        fontSize: 12,
-                                        fontFamily: 'Manrope',
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
                 ),
-              ],
-            ),
-          );
-        },
-      ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

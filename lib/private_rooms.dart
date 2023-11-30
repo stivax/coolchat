@@ -169,35 +169,31 @@ class RoomPrivate extends StatelessWidget {
                         child: Row(
                           //verticalDirection: VerticalDirection.down,
                           mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Center(
-                              child: Text(
-                                recipientName,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  color: Color(0xFFF5FBFF),
-                                  fontSize: 14,
-                                  fontFamily: 'Manrope',
-                                  fontWeight: FontWeight.w600,
-                                  height: 0.09,
-                                ),
+                            Text(
+                              recipientName,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Color(0xFFF5FBFF),
+                                fontSize: 14,
+                                fontFamily: 'Manrope',
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                             Expanded(
                               child: Container(width: double.infinity),
                             ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.only(right: 3, bottom: 5),
-                              child: Icon(
-                                Icons.mail,
-                                size: 20,
-                                color: switchColorMail
-                                    ? const Color(0xFFF5FBFF)
-                                    : const Color(0xFFE02849),
-                              ),
+                            Icon(
+                              Icons.mail,
+                              size: 20,
+                              color: switchColorMail
+                                  ? const Color(0xFFF5FBFF)
+                                  : const Color(0xFFE02849),
+                            ),
+                            const SizedBox(
+                              width: 4,
                             ),
                             const Text(
                               '0',
@@ -206,7 +202,7 @@ class RoomPrivate extends StatelessWidget {
                                 color: Color(0xFFF5FBFF),
                                 fontSize: 14,
                                 fontFamily: 'Manrope',
-                                fontWeight: FontWeight.w400,
+                                fontWeight: FontWeight.w600,
                               ),
                             )
                           ],
