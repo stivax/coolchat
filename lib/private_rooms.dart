@@ -167,19 +167,18 @@ class RoomPrivate extends StatelessWidget {
                         padding: const EdgeInsets.only(
                             left: 8, right: 8, top: 4, bottom: 4),
                         child: Row(
-                          //verticalDirection: VerticalDirection.down,
                           mainAxisSize: MainAxisSize.min,
                           mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Text(
                               recipientName,
                               textAlign: TextAlign.center,
                               style: const TextStyle(
                                 color: Color(0xFFF5FBFF),
-                                fontSize: 14,
+                                fontSize: 12,
                                 fontFamily: 'Manrope',
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w400,
                               ),
                             ),
                             Expanded(
@@ -200,9 +199,9 @@ class RoomPrivate extends StatelessWidget {
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Color(0xFFF5FBFF),
-                                fontSize: 14,
+                                fontSize: 12,
                                 fontFamily: 'Manrope',
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w400,
                               ),
                             )
                           ],

@@ -330,13 +330,13 @@ class _LoginDialogState extends State<LoginDialog> {
                           ),
                         ),
                         onPressed: () async {
-                          await showDialog(
+                          Account acc = await showDialog(
                             context: context,
                             builder: (BuildContext context) {
                               return RegisterDialog();
                             },
                           );
-                          Navigator.pop(context);
+                          Navigator.pop(context, acc);
                         },
                         child: Text(
                           'Register',

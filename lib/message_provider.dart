@@ -7,8 +7,7 @@ class MessageProvider {
 
   MessageProvider(this.serverUrl) {
     print('connect $serverUrl');
-    channel = IOWebSocketChannel.connect(serverUrl,
-        pingInterval: const Duration(minutes: 1));
+    channel = WebSocketChannel.connect(Uri.parse(serverUrl));
   }
 
   void sendMessage(String message) {
