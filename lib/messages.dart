@@ -1,24 +1,32 @@
-import 'package:coolchat/avatar.dart';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:vibration/vibration.dart';
 
-import 'theme_provider.dart';
+import 'package:coolchat/avatar.dart';
+import 'package:coolchat/message_provider.dart';
+import 'package:coolchat/servises/message_provider_container.dart';
+
 import 'account.dart';
+import 'theme_provider.dart';
 
 // ignore: must_be_immutable
 class Messages extends StatelessWidget {
   final String message;
-  final int? id;
+  final int id;
   final DateTime createdAt;
   final String avatar;
   final String userName;
   final int ownerId;
   final bool isPreviousSameMember;
-  final int? vote;
+  final int vote;
   final BuildContext contextMessage;
+  final String roomName;
 
   Account _account =
       Account(email: '', userName: '', password: '', avatar: '', id: 0);
@@ -27,17 +35,18 @@ class Messages extends StatelessWidget {
   Messages(
       {super.key,
       required this.message,
-      this.id,
+      required this.id,
       required this.createdAt,
       required this.avatar,
       required this.userName,
       required this.ownerId,
       required this.isPreviousSameMember,
-      this.vote,
-      required this.contextMessage});
+      required this.vote,
+      required this.contextMessage,
+      required this.roomName});
 
   static List<Messages> fromJsonList(
-      List<dynamic> jsonList, BuildContext contextMessage) {
+      List<dynamic> jsonList, BuildContext contextMessage, String roomName) {
     int previousMemberID = 0;
     final timeZone = DateTime.now().timeZoneOffset;
 
@@ -55,17 +64,19 @@ class Messages extends StatelessWidget {
         isPreviousSameMember: isSameMember,
         vote: json['vote']!,
         contextMessage: contextMessage,
+        roomName: roomName,
       );
     }).toList();
   }
 
-  static Messages fromJsonMessage(
-      dynamic jsonMessage, int previousMemberID, BuildContext contextMessage) {
+  static Messages fromJsonMessage(dynamic jsonMessage, int previousMemberID,
+      BuildContext contextMessage, String roomName) {
     bool isSameMember = jsonMessage['receiver_id'] == previousMemberID;
     final timeZone = DateTime.now().timeZoneOffset;
 
     return Messages(
       message: jsonMessage['message'],
+      id: jsonMessage['id'],
       createdAt: DateTime.parse(jsonMessage['created_at']).add(timeZone),
       avatar: jsonMessage['avatar'],
       userName: jsonMessage['user_name'],
@@ -73,6 +84,7 @@ class Messages extends StatelessWidget {
       isPreviousSameMember: isSameMember,
       vote: jsonMessage['vote'],
       contextMessage: contextMessage,
+      roomName: roomName,
     );
   }
 
@@ -122,6 +134,7 @@ class Messages extends StatelessWidget {
                   vote: vote,
                   isPreviousSameMember: isPreviousSameMember,
                   contextMessage: contextMessage,
+                  roomName: roomName,
                 )
               : TheirMessege(
                   screenWidth: screenWidth,
@@ -134,6 +147,7 @@ class Messages extends StatelessWidget {
                   vote: vote,
                   isPreviousSameMember: isPreviousSameMember,
                   contextMessage: contextMessage,
+                  roomName: roomName,
                 );
         } else {
           return Container();
@@ -146,27 +160,29 @@ class Messages extends StatelessWidget {
 class TheirMessege extends StatelessWidget {
   final double screenWidth;
   final String message;
-  final int? id;
+  final int id;
   final String createdAt;
   final int ownerId;
   final String avatar;
   final String userName;
-  final int? vote;
+  final int vote;
   final bool isPreviousSameMember;
   final BuildContext contextMessage;
+  final String roomName;
 
   const TheirMessege(
       {super.key,
       required this.screenWidth,
       required this.message,
-      this.id,
+      required this.id,
       required this.createdAt,
       required this.ownerId,
       required this.avatar,
       required this.userName,
-      this.vote,
+      required this.vote,
       required this.isPreviousSameMember,
-      required this.contextMessage});
+      required this.contextMessage,
+      required this.roomName});
 
   @override
   Widget build(BuildContext context) {
@@ -242,56 +258,111 @@ class TheirMessege extends StatelessWidget {
                             ),
                           ],
                         ),
-                        Container(
-                          alignment: Alignment.topLeft,
-                          padding: const EdgeInsets.all(10.0),
-                          decoration: ShapeDecoration(
-                            color: themeProvider.currentTheme.hintColor,
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.only(
-                                topRight: Radius.circular(20),
-                                bottomLeft: Radius.circular(20),
-                                bottomRight: Radius.circular(20),
+                        GestureDetector(
+                          onDoubleTap: () {
+                            final provider = MessageProviderContainer.instance
+                                .getProvider(roomName);
+                            print(roomName + " " + id.toString());
+                            provider?.channel.sink.add(json.encode({
+                              "vote": {"message_id": id, "dir": 1}
+                            }));
+                          },
+                          onHorizontalDragEnd: (_) {
+                            final provider = MessageProviderContainer.instance
+                                .getProvider(roomName);
+                            print(roomName + " " + id.toString());
+                            provider?.channel.sink.add(json.encode({
+                              "vote": {"message_id": id, "dir": -1}
+                            }));
+                            HapticFeedback.lightImpact();
+                          },
+                          child: Stack(children: [
+                            Container(
+                              alignment: Alignment.topLeft,
+                              padding: const EdgeInsets.all(10.0),
+                              decoration: ShapeDecoration(
+                                color: themeProvider.currentTheme.hintColor,
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.only(
+                                    topRight: Radius.circular(20),
+                                    bottomLeft: Radius.circular(20),
+                                    bottomRight: Radius.circular(20),
+                                  ),
+                                ),
+                                shadows: [
+                                  BoxShadow(
+                                    color: themeProvider.currentTheme.cardColor,
+                                    blurRadius: 8,
+                                    offset: const Offset(2, 2),
+                                    spreadRadius: 0,
+                                  )
+                                ],
+                              ),
+                              child: SelectableLinkify(
+                                onOpen: (url) async {
+                                  await launchUrlString(url.url,
+                                      mode: LaunchMode.externalApplication);
+                                },
+                                text: message,
+                                style: TextStyle(
+                                  color:
+                                      themeProvider.currentTheme.primaryColor,
+                                  fontSize: 14,
+                                  fontFamily: 'Manrope',
+                                  fontWeight: FontWeight.w400,
+                                  height: 1.30,
+                                ),
+                                options: const LinkifyOptions(
+                                    removeWww: true, looseUrl: true),
+                                contextMenuBuilder:
+                                    (context, editableTextState) {
+                                  final List<ContextMenuButtonItem>
+                                      buttonItems =
+                                      editableTextState.contextMenuButtonItems;
+                                  buttonItems.removeWhere(
+                                      (ContextMenuButtonItem buttonItem) {
+                                    return buttonItem.type ==
+                                        ContextMenuButtonType.cut;
+                                  });
+                                  return AdaptiveTextSelectionToolbar
+                                      .buttonItems(
+                                    anchors:
+                                        editableTextState.contextMenuAnchors,
+                                    buttonItems: buttonItems,
+                                  );
+                                },
                               ),
                             ),
-                            shadows: [
-                              BoxShadow(
-                                color: themeProvider.currentTheme.cardColor,
-                                blurRadius: 8,
-                                offset: const Offset(2, 2),
-                                spreadRadius: 0,
-                              )
-                            ],
-                          ),
-                          child: SelectableLinkify(
-                            onOpen: (url) async {
-                              await launchUrlString(url.url,
-                                  mode: LaunchMode.externalApplication);
-                            },
-                            text: message,
-                            style: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor,
-                              fontSize: 14,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w400,
-                              height: 1.30,
-                            ),
-                            options: const LinkifyOptions(
-                                removeWww: true, looseUrl: true),
-                            contextMenuBuilder: (context, editableTextState) {
-                              final List<ContextMenuButtonItem> buttonItems =
-                                  editableTextState.contextMenuButtonItems;
-                              buttonItems.removeWhere(
-                                  (ContextMenuButtonItem buttonItem) {
-                                return buttonItem.type ==
-                                    ContextMenuButtonType.cut;
-                              });
-                              return AdaptiveTextSelectionToolbar.buttonItems(
-                                anchors: editableTextState.contextMenuAnchors,
-                                buttonItems: buttonItems,
-                              );
-                            },
-                          ),
+                            vote != 0
+                                ? Positioned(
+                                    bottom: 10,
+                                    right: 10,
+                                    child: SizedBox(
+                                      height: 10,
+                                      width: 20,
+                                      child: Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.favorite,
+                                            size: 12,
+                                            color: Colors.pink,
+                                          ),
+                                          Text(
+                                            vote.toString(),
+                                            style: TextStyle(
+                                              color: themeProvider
+                                                  .currentTheme.primaryColor,
+                                              fontSize: 9,
+                                              fontFamily: 'Manrope',
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                : const SizedBox(),
+                          ]),
                         ),
                       ],
                     ),
@@ -310,27 +381,29 @@ class TheirMessege extends StatelessWidget {
 class MyMessege extends StatelessWidget {
   final double screenWidth;
   final String message;
-  final int? id;
+  final int id;
   final String createdAt;
   final int ownerId;
   final String avatar;
   final String userName;
-  final int? vote;
+  final int vote;
   final bool isPreviousSameMember;
   final BuildContext contextMessage;
+  final String roomName;
 
   const MyMessege(
       {super.key,
       required this.screenWidth,
       required this.message,
-      this.id,
+      required this.id,
       required this.createdAt,
       required this.ownerId,
       required this.avatar,
       required this.userName,
-      this.vote,
+      required this.vote,
       required this.isPreviousSameMember,
-      required this.contextMessage});
+      required this.contextMessage,
+      required this.roomName});
 
   @override
   Widget build(BuildContext context) {
@@ -394,56 +467,112 @@ class MyMessege extends StatelessWidget {
                             ),
                           ],
                         ),
-                        Container(
-                          alignment: Alignment.topLeft,
-                          padding: const EdgeInsets.all(10.0),
-                          decoration: ShapeDecoration(
-                            color: themeProvider.currentTheme.hoverColor,
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(20),
-                                bottomLeft: Radius.circular(20),
-                                bottomRight: Radius.circular(20),
+                        GestureDetector(
+                          onDoubleTap: () {
+                            final provider = MessageProviderContainer.instance
+                                .getProvider(roomName);
+                            print(roomName + " " + id.toString());
+                            provider?.channel.sink.add(json.encode({
+                              "vote": {"message_id": id, "dir": 1}
+                            }));
+                            HapticFeedback.lightImpact();
+                          },
+                          onHorizontalDragEnd: (_) {
+                            final provider = MessageProviderContainer.instance
+                                .getProvider(roomName);
+                            print(roomName + " " + id.toString());
+                            provider?.channel.sink.add(json.encode({
+                              "vote": {"message_id": id, "dir": -1}
+                            }));
+                            HapticFeedback.lightImpact();
+                          },
+                          child: Stack(children: [
+                            Container(
+                              alignment: Alignment.topLeft,
+                              padding: const EdgeInsets.all(10.0),
+                              decoration: ShapeDecoration(
+                                color: themeProvider.currentTheme.hoverColor,
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(20),
+                                    bottomLeft: Radius.circular(20),
+                                    bottomRight: Radius.circular(20),
+                                  ),
+                                ),
+                                shadows: [
+                                  BoxShadow(
+                                    color: themeProvider.currentTheme.cardColor,
+                                    blurRadius: 8,
+                                    offset: const Offset(2, 2),
+                                    spreadRadius: 0,
+                                  )
+                                ],
+                              ),
+                              child: SelectableLinkify(
+                                onOpen: (url) async {
+                                  await launchUrlString(url.url,
+                                      mode: LaunchMode.externalApplication);
+                                },
+                                text: message,
+                                style: TextStyle(
+                                  color:
+                                      themeProvider.currentTheme.primaryColor,
+                                  fontSize: 14,
+                                  fontFamily: 'Manrope',
+                                  fontWeight: FontWeight.w400,
+                                  height: 1.30,
+                                ),
+                                options: const LinkifyOptions(
+                                    removeWww: true, looseUrl: true),
+                                contextMenuBuilder:
+                                    (context, editableTextState) {
+                                  final List<ContextMenuButtonItem>
+                                      buttonItems =
+                                      editableTextState.contextMenuButtonItems;
+                                  buttonItems.removeWhere(
+                                      (ContextMenuButtonItem buttonItem) {
+                                    return buttonItem.type ==
+                                        ContextMenuButtonType.cut;
+                                  });
+                                  return AdaptiveTextSelectionToolbar
+                                      .buttonItems(
+                                    anchors:
+                                        editableTextState.contextMenuAnchors,
+                                    buttonItems: buttonItems,
+                                  );
+                                },
                               ),
                             ),
-                            shadows: [
-                              BoxShadow(
-                                color: themeProvider.currentTheme.cardColor,
-                                blurRadius: 8,
-                                offset: const Offset(2, 2),
-                                spreadRadius: 0,
-                              )
-                            ],
-                          ),
-                          child: SelectableLinkify(
-                            onOpen: (url) async {
-                              await launchUrlString(url.url,
-                                  mode: LaunchMode.externalApplication);
-                            },
-                            text: message,
-                            style: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor,
-                              fontSize: 14,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w400,
-                              height: 1.30,
-                            ),
-                            options: const LinkifyOptions(
-                                removeWww: true, looseUrl: true),
-                            contextMenuBuilder: (context, editableTextState) {
-                              final List<ContextMenuButtonItem> buttonItems =
-                                  editableTextState.contextMenuButtonItems;
-                              buttonItems.removeWhere(
-                                  (ContextMenuButtonItem buttonItem) {
-                                return buttonItem.type ==
-                                    ContextMenuButtonType.cut;
-                              });
-                              return AdaptiveTextSelectionToolbar.buttonItems(
-                                anchors: editableTextState.contextMenuAnchors,
-                                buttonItems: buttonItems,
-                              );
-                            },
-                          ),
+                            vote != 0
+                                ? Positioned(
+                                    bottom: 10,
+                                    right: 10,
+                                    child: SizedBox(
+                                      height: 10,
+                                      width: 20,
+                                      child: Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.favorite,
+                                            size: 12,
+                                            color: Colors.pink,
+                                          ),
+                                          Text(
+                                            vote.toString(),
+                                            style: TextStyle(
+                                              color: themeProvider
+                                                  .currentTheme.primaryColor,
+                                              fontSize: 9,
+                                              fontFamily: 'Manrope',
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                : const SizedBox(),
+                          ]),
                         ),
                       ],
                     ),

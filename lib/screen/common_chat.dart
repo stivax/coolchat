@@ -79,8 +79,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void formMessage(String responseBody) {
     dynamic jsonMessage = jsonDecode(responseBody);
-    Messages message = Messages.fromJsonMessage(
-        jsonMessage, widget.messageData.previousMemberID, context);
+    Messages message = Messages.fromJsonMessage(jsonMessage,
+        widget.messageData.previousMemberID, context, widget.topicName);
     widget.messageData.previousMemberID = message.ownerId.toInt();
     blockMessageStateKey.currentState!._messages.add(message);
     blockMessageStateKey.currentState!.widget.updateState();
