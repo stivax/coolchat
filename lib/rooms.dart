@@ -17,6 +17,7 @@ import 'message_provider.dart';
 import 'server/server.dart';
 import 'theme_provider.dart';
 import 'account.dart';
+import 'servises/favorite_room_provider.dart';
 
 class Room extends StatefulWidget {
   String name;
@@ -36,7 +37,8 @@ class Room extends StatefulWidget {
       required this.countMessages,
       required this.isFavorite});
 
-  static List<Room> fromJsonList(List<dynamic> jsonList) {
+  static List<Room> fromJsonList(
+      List<dynamic> jsonList, List<String> favoriteRoomList) {
     return jsonList.map((json) {
       return Room(
         name: json["name_room"],
@@ -47,7 +49,7 @@ class Room extends StatefulWidget {
         ),
         countPeopleOnline: json["count_users"],
         countMessages: json["count_messages"],
-        isFavorite: false,
+        isFavorite: favoriteRoomList.contains(json["name_room"]),
       );
     }).toList()
       ..add(Room(
@@ -211,9 +213,17 @@ class _RoomState extends State<Room> {
                             GestureDetector(
                               onTap: () {
                                 widget.isFavorite = !isFavorite;
+                                if (isFavorite) {
+                                  FavoriteList.removeRoomIntoFavorite(
+                                      widget.name);
+                                } else {
+                                  FavoriteList.addRoomToFavorite(widget.name);
+                                }
                                 setState(() {
                                   isFavorite = isFavorite ? false : true;
                                 });
+                                myHomePageStateKey.currentState!
+                                    .fetchData(Server.server);
                               },
                               child: Icon(
                                 Icons.favorite,

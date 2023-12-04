@@ -134,9 +134,9 @@ class _ChatScreenState extends State<ChatScreen> {
           } else if (state is TokenLoadedState) {
             print('loaded');
             token = state.token;
-            MessageProvider? provider =
-                MessageProviderContainer.instance.getProvider(widget.topicName);
-            messageListen(provider!);
+            MessageProvider provider = MessageProviderContainer.instance
+                .getProvider(widget.topicName)!;
+            messageListen(provider);
             return CommonChatScreen(
               state: 'loaded',
               topicName: widget.topicName,

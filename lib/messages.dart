@@ -542,28 +542,24 @@ class MyMessege extends StatelessWidget {
                                 ? Positioned(
                                     bottom: 10,
                                     right: 10,
-                                    child: Container(
-                                      height: 10,
-                                      width: 20,
-                                      child: Row(
-                                        children: [
-                                          const Icon(
-                                            Icons.favorite,
-                                            size: 12,
-                                            color: Colors.pink,
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.favorite,
+                                          size: 12,
+                                          color: Colors.pink,
+                                        ),
+                                        Text(
+                                          vote.toString(),
+                                          style: TextStyle(
+                                            color: themeProvider
+                                                .currentTheme.primaryColor,
+                                            fontSize: 9,
+                                            fontFamily: 'Manrope',
+                                            fontWeight: FontWeight.w400,
                                           ),
-                                          Text(
-                                            vote.toString(),
-                                            style: TextStyle(
-                                              color: themeProvider
-                                                  .currentTheme.primaryColor,
-                                              fontSize: 9,
-                                              fontFamily: 'Manrope',
-                                              fontWeight: FontWeight.w400,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                                        ),
+                                      ],
                                     ),
                                   )
                                 : const SizedBox(),

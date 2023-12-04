@@ -5,7 +5,7 @@ class MessageProviderContainer {
   static MessageProviderContainer? _instance;
 
   // Контейнер для зберігання об'єктів MessageProvider
-  Map<String, MessageProvider> _providerMap = {};
+  final Map<String, MessageProvider> _providerMap = {};
 
   // Приватний конструктор для заборони створення об'єктів ззовні
   MessageProviderContainer._();

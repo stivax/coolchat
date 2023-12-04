@@ -20,6 +20,7 @@ import 'my_appbar.dart';
 import 'theme_provider.dart';
 import 'rooms.dart';
 import 'server_provider.dart';
+import 'servises/favorite_room_provider.dart';
 
 void main() => runApp(
       ChangeNotifierProvider(
@@ -109,13 +110,22 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> fetchData(String server) async {
+    List<String> roomList = await FavoriteList.readFavoriteRoomList();
     try {
       http.Response response = await _getData(server);
       if (response.statusCode == 200) {
         String responseBody = utf8.decode(response.bodyBytes);
         List<dynamic> jsonList = jsonDecode(responseBody);
-        List<Room> rooms = Room.fromJsonList(jsonList).toList();
+        List<Room> rooms = Room.fromJsonList(jsonList, roomList).toList();
         if (mounted) {
+          rooms.sort((a, b) {
+            if (a.isFavorite == b.isFavorite) {
+              return 0;
+            } else if (a.isFavorite) {
+              return -1;
+            }
+            return 1;
+          });
           setState(() {
             roomsList = rooms;
           });
