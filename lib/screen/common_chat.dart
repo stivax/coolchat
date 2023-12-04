@@ -70,7 +70,9 @@ class _ChatScreenState extends State<ChatScreen> {
           formMessage(event.toString());
         } else if (event.toString().startsWith('{"type":"active_users"')) {
           formMembersList(event.toString());
-        } else {
+        } else if (event.toString().startsWith('{"message":"Vote posted')) {
+          clearMessages();
+        } else if (event.toString().startsWith('{"type":')) {
           showWriting(event.toString());
         }
       });
@@ -84,6 +86,10 @@ class _ChatScreenState extends State<ChatScreen> {
     widget.messageData.previousMemberID = message.ownerId.toInt();
     blockMessageStateKey.currentState!._messages.add(message);
     blockMessageStateKey.currentState!.widget.updateState();
+  }
+
+  void clearMessages() {
+    blockMessageStateKey.currentState!._messages.clear();
   }
 
   void formMembersList(String responseBody) {
@@ -536,6 +542,8 @@ class _BlockMessagesState extends State<BlockMessages> {
     if (_messages.isNotEmpty) {
       return ListView.builder(
         reverse: true,
+        controller: ScrollController(),
+        shrinkWrap: true,
         itemCount: _messages.toList().length,
         itemBuilder: (context, index) {
           return _messages.toList().reversed.toList()[index];

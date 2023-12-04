@@ -6,10 +6,8 @@ import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
-import 'package:vibration/vibration.dart';
 
 import 'package:coolchat/avatar.dart';
-import 'package:coolchat/message_provider.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
 
 import 'account.dart';
@@ -191,14 +189,14 @@ class TheirMessege extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: Container(
-            padding: EdgeInsets.all(2),
+            padding: const EdgeInsets.all(2),
             width: screenWidth - 52,
             child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: EdgeInsets.only(right: 3, left: 3),
+                    padding: const EdgeInsets.only(right: 3, left: 3),
                     alignment: Alignment.topCenter,
                     width: screenWidth * 0.09,
                     height: 32,
@@ -221,7 +219,7 @@ class TheirMessege extends StatelessWidget {
                           children: [
                             Expanded(
                               child: Container(
-                                padding: EdgeInsets.only(bottom: 5),
+                                padding: const EdgeInsets.only(bottom: 5),
                                 alignment: Alignment.centerLeft,
                                 child: isPreviousSameMember
                                     ? Container()
@@ -239,7 +237,7 @@ class TheirMessege extends StatelessWidget {
                               ),
                             ),
                             Container(
-                              padding: EdgeInsets.only(bottom: 5),
+                              padding: const EdgeInsets.only(bottom: 5),
                               alignment: Alignment.centerRight,
                               child: Opacity(
                                 opacity: 0.50,
@@ -262,15 +260,14 @@ class TheirMessege extends StatelessWidget {
                           onDoubleTap: () {
                             final provider = MessageProviderContainer.instance
                                 .getProvider(roomName);
-                            print(roomName + " " + id.toString());
                             provider?.channel.sink.add(json.encode({
                               "vote": {"message_id": id, "dir": 1}
                             }));
+                            HapticFeedback.lightImpact();
                           },
                           onHorizontalDragEnd: (_) {
                             final provider = MessageProviderContainer.instance
                                 .getProvider(roomName);
-                            print(roomName + " " + id.toString());
                             provider?.channel.sink.add(json.encode({
                               "vote": {"message_id": id, "dir": -1}
                             }));
@@ -412,7 +409,7 @@ class MyMessege extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: Container(
-            padding: EdgeInsets.all(2),
+            padding: const EdgeInsets.all(2),
             width: screenWidth - 52,
             child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -429,7 +426,7 @@ class MyMessege extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Container(
-                              padding: EdgeInsets.only(bottom: 5),
+                              padding: const EdgeInsets.only(bottom: 5),
                               alignment: Alignment.centerLeft,
                               child: Opacity(
                                 opacity: 0.50,
@@ -450,7 +447,7 @@ class MyMessege extends StatelessWidget {
                               child: isPreviousSameMember
                                   ? Container()
                                   : Container(
-                                      padding: EdgeInsets.only(bottom: 5),
+                                      padding: const EdgeInsets.only(bottom: 5),
                                       alignment: Alignment.centerRight,
                                       child: Text(
                                         userName,
@@ -471,7 +468,6 @@ class MyMessege extends StatelessWidget {
                           onDoubleTap: () {
                             final provider = MessageProviderContainer.instance
                                 .getProvider(roomName);
-                            print(roomName + " " + id.toString());
                             provider?.channel.sink.add(json.encode({
                               "vote": {"message_id": id, "dir": 1}
                             }));
@@ -480,7 +476,6 @@ class MyMessege extends StatelessWidget {
                           onHorizontalDragEnd: (_) {
                             final provider = MessageProviderContainer.instance
                                 .getProvider(roomName);
-                            print(roomName + " " + id.toString());
                             provider?.channel.sink.add(json.encode({
                               "vote": {"message_id": id, "dir": -1}
                             }));
@@ -547,7 +542,7 @@ class MyMessege extends StatelessWidget {
                                 ? Positioned(
                                     bottom: 10,
                                     right: 10,
-                                    child: SizedBox(
+                                    child: Container(
                                       height: 10,
                                       width: 20,
                                       child: Row(
@@ -578,7 +573,7 @@ class MyMessege extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    padding: EdgeInsets.only(right: 3, left: 3),
+                    padding: const EdgeInsets.only(right: 3, left: 3),
                     alignment: Alignment.topCenter,
                     width: screenWidth * 0.09,
                     height: 32,

@@ -6,8 +6,8 @@ class MessageProvider {
   late WebSocketChannel channel;
 
   MessageProvider(this.serverUrl) {
-    print('connect $serverUrl');
     channel = WebSocketChannel.connect(Uri.parse(serverUrl));
+    print('connect $serverUrl');
   }
 
   void sendMessage(String message) {
