@@ -187,7 +187,7 @@ class _RoomState extends State<Room> {
                 child: Padding(
                   padding: const EdgeInsets.only(left: 0, right: 0),
                   child: Container(
-                    alignment: Alignment.bottomCenter,
+                    alignment: Alignment.center,
                     decoration: ShapeDecoration(
                       color: themeProvider.currentTheme.shadowColor,
                       shape: RoundedRectangleBorder(
@@ -200,73 +200,100 @@ class _RoomState extends State<Room> {
                         ),
                       ),
                     ),
-                    child: Center(
-                      child: Container(
-                        padding: const EdgeInsets.only(left: 8, right: 8),
-                        height: 16,
-                        child: Row(
-                          verticalDirection: VerticalDirection.down,
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            GestureDetector(
-                              onTap: () {
-                                widget.isFavorite = !isFavorite;
-                                if (isFavorite) {
-                                  FavoriteList.removeRoomIntoFavorite(
-                                      widget.name);
-                                } else {
-                                  FavoriteList.addRoomToFavorite(widget.name);
-                                }
-                                setState(() {
-                                  isFavorite = isFavorite ? false : true;
-                                });
-                                myHomePageStateKey.currentState!
-                                    .fetchData(Server.server);
-                              },
-                              child: Icon(
-                                Icons.favorite,
-                                color: isFavorite
-                                    ? Colors.pink
-                                    : const Color(0xFFF5FBFF),
-                                size: 16,
-                              ),
-                            ),
-                            Expanded(
-                              child: Container(width: double.infinity),
-                            ),
-                            Container(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    width: 16,
-                                    height: 16,
-                                    clipBehavior: Clip.antiAlias,
-                                    decoration: BoxDecoration(),
-                                    child:
-                                        Image.asset('assets/images/people.png'),
+                    child: Container(
+                      padding: const EdgeInsets.only(left: 8, right: 8),
+                      child: widget.id == 999
+                          ? Container()
+                          : Row(
+                              verticalDirection: VerticalDirection.down,
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    widget.isFavorite = !isFavorite;
+                                    if (isFavorite) {
+                                      FavoriteList.removeRoomIntoFavorite(
+                                          widget.name);
+                                    } else {
+                                      FavoriteList.addRoomToFavorite(
+                                          widget.name);
+                                    }
+                                    setState(() {
+                                      isFavorite = isFavorite ? false : true;
+                                    });
+                                    myHomePageStateKey.currentState!
+                                        .fetchData(Server.server);
+                                  },
+                                  child: Icon(
+                                    Icons.favorite,
+                                    color: isFavorite
+                                        ? Colors.pink
+                                        : const Color(0xFFF5FBFF),
+                                    size: 16,
                                   ),
-                                  const SizedBox(width: 2),
-                                  Text(
-                                    widget.countPeopleOnline.toString(),
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
+                                ),
+                                Expanded(
+                                  child: Container(width: double.infinity),
+                                ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.mail,
+                                      size: 18,
                                       color: Color(0xFFF5FBFF),
-                                      fontSize: 12,
-                                      fontFamily: 'Manrope',
-                                      fontWeight: FontWeight.w400,
                                     ),
+                                    const SizedBox(width: 2),
+                                    Text(
+                                      widget.countMessages.toString(),
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        color: Color(0xFFF5FBFF),
+                                        fontSize: 12,
+                                        fontFamily: 'Manrope',
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(
+                                  width: 12,
+                                ),
+                                Container(
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        width: 16,
+                                        height: 16,
+                                        clipBehavior: Clip.antiAlias,
+                                        decoration: BoxDecoration(),
+                                        child: Image.asset(
+                                            'assets/images/people.png'),
+                                      ),
+                                      const SizedBox(width: 2),
+                                      Text(
+                                        widget.countPeopleOnline.toString(),
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          color: Color(0xFFF5FBFF),
+                                          fontSize: 12,
+                                          fontFamily: 'Manrope',
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
                     ),
                   ),
                 ),
@@ -282,7 +309,6 @@ class _RoomState extends State<Room> {
 void addRoomDialog(BuildContext context) async {
   final acc = await readAccountFuture();
   if (acc.userName == '') {
-    // ignore: use_build_context_synchronously
     await showDialog(
       context: context,
       builder: (BuildContext context) {

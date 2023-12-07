@@ -27,11 +27,12 @@ import '../server_provider.dart';
 import '../theme_provider.dart';
 
 class MessageData {
-  Set<Messages> messages = {};
-  int previousMemberID = 0;
-  String responseBody;
+  List<Messages> messages;
+  int previousMemberID;
 
-  MessageData(this.messages, this.previousMemberID, this.responseBody);
+  MessageData()
+      : messages = [],
+        previousMemberID = 0;
 }
 
 final blockMessageStateKey = GlobalKey<_BlockMessagesState>();
@@ -43,7 +44,7 @@ class ChatScreen extends StatefulWidget {
   final int? id;
   final String server;
   final Account account;
-  MessageData messageData;
+  final MessageData messageData;
 
   ChatScreen(
       {super.key,
@@ -51,7 +52,7 @@ class ChatScreen extends StatefulWidget {
       this.id,
       required this.server,
       required this.account})
-      : messageData = MessageData({}, 0, '[]');
+      : messageData = MessageData();
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -59,7 +60,7 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   bool isListening = false;
-  Token? token;
+  final messageData = MessageData();
 
   void messageListen(MessageProvider messageProvider) {
     if (!isListening && !messageProvider.messagesStream.isBroadcast) {
@@ -81,10 +82,16 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void formMessage(String responseBody) {
     dynamic jsonMessage = jsonDecode(responseBody);
-    Messages message = Messages.fromJsonMessage(jsonMessage,
-        widget.messageData.previousMemberID, context, widget.topicName);
-    widget.messageData.previousMemberID = message.ownerId.toInt();
+    Messages message = Messages.fromJsonMessage(
+        jsonMessage,
+        messageData.previousMemberID,
+        context,
+        widget.topicName,
+        widget.account.id);
+    messageData.previousMemberID = message.ownerId.toInt();
+    messageData.messages.add(message);
     blockMessageStateKey.currentState!._messages.add(message);
+    blockMessageStateKey.currentState!._controller.jumpTo(0.0);
     blockMessageStateKey.currentState!.widget.updateState();
   }
 
@@ -121,26 +128,22 @@ class _ChatScreenState extends State<ChatScreen> {
         builder: (context, state) {
           print(state.runtimeType);
           if (state is TokenEmptyState) {
-            final MessageProvider messageProvider = MessageProvider(
-                'wss://${widget.server}/ws/${widget.topicName}?token=null');
             return CommonChatScreen(
               state: 'empty',
               topicName: widget.topicName,
-              messageProvider: messageProvider,
               server: widget.server,
               account: widget.account,
               messageData: widget.messageData,
             );
           } else if (state is TokenLoadedState) {
             print('loaded');
-            token = state.token;
             MessageProvider provider = MessageProviderContainer.instance
                 .getProvider(widget.topicName)!;
             messageListen(provider);
             return CommonChatScreen(
               state: 'loaded',
               topicName: widget.topicName,
-              messageProvider: state.messageProvider,
+              messageProvider: provider,
               server: widget.server,
               account: widget.account,
               messageData: widget.messageData,
@@ -156,7 +159,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
 class CommonChatScreen extends StatefulWidget {
   final String topicName;
-  final MessageProvider messageProvider;
+  final MessageProvider? messageProvider;
   final String server;
   final Account account;
   final String state;
@@ -164,7 +167,7 @@ class CommonChatScreen extends StatefulWidget {
   CommonChatScreen(
       {super.key,
       required this.topicName,
-      required this.messageProvider,
+      this.messageProvider,
       required this.server,
       required this.account,
       required this.state,
@@ -197,8 +200,11 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
 
   @override
   void dispose() {
-    print('dispose in screen');
-    widget.messageProvider.channel.sink.close();
+    if (widget.messageProvider != null) {
+      widget.messageProvider!.channel.sink.close();
+      MessageProviderContainer.instance.removeProvider(widget.topicName);
+      print('dispose in screen');
+    }
     super.dispose();
   }
 
@@ -246,6 +252,7 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
                         height: (screenHeight - 248) * 1,
                         child: BlockMessages(
                             key: blockMessageStateKey,
+                            checkContext: context,
                             state: widget.state,
                             messageData: widget.messageData,
                             updateState: () {
@@ -467,26 +474,24 @@ class BlockMessages extends StatefulWidget {
   final MessageData messageData;
   final Function updateState;
   final String state;
+  final BuildContext? checkContext;
   const BlockMessages({
-    Key? key,
+    super.key,
+    this.checkContext,
     required this.messageData,
     required this.updateState,
     required this.state,
-  }) : super(key: key);
+  });
 
   @override
   State<BlockMessages> createState() => _BlockMessagesState();
 }
 
 class _BlockMessagesState extends State<BlockMessages> {
-  final Set<Messages> _messages = {};
+  final List<Messages> _messages = [];
   bool showWrite = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    setState(() {});
-  }
+  final _controller = ScrollController();
+  double offset = 0.0;
 
   whenWriting(String name) async {
     setState(() {
@@ -500,13 +505,19 @@ class _BlockMessagesState extends State<BlockMessages> {
   }
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return Padding(
             padding: const EdgeInsets.only(top: 8, bottom: 8),
             child: Container(
-              padding: const EdgeInsets.only(right: 10, left: 10),
+              //padding: const EdgeInsets.only(right: 0, left: 0),
               decoration: ShapeDecoration(
                 color: themeProvider.currentTheme.primaryColorDark,
                 shape: RoundedRectangleBorder(
@@ -528,7 +539,7 @@ class _BlockMessagesState extends State<BlockMessages> {
                 alignment: Alignment.bottomRight,
                 children: [
                   widget.state == 'loaded'
-                      ? Container(child: messageView(themeProvider))
+                      ? messageView(themeProvider)
                       : const Center(child: CircularProgressIndicator()),
                   showWrite ? const WriteAnimated() : Container(),
                 ],
@@ -538,16 +549,34 @@ class _BlockMessagesState extends State<BlockMessages> {
     );
   }
 
+  List<Messages> _cachedMessages = [];
+
   Widget messageView(ThemeProvider themeProvider) {
     if (_messages.isNotEmpty) {
-      return ListView.builder(
-        reverse: true,
-        controller: ScrollController(),
-        shrinkWrap: true,
-        itemCount: _messages.toList().length,
-        itemBuilder: (context, index) {
-          return _messages.toList().reversed.toList()[index];
-        },
+      _cachedMessages = _messages.reversed.toList();
+      return Stack(
+        alignment: Alignment.bottomRight,
+        children: [
+          ListView.builder(
+            padding: const EdgeInsets.only(left: 10, right: 10),
+            reverse: true,
+            controller: _controller,
+            itemCount: _cachedMessages.length,
+            itemBuilder: (context, index) {
+              offset = _controller.offset;
+              print(offset);
+              return _cachedMessages[index];
+            },
+          ),
+          offset > -1
+              ? IconButton(
+                  onPressed: () {
+                    _controller.jumpTo(0.0);
+                  },
+                  icon: Icon(Icons.arrow_downward,
+                      color: themeProvider.currentTheme.primaryColor))
+              : Container()
+        ],
       );
     } else if (widget.state != 'loaded') {
       return Center(
@@ -704,9 +733,7 @@ class _TextAndSendState extends State<TextAndSend> {
                     ),
                     maxLines: null,
                     onTap: () async {
-                      if (widget.messageProvider!.serverUrl
-                          .toString()
-                          .endsWith('l')) {
+                      if (widget.state == 'empty') {
                         FocusScope.of(context).unfocus();
                         final account = await showDialog(
                           context: context,

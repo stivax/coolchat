@@ -25,11 +25,7 @@ class Messages extends StatelessWidget {
   final int vote;
   final BuildContext contextMessage;
   final String roomName;
-
-  Account _account =
-      Account(email: '', userName: '', password: '', avatar: '', id: 0);
-  late Future<Account> _accountFuture;
-
+  final int accountId;
   Messages(
       {super.key,
       required this.message,
@@ -41,34 +37,11 @@ class Messages extends StatelessWidget {
       required this.isPreviousSameMember,
       required this.vote,
       required this.contextMessage,
-      required this.roomName});
-
-  static List<Messages> fromJsonList(
-      List<dynamic> jsonList, BuildContext contextMessage, String roomName) {
-    int previousMemberID = 0;
-    final timeZone = DateTime.now().timeZoneOffset;
-
-    return jsonList.map((json) {
-      bool isSameMember = json['owner_id'] == previousMemberID;
-      previousMemberID = json['owner_id'];
-
-      return Messages(
-        message: json['message'],
-        id: json['id']!,
-        createdAt: DateTime.parse(json['created_at']).add(timeZone),
-        avatar: json['avatar'],
-        userName: json['user_name'],
-        ownerId: json['receiver_id'],
-        isPreviousSameMember: isSameMember,
-        vote: json['vote']!,
-        contextMessage: contextMessage,
-        roomName: roomName,
-      );
-    }).toList();
-  }
+      required this.roomName,
+      required this.accountId});
 
   static Messages fromJsonMessage(dynamic jsonMessage, int previousMemberID,
-      BuildContext contextMessage, String roomName) {
+      BuildContext contextMessage, String roomName, int accountId) {
     bool isSameMember = jsonMessage['receiver_id'] == previousMemberID;
     final timeZone = DateTime.now().timeZoneOffset;
 
@@ -83,6 +56,7 @@ class Messages extends StatelessWidget {
       vote: jsonMessage['vote'],
       contextMessage: contextMessage,
       roomName: roomName,
+      accountId: accountId,
     );
   }
 
@@ -104,54 +78,36 @@ class Messages extends StatelessWidget {
     }
   }
 
-  void _readDataFromFile() {
-    final data = readAccountFuture();
-    _accountFuture = data;
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (_account.userName == '') {
-      _readDataFromFile();
-    }
-    var screenWidth = MediaQuery.of(context).size.width;
-    return FutureBuilder<Account>(
-      future: _accountFuture,
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          _account = snapshot.data!;
-          return _account.id == ownerId
-              ? MyMessege(
-                  screenWidth: screenWidth,
-                  message: message,
-                  id: id,
-                  createdAt: formatTime(createdAt.toString()),
-                  ownerId: ownerId,
-                  avatar: avatar,
-                  userName: userName,
-                  vote: vote,
-                  isPreviousSameMember: isPreviousSameMember,
-                  contextMessage: contextMessage,
-                  roomName: roomName,
-                )
-              : TheirMessege(
-                  screenWidth: screenWidth,
-                  message: message,
-                  id: id,
-                  createdAt: formatTime(createdAt.toString()),
-                  ownerId: ownerId,
-                  avatar: avatar,
-                  userName: userName,
-                  vote: vote,
-                  isPreviousSameMember: isPreviousSameMember,
-                  contextMessage: contextMessage,
-                  roomName: roomName,
-                );
-        } else {
-          return Container();
-        }
-      },
-    );
+    final screenWidth = MediaQuery.of(context).size.width;
+    return accountId == ownerId
+        ? MyMessege(
+            screenWidth: screenWidth,
+            message: message,
+            id: id,
+            createdAt: formatTime(createdAt.toString()),
+            ownerId: ownerId,
+            avatar: avatar,
+            userName: userName,
+            vote: vote,
+            isPreviousSameMember: isPreviousSameMember,
+            contextMessage: contextMessage,
+            roomName: roomName,
+          )
+        : TheirMessege(
+            screenWidth: screenWidth,
+            message: message,
+            id: id,
+            createdAt: formatTime(createdAt.toString()),
+            ownerId: ownerId,
+            avatar: avatar,
+            userName: userName,
+            vote: vote,
+            isPreviousSameMember: isPreviousSameMember,
+            contextMessage: contextMessage,
+            roomName: roomName,
+          );
   }
 }
 
