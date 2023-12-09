@@ -1,3 +1,4 @@
+import 'package:coolchat/account.dart';
 import 'package:coolchat/message_provider.dart';
 import 'package:coolchat/model/token.dart';
 import 'package:coolchat/server/server.dart';
@@ -22,9 +23,13 @@ class TokenBloc extends Bloc<TokenEvent, TokenState> {
           await messageProvider.channel.ready;
           MessageProviderContainer.instance
               .addProvider(event.roomName!, messageProvider);
+          Account account = await readAccountFuture();
           emit(TokenLoadedState(
-              token: token!, messageProvider: messageProvider));
-        } catch (_) {
+              token: token!,
+              messageProvider: messageProvider,
+              account: account));
+        } catch (e) {
+          print('Error $e');
           emit(TokenErrorState());
         }
       },

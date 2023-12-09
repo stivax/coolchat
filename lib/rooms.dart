@@ -19,6 +19,8 @@ import 'theme_provider.dart';
 import 'account.dart';
 import 'servises/favorite_room_provider.dart';
 
+final roomStateKey = GlobalKey<_RoomState>();
+
 class Room extends StatefulWidget {
   String name;
   int id;
@@ -27,18 +29,21 @@ class Room extends StatefulWidget {
   int countPeopleOnline;
   int countMessages;
   bool isFavorite;
+  bool scale;
 
   Room(
-      {required this.name,
+      {super.key,
+      required this.name,
       required this.id,
       required this.createdAt,
       required this.image,
       required this.countPeopleOnline,
       required this.countMessages,
-      required this.isFavorite});
+      required this.isFavorite,
+      required this.scale});
 
   static List<Room> fromJsonList(
-      List<dynamic> jsonList, List<String> favoriteRoomList) {
+      List<dynamic> jsonList, List<String> favoriteRoomList, bool scale) {
     return jsonList.map((json) {
       return Room(
         name: json["name_room"],
@@ -50,6 +55,7 @@ class Room extends StatefulWidget {
         countPeopleOnline: json["count_users"],
         countMessages: json["count_messages"],
         isFavorite: favoriteRoomList.contains(json["name_room"]),
+        scale: scale,
       );
     }).toList()
       ..add(Room(
@@ -60,6 +66,7 @@ class Room extends StatefulWidget {
         countMessages: 0,
         createdAt: '',
         isFavorite: false,
+        scale: scale,
       ));
   }
 
@@ -117,185 +124,162 @@ class _RoomState extends State<Room> {
                             ),
                           );
                   },
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 0, left: 0, right: 0),
-                    child: Container(
-                      //padding: EdgeInsets.all(8.0),
-                      width: double.infinity,
-                      alignment: Alignment.bottomCenter,
-                      decoration: ShapeDecoration(
-                        image: DecorationImage(
-                          image: widget.id != 999
-                              ? widget.image
-                              : themeProvider.isLightMode
-                                  ? const AssetImage(
-                                      'assets/images/add_room_light.jpg')
-                                  : const AssetImage(
-                                      'assets/images/add_room_dark.jpg'),
-                          fit: BoxFit.cover,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          side: BorderSide(
-                              width: 0.50,
-                              color: themeProvider.currentTheme.shadowColor),
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(10),
-                            topRight: Radius.circular(10),
-                          ),
+                  child: Container(
+                    width: double.infinity,
+                    alignment: Alignment.bottomCenter,
+                    decoration: ShapeDecoration(
+                      image: DecorationImage(
+                        image: widget.id != 999
+                            ? widget.image
+                            : themeProvider.isLightMode
+                                ? const AssetImage(
+                                    'assets/images/add_room_light.jpg')
+                                : const AssetImage(
+                                    'assets/images/add_room_dark.jpg'),
+                        fit: BoxFit.cover,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        side: BorderSide(
+                            width: 0.50,
+                            color: themeProvider.currentTheme.shadowColor),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(10),
+                          topRight: Radius.circular(10),
                         ),
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          widget.id == 999
-                              ? Image(
-                                  image: themeProvider.isLightMode
-                                      ? const AssetImage(
-                                          'assets/images/add_light.png')
-                                      : const AssetImage(
-                                          'assets/images/add_dark.png'),
-                                )
-                              : Container(),
-                          Container(
-                            padding: const EdgeInsets.all(8.0),
-                            width: 200,
-                            decoration: BoxDecoration(
-                                color:
-                                    const Color(0xFF0F1E28).withOpacity(0.40)),
-                            child: Text(
-                              widget.name,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: widget.id == 999
-                                    ? themeProvider.currentTheme.primaryColor
-                                    : const Color(0xFFF5FBFF),
-                                fontSize: 14,
-                                fontFamily: 'Manrope',
-                                fontWeight: FontWeight.w600,
-                                height: 1.30,
-                              ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        widget.id == 999
+                            ? Image(
+                                image: themeProvider.isLightMode
+                                    ? const AssetImage(
+                                        'assets/images/add_light.png')
+                                    : const AssetImage(
+                                        'assets/images/add_dark.png'),
+                                height: widget.scale ? 28 : 14,
+                              )
+                            : Container(),
+                        Container(
+                          padding: const EdgeInsets.all(4.0),
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                              color: const Color(0xFF0F1E28).withOpacity(0.40)),
+                          child: Text(
+                            widget.name,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: widget.id == 999
+                                  ? themeProvider.currentTheme.primaryColor
+                                  : const Color(0xFFF5FBFF),
+                              fontSize: widget.scale ? 14 : 10,
+                              fontFamily: 'Manrope',
+                              fontWeight: FontWeight.w600,
+                              height: 1.30,
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
               Expanded(
                 flex: 1,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 0, right: 0),
-                  child: Container(
-                    alignment: Alignment.center,
-                    decoration: ShapeDecoration(
-                      color: themeProvider.currentTheme.shadowColor,
-                      shape: RoundedRectangleBorder(
-                        side: BorderSide(
-                            width: 0.50,
-                            color: themeProvider.currentTheme.shadowColor),
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(10),
-                          bottomRight: Radius.circular(10),
-                        ),
+                child: Container(
+                  padding: widget.scale
+                      ? const EdgeInsets.only(
+                          right: 8, left: 8, top: 6, bottom: 6)
+                      : const EdgeInsets.only(
+                          right: 4, left: 4, top: 3, bottom: 3),
+                  alignment: Alignment.center,
+                  decoration: ShapeDecoration(
+                    color: themeProvider.currentTheme.shadowColor,
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                          width: 0.50,
+                          color: themeProvider.currentTheme.shadowColor),
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(10),
+                        bottomRight: Radius.circular(10),
                       ),
                     ),
-                    child: Container(
-                      padding: const EdgeInsets.only(left: 8, right: 8),
-                      child: widget.id == 999
-                          ? Container()
-                          : Row(
-                              verticalDirection: VerticalDirection.down,
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                GestureDetector(
-                                  onTap: () {
-                                    widget.isFavorite = !isFavorite;
-                                    if (isFavorite) {
-                                      FavoriteList.removeRoomIntoFavorite(
-                                          widget.name);
-                                    } else {
-                                      FavoriteList.addRoomToFavorite(
-                                          widget.name);
-                                    }
-                                    setState(() {
-                                      isFavorite = isFavorite ? false : true;
-                                    });
-                                    myHomePageStateKey.currentState!
-                                        .fetchData(Server.server);
-                                  },
-                                  child: Icon(
-                                    Icons.favorite,
-                                    color: isFavorite
-                                        ? Colors.pink
-                                        : const Color(0xFFF5FBFF),
-                                    size: 16,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Container(width: double.infinity),
-                                ),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    const Icon(
-                                      Icons.mail,
-                                      size: 18,
-                                      color: Color(0xFFF5FBFF),
-                                    ),
-                                    const SizedBox(width: 2),
-                                    Text(
-                                      widget.countMessages.toString(),
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        color: Color(0xFFF5FBFF),
-                                        fontSize: 12,
-                                        fontFamily: 'Manrope',
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(
-                                  width: 12,
-                                ),
-                                Container(
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      Container(
-                                        width: 16,
-                                        height: 16,
-                                        clipBehavior: Clip.antiAlias,
-                                        decoration: BoxDecoration(),
-                                        child: Image.asset(
-                                            'assets/images/people.png'),
-                                      ),
-                                      const SizedBox(width: 2),
-                                      Text(
-                                        widget.countPeopleOnline.toString(),
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                          color: Color(0xFFF5FBFF),
-                                          fontSize: 12,
-                                          fontFamily: 'Manrope',
-                                          fontWeight: FontWeight.w400,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                    ),
                   ),
+                  child: widget.id == 999
+                      ? Container()
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            FittedBox(
+                              fit: BoxFit.contain,
+                              child: GestureDetector(
+                                onTap: () {
+                                  widget.isFavorite = !isFavorite;
+                                  if (isFavorite) {
+                                    FavoriteList.removeRoomIntoFavorite(
+                                        widget.name);
+                                  } else {
+                                    FavoriteList.addRoomToFavorite(widget.name);
+                                  }
+                                  setState(() {
+                                    isFavorite = isFavorite ? false : true;
+                                  });
+                                  myHomePageStateKey.currentState!
+                                      .fetchData(Server.server);
+                                },
+                                child: Icon(
+                                  Icons.favorite,
+                                  color: isFavorite
+                                      ? Colors.pink
+                                      : const Color(0xFFF5FBFF),
+                                  //size: 16,
+                                ),
+                              ),
+                            ),
+                            Container(),
+                            FittedBox(
+                              fit: BoxFit.contain,
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.mail,
+                                    color: Color(0xFFF5FBFF),
+                                  ),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    widget.countMessages.toString(),
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      color: Color(0xFFF5FBFF),
+                                      //fontSize: 12,
+                                      fontFamily: 'Manrope',
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    width: 6,
+                                  ),
+                                  const Icon(
+                                    Icons.people,
+                                    color: Color(0xFFF5FBFF),
+                                  ),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    widget.countPeopleOnline.toString(),
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      color: Color(0xFFF5FBFF),
+                                      //fontSize: 12,
+                                      fontFamily: 'Manrope',
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                 ),
               ),
             ],

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:coolchat/animation_start.dart';
 import 'package:coolchat/screen/common_chat.dart';
 import 'package:coolchat/screen/private_chat.dart';
+import 'package:coolchat/server/server.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
 import 'package:coolchat/servises/token_provider.dart';
 import 'package:coolchat/servises/token_repository.dart';
@@ -33,6 +34,7 @@ void main() => runApp(
     );
 
 final myHomePageStateKey = GlobalKey<_MyHomePageState>();
+final scrollRoomsListStateKey = GlobalKey<_ScrollRoomsListState>();
 
 class MyApp extends StatelessWidget {
   static final MessageProviderContainer messageProviderContainer =
@@ -75,6 +77,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Room> roomsList = [];
   late String server;
   late Map<dynamic, dynamic> token;
+  bool scale = true;
 
   @override
   void initState() {
@@ -116,7 +119,8 @@ class _MyHomePageState extends State<MyHomePage> {
       if (response.statusCode == 200) {
         String responseBody = utf8.decode(response.bodyBytes);
         List<dynamic> jsonList = jsonDecode(responseBody);
-        List<Room> rooms = Room.fromJsonList(jsonList, roomList).toList();
+        List<Room> rooms =
+            Room.fromJsonList(jsonList, roomList, scale).toList();
         if (mounted) {
           rooms.sort((a, b) {
             if (a.isFavorite == b.isFavorite) {
@@ -224,16 +228,34 @@ class ChatListWidget extends StatelessWidget {
                 child: Padding(
                   padding:
                       const EdgeInsets.only(left: 20, bottom: 5, right: 20),
-                  child: Text(
-                    'Choose rooms for\ncommunication',
-                    textScaler: const TextScaler.linear(0.97),
-                    style: TextStyle(
-                      color: themeProvider.currentTheme.primaryColor,
-                      fontSize: 24,
-                      fontFamily: 'Manrope',
-                      fontWeight: FontWeight.w500,
-                      height: 1.24,
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Choose rooms for\ncommunication',
+                        textScaler: const TextScaler.linear(0.97),
+                        style: TextStyle(
+                          color: themeProvider.currentTheme.primaryColor,
+                          fontSize: 24,
+                          fontFamily: 'Manrope',
+                          fontWeight: FontWeight.w500,
+                          height: 1.24,
+                        ),
+                      ),
+                      Container(),
+                      IconButton(
+                          onPressed: () {
+                            scrollRoomsListStateKey.currentState!.scale =
+                                !scrollRoomsListStateKey.currentState!.scale;
+                            //scrollRoomsListStateKey.currentState!.changeScale();
+                            myHomePageStateKey.currentState!.scale =
+                                !myHomePageStateKey.currentState!.scale;
+                            myHomePageStateKey.currentState!
+                                .fetchData(Server.server);
+                          },
+                          icon: Icon(Icons.grid_view,
+                              color: themeProvider.currentTheme.primaryColor))
+                    ],
                   ),
                 ),
               ),
@@ -241,6 +263,7 @@ class ChatListWidget extends StatelessWidget {
           },
         ),
         ScrollRoomsList(
+          key: scrollRoomsListStateKey,
           roomsList: roomsList,
         ),
         const SliverToBoxAdapter(
@@ -312,9 +335,15 @@ class ScrollRoomsList extends StatefulWidget {
 }
 
 class _ScrollRoomsListState extends State<ScrollRoomsList> {
+  bool scale = true;
+
   @override
   void initState() {
     super.initState();
+  }
+
+  void changeScale() {
+    setState(() {});
   }
 
   @override
@@ -326,10 +355,10 @@ class _ScrollRoomsListState extends State<ScrollRoomsList> {
           (context, index) => widget.roomsList[index],
           childCount: widget.roomsList.length,
         ),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 16.0,
-          mainAxisSpacing: 16.0,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: scale ? 2 : 3,
+          crossAxisSpacing: scale ? 16.0 : 10.0,
+          mainAxisSpacing: scale ? 16.0 : 10.0,
           childAspectRatio: 0.826,
         ),
       ),

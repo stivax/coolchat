@@ -61,6 +61,8 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   bool isListening = false;
   final messageData = MessageData();
+  Account acc =
+      Account(email: '', userName: '', password: '', avatar: '', id: 0);
 
   void messageListen(MessageProvider messageProvider) {
     if (!isListening && !messageProvider.messagesStream.isBroadcast) {
@@ -82,16 +84,12 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void formMessage(String responseBody) {
     dynamic jsonMessage = jsonDecode(responseBody);
-    Messages message = Messages.fromJsonMessage(
-        jsonMessage,
-        messageData.previousMemberID,
-        context,
-        widget.topicName,
-        widget.account.id);
+    Messages message = Messages.fromJsonMessage(jsonMessage,
+        messageData.previousMemberID, context, widget.topicName, acc.id);
     messageData.previousMemberID = message.ownerId.toInt();
     messageData.messages.add(message);
     blockMessageStateKey.currentState!._messages.add(message);
-    blockMessageStateKey.currentState!._controller.jumpTo(0.0);
+    //blockMessageStateKey.currentState!._controller.jumpTo(0.0);
     blockMessageStateKey.currentState!.widget.updateState();
   }
 
@@ -137,6 +135,7 @@ class _ChatScreenState extends State<ChatScreen> {
             );
           } else if (state is TokenLoadedState) {
             print('loaded');
+            acc = state.account;
             MessageProvider provider = MessageProviderContainer.instance
                 .getProvider(widget.topicName)!;
             messageListen(provider);
@@ -145,7 +144,7 @@ class _ChatScreenState extends State<ChatScreen> {
               topicName: widget.topicName,
               messageProvider: provider,
               server: widget.server,
-              account: widget.account,
+              account: state.account,
               messageData: widget.messageData,
             );
           } else {
@@ -492,6 +491,7 @@ class _BlockMessagesState extends State<BlockMessages> {
   bool showWrite = false;
   final _controller = ScrollController();
   double offset = 0.0;
+  bool showArrow = true;
 
   whenWriting(String name) async {
     setState(() {
@@ -501,6 +501,12 @@ class _BlockMessagesState extends State<BlockMessages> {
       setState(() {
         showWrite = false;
       });
+    });
+  }
+
+  void showingArrow() {
+    setState(() {
+      showArrow = !showArrow;
     });
   }
 
@@ -552,6 +558,7 @@ class _BlockMessagesState extends State<BlockMessages> {
   List<Messages> _cachedMessages = [];
 
   Widget messageView(ThemeProvider themeProvider) {
+    int countNewMessages = _messages.length - _cachedMessages.length;
     if (_messages.isNotEmpty) {
       _cachedMessages = _messages.reversed.toList();
       return Stack(
@@ -563,16 +570,25 @@ class _BlockMessagesState extends State<BlockMessages> {
             controller: _controller,
             itemCount: _cachedMessages.length,
             itemBuilder: (context, index) {
-              offset = _controller.offset;
-              print(offset);
+              if (_controller.offset > 500 && !showArrow) {
+                //showingArrow();
+              } else if (_controller.offset < 500 && showArrow) {
+                //showingArrow();
+              }
+              print(showArrow);
               return _cachedMessages[index];
             },
           ),
-          offset > -1
+          showArrow
               ? IconButton(
                   onPressed: () {
-                    _controller.jumpTo(0.0);
+                    _controller.animateTo(0.0,
+                        duration: Duration(milliseconds: 500),
+                        curve: Curves.linear);
                   },
+                  splashRadius: 50,
+                  splashColor:
+                      themeProvider.currentTheme.shadowColor.withOpacity(0.4),
                   icon: Icon(Icons.arrow_downward,
                       color: themeProvider.currentTheme.primaryColor))
               : Container()
