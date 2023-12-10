@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:beholder_flutter/beholder_flutter.dart';
 import 'package:coolchat/bloc/token_blok.dart';
 import 'package:coolchat/model/token.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
@@ -25,6 +26,7 @@ import '../messages.dart';
 import '../my_appbar.dart';
 import '../server_provider.dart';
 import '../theme_provider.dart';
+import '../beholder/scroll_chat_controll.dart';
 
 class MessageData {
   List<Messages> messages;
@@ -490,8 +492,8 @@ class _BlockMessagesState extends State<BlockMessages> {
   final List<Messages> _messages = [];
   bool showWrite = false;
   final _controller = ScrollController();
-  double offset = 0.0;
   bool showArrow = true;
+  final scrollChatController = ScrollChatControll();
 
   whenWriting(String name) async {
     setState(() {
@@ -558,42 +560,83 @@ class _BlockMessagesState extends State<BlockMessages> {
   List<Messages> _cachedMessages = [];
 
   Widget messageView(ThemeProvider themeProvider) {
-    int countNewMessages = _messages.length - _cachedMessages.length;
+    bool countNewMessages = (_messages.length - _cachedMessages.length) == 1;
     if (_messages.isNotEmpty) {
       _cachedMessages = _messages.reversed.toList();
-      return Stack(
-        alignment: Alignment.bottomRight,
-        children: [
-          ListView.builder(
-            padding: const EdgeInsets.only(left: 10, right: 10),
-            reverse: true,
-            controller: _controller,
-            itemCount: _cachedMessages.length,
-            itemBuilder: (context, index) {
-              if (_controller.offset > 500 && !showArrow) {
-                //showingArrow();
-              } else if (_controller.offset < 500 && showArrow) {
-                //showingArrow();
-              }
-              print(showArrow);
-              return _cachedMessages[index];
-            },
-          ),
-          showArrow
-              ? IconButton(
-                  onPressed: () {
-                    _controller.animateTo(0.0,
-                        duration: Duration(milliseconds: 500),
-                        curve: Curves.linear);
-                  },
-                  splashRadius: 50,
-                  splashColor:
-                      themeProvider.currentTheme.shadowColor.withOpacity(0.4),
-                  icon: Icon(Icons.arrow_downward,
-                      color: themeProvider.currentTheme.primaryColor))
-              : Container()
-        ],
-      );
+      return Observer(builder: (context, watch) {
+        return Stack(
+          alignment: Alignment.bottomRight,
+          children: [
+            ListView.builder(
+              padding: const EdgeInsets.only(left: 10, right: 10),
+              reverse: true,
+              controller: _controller,
+              itemCount: _cachedMessages.length,
+              itemBuilder: (context, index) {
+                if (_controller.offset > 500 &&
+                    !watch(scrollChatController.showArrow)) {
+                  scrollChatController.clearNewMessagess();
+                  scrollChatController.showingArrow();
+                } else if (_controller.offset < 500 &&
+                    watch(scrollChatController.showArrow)) {
+                  scrollChatController.showingArrow();
+                  scrollChatController.clearNewMessagess();
+                }
+                if (countNewMessages && _controller.offset > 500) {
+                  countNewMessages = !countNewMessages;
+                  scrollChatController.addNewMessage();
+                  _controller.jumpTo(_controller.offset + 82);
+                }
+                print(_controller.offset);
+                return _cachedMessages[index];
+              },
+            ),
+            watch(scrollChatController.showArrow)
+                ? Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      FloatingActionButton(
+                        onPressed: () {
+                          scrollChatController.showingArrow();
+                          scrollChatController.clearNewMessagess();
+                          _controller.animateTo(0.0,
+                              duration: const Duration(milliseconds: 500),
+                              curve: Curves.linear);
+                        },
+                        backgroundColor: themeProvider.currentTheme.cardColor,
+                        mini: true,
+                        child: Icon(
+                          Icons.arrow_downward,
+                          color: themeProvider.currentTheme.primaryColor,
+                        ),
+                      ),
+                      watch(scrollChatController.countNewMessages) != 0
+                          ? Padding(
+                              padding: const EdgeInsets.all(2.0),
+                              child: Container(
+                                height: 14,
+                                width: 14,
+                                alignment: Alignment.center,
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Text(
+                                  watch(
+                                    scrollChatController.countNewMessages,
+                                  ).toString(),
+                                  style: const TextStyle(
+                                      fontSize: 10, color: Colors.white),
+                                ),
+                              ),
+                            )
+                          : Container(),
+                    ],
+                  )
+                : Container()
+          ],
+        );
+      });
     } else if (widget.state != 'loaded') {
       return Center(
         child: Column(
