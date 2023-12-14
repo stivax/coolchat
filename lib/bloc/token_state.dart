@@ -21,4 +21,9 @@ class TokenLoadedState extends TokenState {
   });
 }
 
-class TokenErrorState extends TokenState {}
+class TokenErrorState extends TokenState {
+  final String error;
+  TokenErrorState({
+    required this.error,
+  });
+}

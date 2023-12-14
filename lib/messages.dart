@@ -16,7 +16,7 @@ import 'theme_provider.dart';
 // ignore: must_be_immutable
 class Messages extends StatelessWidget {
   final String message;
-  final int id;
+  final int? id;
   final DateTime createdAt;
   final String avatar;
   final String userName;
@@ -114,7 +114,7 @@ class Messages extends StatelessWidget {
 class TheirMessege extends StatelessWidget {
   final double screenWidth;
   final String message;
-  final int id;
+  final int? id;
   final String createdAt;
   final int ownerId;
   final String avatar;
@@ -214,11 +214,13 @@ class TheirMessege extends StatelessWidget {
                         ),
                         GestureDetector(
                           onDoubleTap: () {
-                            final provider = MessageProviderContainer.instance
-                                .getProvider(roomName);
-                            provider?.channel.sink.add(json.encode({
-                              "vote": {"message_id": id, "dir": 1}
-                            }));
+                            MessageProviderContainer.instance
+                                .getProvider(roomName)
+                                ?.channel
+                                .sink
+                                .add(json.encode({
+                                  "vote": {"message_id": id, "dir": 1}
+                                }));
                             HapticFeedback.lightImpact();
                           },
                           onHorizontalDragEnd: (_) {
@@ -334,7 +336,7 @@ class TheirMessege extends StatelessWidget {
 class MyMessege extends StatelessWidget {
   final double screenWidth;
   final String message;
-  final int id;
+  final int? id;
   final String createdAt;
   final int ownerId;
   final String avatar;

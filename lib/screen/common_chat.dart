@@ -13,6 +13,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
 import 'package:marquee/marquee.dart';
 import 'package:provider/provider.dart';
+import 'package:connectivity/connectivity.dart';
 
 import '../account.dart';
 import '../bloc/token_event.dart';
@@ -60,27 +61,58 @@ class ChatScreen extends StatefulWidget {
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool isListening = false;
   final messageData = MessageData();
   Account acc =
       Account(email: '', userName: '', password: '', avatar: '', id: 0);
+  late final MessageProvider providerInScreen;
+  late final StreamSubscription _messageSubscription;
+  late final StreamSubscription<ConnectivityResult> _connectivitySubscription;
 
-  void messageListen(MessageProvider messageProvider) {
-    if (!isListening && !messageProvider.messagesStream.isBroadcast) {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    providerInScreen.channel.sink.close();
+    _messageSubscription.cancel();
+    _connectivitySubscription.cancel();
+    WidgetsBinding.instance.addObserver(this);
+    super.dispose();
+  }
+
+  void messageListen() {
+    if (!isListening) {
       isListening = true;
-      messageProvider.messagesStream.listen((event) async {
-        print(event);
-        if (event.toString().startsWith('{"created_at"')) {
-          formMessage(event.toString());
-        } else if (event.toString().startsWith('{"type":"active_users"')) {
-          formMembersList(event.toString());
-        } else if (event.toString().startsWith('{"message":"Vote posted')) {
-          clearMessages();
-        } else if (event.toString().startsWith('{"type":')) {
-          showWriting(event.toString());
-        }
-      });
+      clearMessages();
+      _messageSubscription = providerInScreen.messagesStream.listen(
+        (event) async {
+          //print(event);
+          if (event.toString().startsWith('{"created_at"')) {
+            formMessage(event.toString());
+          } else if (event.toString().startsWith('{"type":"active_users"')) {
+            formMembersList(event.toString());
+          } else if (event.toString().startsWith('{"message":"Vote posted')) {
+            clearMessages();
+          } else if (event.toString().startsWith('{"type":')) {
+            showWriting(event.toString());
+          }
+        },
+        onDone: () {
+          isListening = false;
+          providerInScreen.setIsConnected = false;
+          providerInScreen.reconnect();
+        },
+        onError: (e) {
+          isListening = false;
+          providerInScreen.setIsConnected = false;
+          providerInScreen.reconnect();
+        },
+      );
     }
   }
 
@@ -91,7 +123,6 @@ class _ChatScreenState extends State<ChatScreen> {
     messageData.previousMemberID = message.ownerId.toInt();
     messageData.messages.add(message);
     blockMessageStateKey.currentState!._messages.add(message);
-    //blockMessageStateKey.currentState!._controller.jumpTo(0.0);
     blockMessageStateKey.currentState!.widget.updateState();
   }
 
@@ -109,6 +140,13 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void showWriting(String name) {
     blockMessageStateKey.currentState!.whenWriting(name);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    messageListen();
+    _messageSubscription.resume();
   }
 
   @override
@@ -136,11 +174,24 @@ class _ChatScreenState extends State<ChatScreen> {
               messageData: widget.messageData,
             );
           } else if (state is TokenLoadedState) {
-            print('loaded');
             acc = state.account;
             MessageProvider provider = MessageProviderContainer.instance
                 .getProvider(widget.topicName)!;
-            messageListen(provider);
+            providerInScreen = provider;
+            messageListen();
+            _connectivitySubscription =
+                Connectivity().onConnectivityChanged.listen((result) async {
+              if (result != ConnectivityResult.none) {
+                if (!providerInScreen.isConnected) {
+                  providerInScreen.reconnect();
+                  await providerInScreen.channel.ready;
+                  messageListen();
+                }
+              }
+            });
+            if (_messageSubscription.isPaused) {
+              _messageSubscription.resume();
+            }
             return CommonChatScreen(
               state: 'loaded',
               topicName: widget.topicName,
@@ -149,6 +200,8 @@ class _ChatScreenState extends State<ChatScreen> {
               account: state.account,
               messageData: widget.messageData,
             );
+          } else if (state is TokenErrorState) {
+            return Center(child: Text('Error is ${state.error}'));
           } else {
             return const Center(child: LinearProgressIndicator());
           }
@@ -164,8 +217,8 @@ class CommonChatScreen extends StatefulWidget {
   final String server;
   final Account account;
   final String state;
-  MessageData messageData;
-  CommonChatScreen(
+  final MessageData messageData;
+  const CommonChatScreen(
       {super.key,
       required this.topicName,
       this.messageProvider,
@@ -186,10 +239,7 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
     messageData = widget.messageData;
     if (widget.account.email.isNotEmpty) {
       final TokenBloc tokenBloc = context.read<TokenBloc>();
-      tokenBloc.add(TokenLoadEvent(
-          email: widget.account.email,
-          password: widget.account.password,
-          roomName: widget.topicName));
+      tokenBloc.add(TokenLoadEvent(roomName: widget.topicName));
     }
   }
 
@@ -203,7 +253,6 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
   void dispose() {
     if (widget.messageProvider != null) {
       widget.messageProvider!.channel.sink.close();
-      MessageProviderContainer.instance.removeProvider(widget.topicName);
       print('dispose in screen');
     }
     super.dispose();
@@ -525,7 +574,6 @@ class _BlockMessagesState extends State<BlockMessages> {
         return Padding(
             padding: const EdgeInsets.only(top: 8, bottom: 8),
             child: Container(
-              //padding: const EdgeInsets.only(right: 0, left: 0),
               decoration: ShapeDecoration(
                 color: themeProvider.currentTheme.primaryColorDark,
                 shape: RoundedRectangleBorder(
@@ -587,7 +635,6 @@ class _BlockMessagesState extends State<BlockMessages> {
                   scrollChatController.addNewMessage();
                   _controller.jumpTo(_controller.offset + 82);
                 }
-                print(_controller.offset);
                 return _cachedMessages[index];
               },
             ),
@@ -794,17 +841,15 @@ class _TextAndSendState extends State<TextAndSend> {
                     onTap: () async {
                       if (widget.state == 'empty') {
                         FocusScope.of(context).unfocus();
-                        final account = await showDialog(
+                        await showDialog(
                           context: context,
                           builder: (BuildContext context) {
                             return LoginDialog();
                           },
                         );
                         final TokenBloc tokenBloc = context.read<TokenBloc>();
-                        tokenBloc.add(TokenLoadEvent(
-                            email: account.email,
-                            password: account.password,
-                            roomName: widget.topicName));
+                        tokenBloc
+                            .add(TokenLoadEvent(roomName: widget.topicName));
                       } else {
                         FocusScope.of(context)
                             .requestFocus(_textFieldFocusNode);

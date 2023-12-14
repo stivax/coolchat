@@ -17,20 +17,29 @@ class TokenBloc extends Bloc<TokenEvent, TokenState> {
     on<TokenLoadEvent>(
       (event, emit) async {
         try {
-          token = await tokenRepository.getToken(event.email, event.password);
+          print('Begin create Token state');
+          Account account = await readAccountFuture();
+          print('Read account ${account.email}');
+          await Server.checkConnection();
+          token =
+              await tokenRepository.getToken(account.email, account.password);
+          print('token ${token!.token["access_token"]}');
           final MessageProvider messageProvider = MessageProvider(
-              'wss://$server/ws/${event.roomName}?token=${token!.token["access_token"]}');
+              'wss://$server/ws/${event.roomName!}?token=${token!.token["access_token"]}');
+          print('Create message provider ${messageProvider.serverUrl}');
           await messageProvider.channel.ready;
           MessageProviderContainer.instance
               .addProvider(event.roomName!, messageProvider);
-          Account account = await readAccountFuture();
+          print('Save message provider to instance');
           emit(TokenLoadedState(
               token: token!,
               messageProvider: messageProvider,
               account: account));
         } catch (e) {
           print('Error $e');
-          emit(TokenErrorState());
+          emit(TokenErrorState(
+            error: e.toString(),
+          ));
         }
       },
     );

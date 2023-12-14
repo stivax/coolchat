@@ -4,25 +4,46 @@ import 'package:web_socket_channel/io.dart';
 class MessageProvider {
   final String serverUrl;
   late WebSocketChannel channel;
+  bool _isConnected = false;
 
   MessageProvider(this.serverUrl) {
-    try {
-      channel = WebSocketChannel.connect(Uri.parse(serverUrl));
-      print('connect to $serverUrl');
-    } catch (e) {
-      channel = WebSocketChannel.connect(Uri.parse(serverUrl));
-      print('connect with error $e to $serverUrl');
+    _connect();
+  }
+
+  Future<void> _connect() async {
+    channel = WebSocketChannel.connect(Uri.parse(serverUrl));
+    await channel.ready;
+    _isConnected = true;
+    print('Connected to $serverUrl');
+  }
+
+  void reconnect() {
+    print('try to Reconnecting... with $_isConnected');
+    if (!_isConnected) {
+      print('Reconnecting...');
+      _connect();
     }
   }
 
   void sendMessage(String message) {
-    print(message);
-    channel.sink.add(message);
+    if (_isConnected) {
+      print(message);
+      channel.sink.add(message);
+    } else {
+      print('Not connected. Message not sent.');
+    }
   }
 
   Stream<dynamic> get messagesStream => channel.stream;
 
+  bool get isConnected => _isConnected;
+
+  set setIsConnected(bool value) {
+    _isConnected = value;
+  }
+
   void dispose() {
+    _isConnected = false;
     channel.sink.close();
   }
 }
