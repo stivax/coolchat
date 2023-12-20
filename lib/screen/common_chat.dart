@@ -66,30 +66,39 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   final messageData = MessageData();
   Account acc =
       Account(email: '', userName: '', password: '', avatar: '', id: 0);
-  late final MessageProvider providerInScreen;
-  late final StreamSubscription _messageSubscription;
-  late final StreamSubscription<ConnectivityResult> _connectivitySubscription;
+  MessageProvider? providerInScreen;
+  StreamSubscription? _messageSubscription;
+  late StreamSubscription<ConnectivityResult> _connectivitySubscription;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    if (widget.account.email != '') {
+      acc = widget.account;
+    }
   }
 
   @override
   void dispose() {
-    providerInScreen.channel.sink.close();
-    _messageSubscription.cancel();
+    providerInScreen?.channel.sink.close();
+    _messageSubscription?.cancel();
     _connectivitySubscription.cancel();
     WidgetsBinding.instance.addObserver(this);
     super.dispose();
   }
 
   void messageListen() {
+    providerInScreen ??=
+        MessageProviderContainer.instance.getProvider(widget.topicName)!;
+    print('_messageSubscription ${_messageSubscription?.isPaused}');
     if (!isListening) {
+      print('listen begin');
       isListening = true;
       clearMessages();
-      _messageSubscription = providerInScreen.messagesStream.listen(
+      _messageSubscription?.cancel();
+      _messageSubscription = null;
+      _messageSubscription = providerInScreen!.messagesStream.listen(
         (event) async {
           //print(event);
           if (event.toString().startsWith('{"created_at"')) {
@@ -103,16 +112,21 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           }
         },
         onDone: () {
+          print('onDone');
           isListening = false;
-          providerInScreen.setIsConnected = false;
-          providerInScreen.reconnect();
+          providerInScreen!.setIsConnected = false;
+          //messageListen();
         },
         onError: (e) {
+          print('onError');
           isListening = false;
-          providerInScreen.setIsConnected = false;
-          providerInScreen.reconnect();
+          providerInScreen!.setIsConnected = false;
+          //messageListen();
         },
       );
+    } else if (_messageSubscription!.isPaused) {
+      print('messageSubscription resume');
+      _messageSubscription!.resume();
     }
   }
 
@@ -145,8 +159,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    messageListen();
-    _messageSubscription.resume();
+    if (state == AppLifecycleState.resumed) {
+      messageListen();
+    }
   }
 
   @override
@@ -164,7 +179,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       ],
       child: BlocBuilder<TokenBloc, TokenState>(
         builder: (context, state) {
-          print(state.runtimeType);
+          //print(state.runtimeType);
           if (state is TokenEmptyState) {
             return CommonChatScreen(
               state: 'empty',
@@ -175,33 +190,36 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             );
           } else if (state is TokenLoadedState) {
             acc = state.account;
-            MessageProvider provider = MessageProviderContainer.instance
+            providerInScreen ??= MessageProviderContainer.instance
                 .getProvider(widget.topicName)!;
-            providerInScreen = provider;
             messageListen();
             _connectivitySubscription =
                 Connectivity().onConnectivityChanged.listen((result) async {
               if (result != ConnectivityResult.none) {
-                if (!providerInScreen.isConnected) {
-                  providerInScreen.reconnect();
-                  await providerInScreen.channel.ready;
+                if (!providerInScreen!.isConnected) {
+                  providerInScreen!.reconnect();
+                  await providerInScreen!.channel.ready;
+                  _messageSubscription = null;
                   messageListen();
                 }
               }
             });
-            if (_messageSubscription.isPaused) {
-              _messageSubscription.resume();
-            }
             return CommonChatScreen(
               state: 'loaded',
               topicName: widget.topicName,
-              messageProvider: provider,
+              messageProvider: providerInScreen,
               server: widget.server,
-              account: state.account,
+              account: acc,
               messageData: widget.messageData,
             );
           } else if (state is TokenErrorState) {
-            return Center(child: Text('Error is ${state.error}'));
+            return CommonChatScreen(
+              state: state.error,
+              topicName: widget.topicName,
+              server: widget.server,
+              account: widget.account,
+              messageData: widget.messageData,
+            );
           } else {
             return const Center(child: LinearProgressIndicator());
           }
@@ -596,7 +614,22 @@ class _BlockMessagesState extends State<BlockMessages> {
                 children: [
                   widget.state == 'loaded'
                       ? messageView(themeProvider)
-                      : const Center(child: CircularProgressIndicator()),
+                      : Center(
+                          child: widget.state == 'empty'
+                              ? const CircularProgressIndicator()
+                              : Center(
+                                  child: Text(
+                                    widget.state,
+                                    style: TextStyle(
+                                      color: themeProvider
+                                          .currentTheme.primaryColor,
+                                      fontSize: 14,
+                                      fontFamily: 'Manrope',
+                                      fontWeight: FontWeight.w600,
+                                      height: 1.30,
+                                    ),
+                                  ),
+                                )),
                   showWrite ? const WriteAnimated() : Container(),
                 ],
               ),

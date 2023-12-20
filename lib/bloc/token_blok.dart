@@ -16,30 +16,36 @@ class TokenBloc extends Bloc<TokenEvent, TokenState> {
   TokenBloc({required this.tokenRepository}) : super(TokenEmptyState()) {
     on<TokenLoadEvent>(
       (event, emit) async {
-        try {
-          print('Begin create Token state');
-          Account account = await readAccountFuture();
-          print('Read account ${account.email}');
-          await Server.checkConnection();
-          token =
-              await tokenRepository.getToken(account.email, account.password);
-          print('token ${token!.token["access_token"]}');
-          final MessageProvider messageProvider = MessageProvider(
-              'wss://$server/ws/${event.roomName!}?token=${token!.token["access_token"]}');
-          print('Create message provider ${messageProvider.serverUrl}');
-          await messageProvider.channel.ready;
-          MessageProviderContainer.instance
-              .addProvider(event.roomName!, messageProvider);
-          print('Save message provider to instance');
-          emit(TokenLoadedState(
-              token: token!,
-              messageProvider: messageProvider,
-              account: account));
-        } catch (e) {
-          print('Error $e');
-          emit(TokenErrorState(
-            error: e.toString(),
-          ));
+        late var error;
+        const maxAttempts = 5;
+        const delayBetweenAttempts = Duration(milliseconds: 500);
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+          try {
+            late final MessageProvider messageProvider;
+            Account account = await readAccountFuture();
+            token =
+                await tokenRepository.getToken(account.email, account.password);
+            messageProvider = MessageProvider(
+                'wss://$server/ws/${event.roomName!}?token=${token!.token["access_token"]}');
+            await messageProvider.channel.ready;
+            MessageProviderContainer.instance
+                .addProvider(event.roomName!, messageProvider);
+            emit(TokenLoadedState(
+                token: token!,
+                messageProvider: messageProvider,
+                account: account));
+            break;
+          } catch (e) {
+            print('Error $e');
+            error = e;
+            if (attempt < maxAttempts) {
+              await Future.delayed(delayBetweenAttempts);
+              print('Reconnecting... Attempt $attempt');
+            } else {
+              print('Max attempts reached. Connection failed.');
+              emit(TokenErrorState(error: error));
+            }
+          }
         }
       },
     );

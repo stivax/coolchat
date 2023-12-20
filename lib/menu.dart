@@ -196,6 +196,16 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                                 color: themeProvider.currentTheme.primaryColor),
                           ),
                   ),
+                  PopupMenuItem<String>(
+                    value: 'item8',
+                    child: Text(
+                      'Version: v0.13.22',
+                      style: TextStyle(
+                          color: themeProvider.currentTheme.primaryColor
+                              .withOpacity(0.5),
+                          fontSize: 12),
+                    ),
+                  ),
                 ],
                 //
                 color: themeProvider.currentTheme.primaryColorDark,

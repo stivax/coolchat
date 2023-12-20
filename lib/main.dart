@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:coolchat/animation_start.dart';
@@ -13,6 +14,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
+import 'package:workmanager/workmanager.dart';
 
 import 'account.dart';
 import 'bloc/token_blok.dart';
@@ -22,16 +24,30 @@ import 'theme_provider.dart';
 import 'rooms.dart';
 import 'server_provider.dart';
 import 'servises/favorite_room_provider.dart';
+import 'background_workmanager/socket_connection_worker.dart';
 
-void main() => runApp(
-      ChangeNotifierProvider(
-        create: (context) => ThemeProvider(),
-        child: RepositoryProvider(
-            create: (context) => TokenRepository(),
-            child:
-                const ServerProvider(server: 'cool-chat.club', child: MyApp())),
-      ),
-    );
+void main() {
+  /*WidgetsFlutterBinding.ensureInitialized();
+  Workmanager().initialize(
+    callbackDispatcher,
+    isInDebugMode: true,
+  );
+  Workmanager().registerPeriodicTask(
+    "1",
+    "simpleTask",
+    //frequency: const Duration(minutes: 15),
+  );*/
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => ThemeProvider(),
+      child: RepositoryProvider(
+          create: (context) => TokenRepository(),
+          child:
+              const ServerProvider(server: 'cool-chat.club', child: MyApp())),
+    ),
+  );
+}
 
 final myHomePageStateKey = GlobalKey<_MyHomePageState>();
 final scrollRoomsListStateKey = GlobalKey<_ScrollRoomsListState>();
@@ -78,6 +94,7 @@ class _MyHomePageState extends State<MyHomePage> {
   late String server;
   late Map<dynamic, dynamic> token;
   bool scale = true;
+  //StreamSubscription? _messageSubscription;
 
   @override
   void initState() {
@@ -85,6 +102,20 @@ class _MyHomePageState extends State<MyHomePage> {
     _scrollController.addListener(_onScroll);
     getToken();
     requestPermissions();
+    initializeWorkmanager();
+  }
+
+  void initializeWorkmanager() async {
+    print('initialize Workmanager');
+    await Workmanager().initialize(
+      callbackDispatcher,
+      isInDebugMode: true,
+    );
+
+    await Workmanager().registerPeriodicTask(
+      "1",
+      "simpleTask",
+    );
   }
 
   @override
@@ -140,15 +171,11 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _onScroll() {
-    // Отримуємо поточну позицію скролінгу
     double offset = _scrollController.position.pixels;
-    // Отримуємо максимально можливий офсет (кінцеву позицію) скролінгу
     double maxOffset = _scrollController.position.maxScrollExtent;
-    // Перевіряємо, чи користувач знаходиться внизу екрану (різниця між офсетом і максимально можливим офсетом дорівнює 0)
     if (offset >= maxOffset &&
         _scrollController.position.userScrollDirection ==
             ScrollDirection.reverse) {
-      // Викликаємо ваш метод при спробі скролити вниз, коли вже знаходишся внизу
       _handleScrollDown();
     }
   }

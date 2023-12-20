@@ -11,14 +11,29 @@ class MessageProvider {
   }
 
   Future<void> _connect() async {
-    channel = WebSocketChannel.connect(Uri.parse(serverUrl));
-    await channel.ready;
-    _isConnected = true;
-    print('Connected to $serverUrl');
+    const maxAttempts = 5;
+    const delayBetweenAttempts = Duration(milliseconds: 500);
+
+    for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        channel = WebSocketChannel.connect(Uri.parse(serverUrl));
+        await channel.ready;
+        _isConnected = true;
+        print('Connected to $serverUrl');
+        break;
+      } catch (e) {
+        print('Error during connection: $e');
+        if (attempt < maxAttempts) {
+          await Future.delayed(delayBetweenAttempts);
+          print('Reconnecting... Attempt $attempt');
+        } else {
+          print('Max attempts reached. Connection failed.');
+        }
+      }
+    }
   }
 
   void reconnect() {
-    print('try to Reconnecting... with $_isConnected');
     if (!_isConnected) {
       print('Reconnecting...');
       _connect();
