@@ -33,10 +33,10 @@ class MessageProvider {
     }
   }
 
-  void reconnect() {
+  Future<void> reconnect() async {
     if (!_isConnected) {
       print('Reconnecting...');
-      _connect();
+      await _connect();
     }
   }
 

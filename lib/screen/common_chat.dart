@@ -88,16 +88,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  void messageListen() {
+  void messageListen() async {
     providerInScreen ??=
         MessageProviderContainer.instance.getProvider(widget.topicName)!;
-    print('_messageSubscription ${_messageSubscription?.isPaused}');
-    if (!isListening) {
-      print('listen begin');
+    //print('_messageSubscription ${_messageSubscription?.isPaused}');
+    if (!isListening || _messageSubscription!.isPaused) {
       isListening = true;
+      await providerInScreen!.reconnect();
+      await providerInScreen!.channel.ready;
+      print('listen begin');
       clearMessages();
       _messageSubscription?.cancel();
-      _messageSubscription = null;
       _messageSubscription = providerInScreen!.messagesStream.listen(
         (event) async {
           //print(event);
@@ -115,13 +116,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           print('onDone');
           isListening = false;
           providerInScreen!.setIsConnected = false;
-          //messageListen();
         },
         onError: (e) {
           print('onError');
           isListening = false;
           providerInScreen!.setIsConnected = false;
-          //messageListen();
         },
       );
     } else if (_messageSubscription!.isPaused) {
@@ -194,12 +193,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 .getProvider(widget.topicName)!;
             messageListen();
             _connectivitySubscription =
-                Connectivity().onConnectivityChanged.listen((result) async {
+                Connectivity().onConnectivityChanged.listen((result) {
               if (result != ConnectivityResult.none) {
                 if (!providerInScreen!.isConnected) {
-                  providerInScreen!.reconnect();
-                  await providerInScreen!.channel.ready;
-                  _messageSubscription = null;
                   messageListen();
                 }
               }
@@ -872,7 +868,8 @@ class _TextAndSendState extends State<TextAndSend> {
                     ),
                     maxLines: null,
                     onTap: () async {
-                      if (widget.state == 'empty') {
+                      if (widget.state == 'empty' &&
+                          widget.account.email.isEmpty) {
                         FocusScope.of(context).unfocus();
                         await showDialog(
                           context: context,

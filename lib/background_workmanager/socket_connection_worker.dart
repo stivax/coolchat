@@ -9,6 +9,7 @@ import 'package:workmanager/workmanager.dart';
 
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
+    var completer = Completer<bool>();
     try {
       print('Callback dispatched');
       Account account = await readAccountFuture();
@@ -23,7 +24,8 @@ void callbackDispatcher() {
       final socketSubscription = socket.messagesStream.listen((message) async {
         print('Received: $message');
       });
-      return Future.value(true);
+      completer.complete(true);
+      return completer.future;
     } catch (e, stackTrace) {
       print('Error in callbackDispatcher: $e');
       print('StackTrace: $stackTrace');

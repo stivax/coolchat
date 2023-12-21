@@ -27,7 +27,7 @@ import 'servises/favorite_room_provider.dart';
 import 'background_workmanager/socket_connection_worker.dart';
 
 void main() {
-  /*WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();
   Workmanager().initialize(
     callbackDispatcher,
     isInDebugMode: true,
@@ -36,8 +36,7 @@ void main() {
     "1",
     "simpleTask",
     //frequency: const Duration(minutes: 15),
-  );*/
-  WidgetsFlutterBinding.ensureInitialized();
+  );
   runApp(
     ChangeNotifierProvider(
       create: (context) => ThemeProvider(),
@@ -94,7 +93,6 @@ class _MyHomePageState extends State<MyHomePage> {
   late String server;
   late Map<dynamic, dynamic> token;
   bool scale = true;
-  //StreamSubscription? _messageSubscription;
 
   @override
   void initState() {
@@ -102,20 +100,6 @@ class _MyHomePageState extends State<MyHomePage> {
     _scrollController.addListener(_onScroll);
     getToken();
     requestPermissions();
-    initializeWorkmanager();
-  }
-
-  void initializeWorkmanager() async {
-    print('initialize Workmanager');
-    await Workmanager().initialize(
-      callbackDispatcher,
-      isInDebugMode: true,
-    );
-
-    await Workmanager().registerPeriodicTask(
-      "1",
-      "simpleTask",
-    );
   }
 
   @override
