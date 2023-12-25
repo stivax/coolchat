@@ -2,6 +2,7 @@
 import 'dart:async';
 
 import 'package:coolchat/screen/private_chat_list.dart';
+import 'package:coolchat/servises/message_provider_container.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -123,6 +124,14 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                     const url = Server.server;
                     openUrl(url);
                   } else if (value == 'item2') {
+                    MessageProviderContainer.instance
+                        .getProvider('direct')
+                        ?.channel
+                        .sink
+                        .close();
+                    if (Navigator.canPop(context)) {
+                      Navigator.pop(context);
+                    }
                     Navigator.push(
                       context,
                       MaterialPageRoute(

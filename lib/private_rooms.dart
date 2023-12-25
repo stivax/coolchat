@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:coolchat/screen/private_chat.dart';
+import 'package:coolchat/servises/message_provider_container.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -45,23 +46,46 @@ class RoomPrivate extends StatelessWidget {
     bool switchColorMail = true;
     return GestureDetector(
       onTap: () async {
+        late MessageProvider messageProvider;
+        bool messageProviderCreated = false;
         const server = Server.server;
         final String id = recipientId.toString();
         final account = await readAccountFuture();
-        final token =
-            await loginProcess(context, account.email, account.password);
-        final MessageProvider messageProvider = MessageProvider(
-            'wss://$server/private/$id?token=${token["access_token"]}');
-        print('id = $id , token = $token');
-        print('current context ${contextPrivateRoom.widget}');
+        const maxAttempts = 5;
+        const delayBetweenAttempts = Duration(milliseconds: 500);
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+          try {
+            final token =
+                await loginProcess(context, account.email, account.password);
+            messageProvider = MessageProvider(
+                'wss://$server/private/$id?token=${token["access_token"]}');
+            await messageProvider.channel.ready;
+            messageProviderCreated = true;
+            // new
+            MessageProviderContainer.instance
+                .addProvider('direct', messageProvider);
+            break;
+          } catch (e) {
+            print('Error $e');
+            if (attempt < maxAttempts) {
+              await Future.delayed(delayBetweenAttempts);
+              print('Reconnecting... Attempt $attempt');
+            } else {
+              print('Max attempts reached. Connection failed.');
+            }
+          }
+        }
+        print('start chat with ${recipientName.toString()}');
         //Navigator.pop(context);
-        Navigator.push(
-          contextPrivateRoom,
-          MaterialPageRoute(
-              builder: (contextPrivateRoom) => PrivateChatScreen(
-                  receiverName: recipientName,
-                  messageProvider: messageProvider)),
-        );
+        if (messageProviderCreated) {
+          Navigator.push(
+            contextPrivateRoom,
+            MaterialPageRoute(
+                builder: (contextPrivateRoom) => PrivateChatScreen(
+                    receiverName: recipientName,
+                    messageProvider: messageProvider)),
+          );
+        }
       },
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {

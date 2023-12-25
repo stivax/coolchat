@@ -16,7 +16,7 @@ class TokenBloc extends Bloc<TokenEvent, TokenState> {
   TokenBloc({required this.tokenRepository}) : super(TokenEmptyState()) {
     on<TokenLoadEvent>(
       (event, emit) async {
-        late var error;
+        var error;
         const maxAttempts = 5;
         const delayBetweenAttempts = Duration(milliseconds: 500);
         for (int attempt = 1; attempt <= maxAttempts; attempt++) {

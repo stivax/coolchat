@@ -10,7 +10,6 @@ import 'package:url_launcher/url_launcher_string.dart';
 import 'package:coolchat/avatar.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
 
-import 'account.dart';
 import 'theme_provider.dart';
 
 // ignore: must_be_immutable

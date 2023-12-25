@@ -1,16 +1,15 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:connectivity/connectivity.dart';
 import 'package:coolchat/bloc/token_blok.dart';
-import 'package:coolchat/servises/message_provider_container.dart';
 import 'package:coolchat/servises/token_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marquee/marquee.dart';
 import 'package:provider/provider.dart';
 
-import '../bloc/token_event.dart';
-import '../login_popup.dart';
 import '../menu.dart';
 import '../message_provider.dart';
 import '../messages_privat.dart';
@@ -42,19 +41,71 @@ class PrivateChatScreen extends StatefulWidget {
 
 class _PrivateChatScreenState extends State<PrivateChatScreen> {
   bool isListening = false;
+  StreamSubscription? _messageSubscription;
+  late StreamSubscription<ConnectivityResult> _connectivitySubscription;
 
-  void messageListen(MessageProvider messageProvider) {
-    if (!isListening && !messageProvider.messagesStream.isBroadcast) {
-      isListening = true;
-      messageProvider.messagesStream.listen((event) async {
-        print(event);
-        if (event.toString().startsWith('{"created_at"')) {
-          formMessage(event.toString());
-        } else {
-          //formMembersList(event.toString());
+  @override
+  void initState() {
+    messageListen(widget.messageProvider);
+    _connectivitySubscription =
+        Connectivity().onConnectivityChanged.listen((result) {
+      if (result != ConnectivityResult.none) {
+        if (!widget.messageProvider.isConnected) {
+          messageListen(widget.messageProvider);
         }
-      });
+      }
+    });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    print('dispose private in screen');
+    widget.messageProvider.channel.sink.close();
+    super.dispose();
+  }
+
+  void messageListen(MessageProvider messageProvider) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!isListening || _messageSubscription!.isPaused) {
+      isListening = true;
+      if (!messageProvider.isConnected) {
+        await messageProvider.reconnect();
+        await messageProvider.channel.ready;
+      }
+      print('listen private messages begin');
+      clearMessages();
+      _messageSubscription?.cancel();
+      _messageSubscription = messageProvider.messagesStream.listen(
+        (event) async {
+          //print(event);
+          if (event.toString().startsWith('{"created_at"')) {
+            formMessage(event.toString());
+          } else {}
+        },
+        onDone: () {
+          print('onDone');
+          isListening = false;
+          messageProvider.setIsConnected = false;
+        },
+        onError: (e) {
+          print('onError');
+          isListening = false;
+          messageProvider.setIsConnected = false;
+        },
+      );
     }
+  }
+
+  void connectivitySubscription() async {
+    _connectivitySubscription =
+        Connectivity().onConnectivityChanged.listen((result) async {
+      if (result != ConnectivityResult.none) {
+        if (widget.messageProvider.isConnected) {
+          messageListen(widget.messageProvider);
+        }
+      }
+    });
   }
 
   void formMessage(String responseBody) {
@@ -66,9 +117,12 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
     blockMessageStateKey.currentState!.widget.updateState();
   }
 
+  void clearMessages() {
+    blockMessageStateKey.currentState!._messages.clear();
+  }
+
   @override
   Widget build(BuildContext context) {
-    messageListen(widget.messageProvider);
     return MultiBlocProvider(
       providers: [
         BlocProvider<MenuBloc>(
@@ -109,13 +163,6 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
   void initState() {
     super.initState();
     messageData = widget.messageData;
-  }
-
-  @override
-  void dispose() {
-    print('dispose private in screen');
-    widget.messageProvider.channel.sink.close();
-    super.dispose();
   }
 
   @override
@@ -391,7 +438,7 @@ class _TextAndSendState extends State<TextAndSend> {
   }
 
   void _sendMessage(String message) {
-    widget.messageProvider?.sendMessage(json.encode({
+    widget.messageProvider.sendMessage(json.encode({
       'messages': message,
     }));
   }

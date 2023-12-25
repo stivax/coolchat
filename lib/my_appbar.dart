@@ -21,12 +21,12 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
         return AppBar(
           toolbarHeight: 56,
           backgroundColor: themeProvider.currentTheme.primaryColorDark,
-          title: Container(
+          title: SizedBox(
             height: 35,
             child: Image(
               image: themeProvider.isLightMode
-                  ? AssetImage('assets/images/logo_light_tema.png')
-                  : AssetImage('assets/images/logo_dark_tema.png'),
+                  ? const AssetImage('assets/images/logo_light_tema.png')
+                  : const AssetImage('assets/images/logo_dark_tema.png'),
             ),
           ),
           leading: MainDropdownMenu(roomName: roomName),
@@ -37,13 +37,13 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
                   onTap: () {
                     themeProvider.toggleTheme();
                   },
-                  child: Container(
+                  child: SizedBox(
                     width: 48,
                     height: 26,
                     child: Image(
                       image: themeProvider.isLightMode
-                          ? AssetImage('assets/images/toogle_light.png')
-                          : AssetImage('assets/images/toogle_dark.png'),
+                          ? const AssetImage('assets/images/toogle_light.png')
+                          : const AssetImage('assets/images/toogle_dark.png'),
                     ),
                   ),
                 ),
@@ -52,13 +52,13 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
                 GestureDetector(
                   onTap: () {},
-                  child: Container(
+                  child: SizedBox(
                     width: 48,
                     height: 26,
                     child: Image(
                       image: themeProvider.isLightMode
-                          ? AssetImage('assets/images/lang_en_light.png')
-                          : AssetImage('assets/images/lang_en_dark.png'),
+                          ? const AssetImage('assets/images/lang_en_light.png')
+                          : const AssetImage('assets/images/lang_en_dark.png'),
                     ),
                   ),
                 ),

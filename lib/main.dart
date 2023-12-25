@@ -10,11 +10,11 @@ import 'package:coolchat/servises/token_provider.dart';
 import 'package:coolchat/servises/token_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
-import 'package:workmanager/workmanager.dart';
 
 import 'account.dart';
 import 'bloc/token_blok.dart';
@@ -24,19 +24,8 @@ import 'theme_provider.dart';
 import 'rooms.dart';
 import 'server_provider.dart';
 import 'servises/favorite_room_provider.dart';
-import 'background_workmanager/socket_connection_worker.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  Workmanager().initialize(
-    callbackDispatcher,
-    isInDebugMode: true,
-  );
-  Workmanager().registerPeriodicTask(
-    "1",
-    "simpleTask",
-    //frequency: const Duration(minutes: 15),
-  );
   runApp(
     ChangeNotifierProvider(
       create: (context) => ThemeProvider(),
@@ -216,16 +205,23 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class ChatListWidget extends StatelessWidget {
+class ChatListWidget extends StatefulWidget {
   final ScrollController scrollController;
   List<Room> roomsList;
   ChatListWidget(
       {super.key, required this.scrollController, required this.roomsList});
 
   @override
+  State<ChatListWidget> createState() => _ChatListWidgetState();
+}
+
+class _ChatListWidgetState extends State<ChatListWidget> {
+  bool scale = true;
+
+  @override
   Widget build(BuildContext context) {
     return CustomScrollView(
-      controller: scrollController,
+      controller: widget.scrollController,
       slivers: [
         const SliverToBoxAdapter(child: HeaderWidget()),
         const SliverToBoxAdapter(
@@ -256,6 +252,7 @@ class ChatListWidget extends StatelessWidget {
                       Container(),
                       IconButton(
                           onPressed: () {
+                            scale = !scale;
                             scrollRoomsListStateKey.currentState!.scale =
                                 !scrollRoomsListStateKey.currentState!.scale;
                             //scrollRoomsListStateKey.currentState!.changeScale();
@@ -264,7 +261,7 @@ class ChatListWidget extends StatelessWidget {
                             myHomePageStateKey.currentState!
                                 .fetchData(Server.server);
                           },
-                          icon: Icon(Icons.grid_view,
+                          icon: Icon(scale ? Icons.grid_on : Icons.grid_view,
                               color: themeProvider.currentTheme.primaryColor))
                     ],
                   ),
@@ -275,7 +272,7 @@ class ChatListWidget extends StatelessWidget {
         ),
         ScrollRoomsList(
           key: scrollRoomsListStateKey,
-          roomsList: roomsList,
+          roomsList: widget.roomsList,
         ),
         const SliverToBoxAdapter(
             child: SizedBox(height: 8, width: double.infinity)),

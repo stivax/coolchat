@@ -94,8 +94,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     //print('_messageSubscription ${_messageSubscription?.isPaused}');
     if (!isListening || _messageSubscription!.isPaused) {
       isListening = true;
-      await providerInScreen!.reconnect();
-      await providerInScreen!.channel.ready;
+      if (!providerInScreen!.isConnected) {
+        await providerInScreen!.reconnect();
+        await providerInScreen!.channel.ready;
+      }
       print('listen begin');
       clearMessages();
       _messageSubscription?.cancel();

@@ -90,7 +90,7 @@ class AvatarMember extends StatelessWidget {
       shape: RoundedRectangleBorder(
         side:
             BorderSide(width: 1, color: themeProvider.currentTheme.shadowColor),
-        borderRadius: BorderRadius.only(
+        borderRadius: const BorderRadius.only(
           topRight: Radius.circular(14),
           bottomLeft: Radius.circular(14),
           bottomRight: Radius.circular(14),
@@ -100,21 +100,42 @@ class AvatarMember extends StatelessWidget {
         PopupMenuItem(
           height: 36,
           onTap: () async {
+            late MessageProvider messageProvider;
+            bool messageProviderCreated = false;
             const server = Server.server;
             final String id = memberID.toString();
             final account = await readAccountFuture();
-            final token = await loginProcess(
-                contextAvatarMember, account.email, account.password);
-            final MessageProvider messageProvider = MessageProvider(
-                'wss://$server/private/$id?token=${token["access_token"]}');
-            print('id = $id , token = $token');
+            const maxAttempts = 5;
+            const delayBetweenAttempts = Duration(milliseconds: 500);
+            for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+              try {
+                final token = await loginProcess(
+                    contextAvatarMember, account.email, account.password);
+                messageProvider = MessageProvider(
+                    'wss://$server/private/$id?token=${token["access_token"]}');
+                await messageProvider.channel.ready;
+                messageProviderCreated = true;
+                break;
+              } catch (e) {
+                print('Error $e');
+                if (attempt < maxAttempts) {
+                  await Future.delayed(delayBetweenAttempts);
+                  print('Reconnecting... Attempt $attempt');
+                } else {
+                  print('Max attempts reached. Connection failed.');
+                }
+              }
+            }
+            print('start chat with ${name.toString()}');
             //Navigator.pop(contextAvatarMember);
-            Navigator.push(
-              contextAvatarMember,
-              MaterialPageRoute(
-                  builder: (contextAvatarMember) => PrivateChatScreen(
-                      receiverName: name, messageProvider: messageProvider)),
-            );
+            if (messageProviderCreated) {
+              Navigator.push(
+                contextAvatarMember,
+                MaterialPageRoute(
+                    builder: (contextAvatarMember) => PrivateChatScreen(
+                        receiverName: name, messageProvider: messageProvider)),
+              );
+            }
           },
           child: Container(
             child: Text(
