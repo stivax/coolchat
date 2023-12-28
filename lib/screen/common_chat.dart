@@ -48,13 +48,15 @@ class ChatScreen extends StatefulWidget {
   final String server;
   final Account account;
   final MessageData messageData;
+  final bool hasMessage;
 
   ChatScreen(
       {super.key,
       required this.topicName,
       this.id,
       required this.server,
-      required this.account})
+      required this.account,
+      required this.hasMessage})
       : messageData = MessageData();
 
   @override
@@ -91,7 +93,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   void messageListen() async {
     providerInScreen ??=
         MessageProviderContainer.instance.getProvider(widget.topicName)!;
-    //print('_messageSubscription ${_messageSubscription?.isPaused}');
     if (!isListening || _messageSubscription!.isPaused) {
       isListening = true;
       if (!providerInScreen!.isConnected) {
@@ -188,6 +189,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               server: widget.server,
               account: widget.account,
               messageData: widget.messageData,
+              hasMessage: widget.hasMessage,
             );
           } else if (state is TokenLoadedState) {
             acc = state.account;
@@ -209,6 +211,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               server: widget.server,
               account: acc,
               messageData: widget.messageData,
+              hasMessage: widget.hasMessage,
             );
           } else if (state is TokenErrorState) {
             return CommonChatScreen(
@@ -217,6 +220,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               server: widget.server,
               account: widget.account,
               messageData: widget.messageData,
+              hasMessage: widget.hasMessage,
             );
           } else {
             return const Center(child: LinearProgressIndicator());
@@ -234,6 +238,7 @@ class CommonChatScreen extends StatefulWidget {
   final Account account;
   final String state;
   final MessageData messageData;
+  final bool hasMessage;
   const CommonChatScreen(
       {super.key,
       required this.topicName,
@@ -241,7 +246,8 @@ class CommonChatScreen extends StatefulWidget {
       required this.server,
       required this.account,
       required this.state,
-      required this.messageData});
+      required this.messageData,
+      required this.hasMessage});
 
   @override
   State<CommonChatScreen> createState() => _CommonChatScreenState();
@@ -317,13 +323,15 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
                       SizedBox(
                         height: (screenHeight - 248) * 1,
                         child: BlockMessages(
-                            key: blockMessageStateKey,
-                            checkContext: context,
-                            state: widget.state,
-                            messageData: widget.messageData,
-                            updateState: () {
-                              setState(() {});
-                            }),
+                          key: blockMessageStateKey,
+                          checkContext: context,
+                          state: widget.state,
+                          messageData: widget.messageData,
+                          updateState: () {
+                            setState(() {});
+                          },
+                          hasMessage: widget.hasMessage,
+                        ),
                       ),
                       TextAndSend(
                         state: widget.state,
@@ -541,12 +549,14 @@ class BlockMessages extends StatefulWidget {
   final Function updateState;
   final String state;
   final BuildContext? checkContext;
+  final bool hasMessage;
   const BlockMessages({
     super.key,
     this.checkContext,
     required this.messageData,
     required this.updateState,
     required this.state,
+    required this.hasMessage,
   });
 
   @override
@@ -640,7 +650,7 @@ class _BlockMessagesState extends State<BlockMessages> {
 
   Widget messageView(ThemeProvider themeProvider) {
     bool countNewMessages = (_messages.length - _cachedMessages.length) == 1;
-    if (_messages.isNotEmpty) {
+    if (widget.hasMessage) {
       _cachedMessages = _messages.reversed.toList();
       return Observer(builder: (context, watch) {
         return Stack(
@@ -715,7 +725,7 @@ class _BlockMessagesState extends State<BlockMessages> {
           ],
         );
       });
-    } else if (widget.state != 'loaded') {
+    } else if (widget.state == 'loaded') {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.max,
@@ -727,22 +737,18 @@ class _BlockMessagesState extends State<BlockMessages> {
               fit: BoxFit.cover,
             ),
             const SizedBox(
-              height: 16,
+              height: 8,
             ),
-            SizedBox(
-              height: 50,
-              child: Text(
-                'Oops.. there are no messages here yet \nWrite first!',
-                textAlign: TextAlign.center,
-                textScaleFactor: 1,
-                style: TextStyle(
-                  color:
-                      themeProvider.currentTheme.primaryColor.withOpacity(0.5),
-                  fontSize: 16,
-                  fontFamily: 'Manrope',
-                  fontWeight: FontWeight.w500,
-                  height: 1.16,
-                ),
+            Text(
+              'Oops.. there are no messages here yet \nWrite first!',
+              textAlign: TextAlign.center,
+              textScaleFactor: 1,
+              style: TextStyle(
+                color: themeProvider.currentTheme.primaryColor.withOpacity(0.5),
+                fontSize: 16,
+                fontFamily: 'Manrope',
+                fontWeight: FontWeight.w500,
+                height: 1.16,
               ),
             ),
           ],

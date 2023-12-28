@@ -43,7 +43,6 @@ class RoomPrivate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool switchColorMail = true;
     return GestureDetector(
       onTap: () async {
         late MessageProvider messageProvider;
@@ -55,8 +54,7 @@ class RoomPrivate extends StatelessWidget {
         const delayBetweenAttempts = Duration(milliseconds: 500);
         for (int attempt = 1; attempt <= maxAttempts; attempt++) {
           try {
-            final token =
-                await loginProcess(context, account.email, account.password);
+            final token = await loginProcess(account.email, account.password);
             messageProvider = MessageProvider(
                 'wss://$server/private/$id?token=${token["access_token"]}');
             await messageProvider.channel.ready;
@@ -211,7 +209,7 @@ class RoomPrivate extends StatelessWidget {
                             Icon(
                               Icons.mail,
                               size: 20,
-                              color: switchColorMail
+                              color: !isRead
                                   ? const Color(0xFFF5FBFF)
                                   : const Color(0xFFE02849),
                             ),
@@ -219,7 +217,7 @@ class RoomPrivate extends StatelessWidget {
                               width: 4,
                             ),
                             const Text(
-                              '0',
+                              '',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Color(0xFFF5FBFF),

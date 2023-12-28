@@ -78,7 +78,7 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
       _messageSubscription?.cancel();
       _messageSubscription = messageProvider.messagesStream.listen(
         (event) async {
-          //print(event);
+          print(event);
           if (event.toString().startsWith('{"created_at"')) {
             formMessage(event.toString());
           } else {}

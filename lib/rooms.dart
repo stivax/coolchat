@@ -13,7 +13,6 @@ import 'screen/common_chat.dart';
 import 'error_answer.dart';
 import 'login_popup.dart';
 import 'main.dart';
-import 'message_provider.dart';
 import 'server/server.dart';
 import 'theme_provider.dart';
 import 'account.dart';
@@ -120,6 +119,7 @@ class _RoomState extends State<Room> {
                                 id: widget.id,
                                 server: server,
                                 account: account,
+                                hasMessage: widget.countMessages > 0,
                               ),
                             ),
                           );
@@ -291,7 +291,7 @@ class _RoomState extends State<Room> {
 }
 
 void addRoomDialog(BuildContext context) async {
-  final acc = await readAccountFuture();
+  Account acc = await readAccountFuture();
   if (acc.userName == '') {
     await showDialog(
       context: context,
@@ -299,18 +299,20 @@ void addRoomDialog(BuildContext context) async {
         return LoginDialog();
       },
     );
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return RoomAddDialog();
-      },
-    );
+    acc = await readAccountFuture();
+    if (acc.userName != '') {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return const RoomAddDialog();
+        },
+      );
+    }
   } else {
-    // ignore: use_build_context_synchronously
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return RoomAddDialog();
+        return const RoomAddDialog();
       },
     );
   }
@@ -318,7 +320,7 @@ void addRoomDialog(BuildContext context) async {
 
 Future<String> sendRoom(BuildContext context, String roomName, String roomImage,
     Account acc) async {
-  final token = await loginProcess(context, acc.email, acc.password);
+  final token = await loginProcess(acc.email, acc.password);
   final server = ServerProvider.of(context).server;
   final url = Uri.https(server, '/rooms/');
 
@@ -382,22 +384,19 @@ class RoomAvatar extends StatelessWidget {
             image: DecorationImage(
               image: image,
               fit: BoxFit.cover,
+              opacity: isChoise ? 1 : 0.8,
             ),
-            borderRadius: BorderRadius.circular(20.0),
-            border: Border.all(
-              width: 3,
-              color: !isChoise
-                  ? themeProvider.currentTheme.primaryColorDark
-                  : themeProvider.currentTheme.shadowColor,
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x4C024A7A),
-                blurRadius: 3,
-                offset: Offset(2, 2),
-                spreadRadius: 1,
-              )
-            ],
+            borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(10.0),
+                topRight: Radius.circular(10.0)),
+            border: isChoise
+                ? Border.all(
+                    width: 3,
+                    color: themeProvider.currentTheme.shadowColor,
+                  )
+                : Border.all(
+                    width: 0,
+                  ),
           ),
         );
       },

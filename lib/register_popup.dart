@@ -71,8 +71,8 @@ class _RegisterDialogState extends State<RegisterDialog> {
           id: 0);
       final answer = await sendUser(acc, context);
       if (answer.isEmpty) {
-        final token = await loginProcess(
-            context, _emailController.text, _passwordController.text);
+        final token =
+            await loginProcess(_emailController.text, _passwordController.text);
         Account acc = await readAccountFromServer(
             context, _emailController.text, _passwordController.text);
         await writeAccount(acc);

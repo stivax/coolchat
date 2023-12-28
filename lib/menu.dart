@@ -54,9 +54,9 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
 class MainDropdownMenu extends StatefulWidget {
   String? roomName;
   MainDropdownMenu({
-    Key? key,
+    super.key,
     this.roomName,
-  }) : super(key: key);
+  });
   @override
   State<MainDropdownMenu> createState() => _MainDropdownMenuState();
 }
@@ -115,7 +115,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                   if (value == 'item7') {
                     final TokenBloc tokenBloc = context.read<TokenBloc>();
                     await handleLogIn(_account, tokenBloc, context);
-                    if (_account.id != 0) {
+                    if (_account.id != 0 && widget.roomName != null) {
                       tokenBloc.add(TokenLoadEvent(roomName: widget.roomName));
                     } else {
                       //tokenBloc.add(TokenClearEvent());
@@ -124,20 +124,41 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                     const url = Server.server;
                     openUrl(url);
                   } else if (value == 'item2') {
-                    MessageProviderContainer.instance
-                        .getProvider('direct')
-                        ?.channel
-                        .sink
-                        .close();
-                    if (Navigator.canPop(context)) {
-                      Navigator.pop(context);
+                    if (_account.email.isNotEmpty) {
+                      MessageProviderContainer.instance
+                          .getProvider('direct')
+                          ?.channel
+                          .sink
+                          .close();
+                      if (Navigator.canPop(context)) {
+                        Navigator.pop(context);
+                      }
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PrivateChatList(),
+                        ),
+                      );
+                    } else {
+                      await showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return LoginDialog();
+                        },
+                      );
+                      final acc = await readAccountFuture();
+                      if (acc.userName != '') {
+                        if (Navigator.canPop(context)) {
+                          Navigator.pop(context);
+                        }
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PrivateChatList(),
+                          ),
+                        );
+                      }
                     }
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => PrivateChatList(),
-                      ),
-                    );
                   }
                 },
                 icon: Icon(Icons.menu_rounded,
@@ -208,7 +229,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                   PopupMenuItem<String>(
                     value: 'item8',
                     child: Text(
-                      'Version: v0.13.23',
+                      'Version: v0.13.25',
                       style: TextStyle(
                           color: themeProvider.currentTheme.primaryColor
                               .withOpacity(0.5),

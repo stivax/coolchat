@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:coolchat/server/server.dart';
 import 'package:coolchat/servises/token_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -159,10 +160,10 @@ Future<Account> readAccountFromServer(
 }
 
 Future<Map<String, dynamic>> loginProcess(
-    BuildContext context, String emailUser, String passwordUser) async {
+    String emailUser, String passwordUser) async {
   String email = Uri.encodeComponent(emailUser);
   String password = Uri.encodeComponent(passwordUser);
-  String server = ServerProvider.of(context).server;
+  String server = Server.server;
 
   String body = 'username=$email&password=$password';
 

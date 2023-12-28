@@ -109,8 +109,8 @@ class AvatarMember extends StatelessWidget {
             const delayBetweenAttempts = Duration(milliseconds: 500);
             for (int attempt = 1; attempt <= maxAttempts; attempt++) {
               try {
-                final token = await loginProcess(
-                    contextAvatarMember, account.email, account.password);
+                final token =
+                    await loginProcess(account.email, account.password);
                 messageProvider = MessageProvider(
                     'wss://$server/private/$id?token=${token["access_token"]}');
                 await messageProvider.channel.ready;

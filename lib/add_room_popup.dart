@@ -69,7 +69,6 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
 
   Future<void> _saveDataAndClosePopup() async {
     const server = Server.server;
-    MessageProvider messageProvider = socketConnect(context);
     if (_formKey.currentState!.validate() && _selectedItems != '') {
       final acc = await readAccountFuture();
       // ignore: use_build_context_synchronously
@@ -86,6 +85,7 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
               topicName: _nameRoomController.text,
               server: server,
               account: acc,
+              hasMessage: false,
             ),
           ),
         );

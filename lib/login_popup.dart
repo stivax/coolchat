@@ -47,8 +47,8 @@ class _LoginDialogState extends State<LoginDialog> {
 
   _saveDataAndClosePopup() async {
     if (_formKey.currentState!.validate()) {
-      final token = await loginProcess(
-          context, _emailController.text, _passwordController.text);
+      final token =
+          await loginProcess(_emailController.text, _passwordController.text);
       Account acc = await readAccountFromServer(
           context, _emailController.text, _passwordController.text);
       if (acc.userName.isNotEmpty &&

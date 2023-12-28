@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:connectivity/connectivity.dart';
 import 'package:coolchat/animation_start.dart';
-import 'package:coolchat/screen/common_chat.dart';
-import 'package:coolchat/screen/private_chat.dart';
+import 'package:coolchat/message_provider.dart';
 import 'package:coolchat/server/server.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
-import 'package:coolchat/servises/token_provider.dart';
 import 'package:coolchat/servises/token_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -76,39 +75,129 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   final _scrollController = ScrollController();
   List<Room> roomsList = [];
-  late String server;
+  MessageProvider? messageProvider;
+  final server = Server.server;
   late Map<dynamic, dynamic> token;
   bool scale = true;
+  bool isListening = false;
+  StreamSubscription? _messageSubscription;
+  late StreamSubscription<ConnectivityResult> _connectivitySubscription;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    getToken();
     requestPermissions();
+    startListenSocket();
+  }
+
+  @override
+  void dispose() {
+    messageProvider?.channel.sink.close();
+    _messageSubscription?.cancel();
+    _connectivitySubscription.cancel();
+    WidgetsBinding.instance.addObserver(this);
+    super.dispose();
+  }
+
+  Future<void> startListenSocket() async {
+    await getToken();
+    print(token["access_token"].toString());
+    if (token["access_token"].toString().isNotEmpty) {
+      await createProvider();
+      await listenSocket();
+    }
+  }
+
+  Future<void> createProvider() async {
+    print('Starting global socket');
+    const maxAttempts = 5;
+    const delayBetweenAttempts = Duration(milliseconds: 500);
+    for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        print('Token ${token["access_token"]}');
+        messageProvider = MessageProvider(
+            'wss://$server/notification?token=${token["access_token"]}');
+        await messageProvider!.channel.ready;
+        MessageProviderContainer.instance.addProvider('main', messageProvider!);
+        break;
+      } catch (e) {
+        print('Error $e');
+        if (attempt < maxAttempts) {
+          await Future.delayed(delayBetweenAttempts);
+          print('Reconnecting... Attempt $attempt');
+        } else {
+          print('Max attempts reached. Connection failed.');
+        }
+      }
+    }
+    createConnectivitySubscription();
+  }
+
+  Future<void> listenSocket() async {
+    messageProvider ??= MessageProviderContainer.instance.getProvider('mail')!;
+    if (!isListening || _messageSubscription!.isPaused) {
+      isListening = true;
+      if (!messageProvider!.isConnected) {
+        await messageProvider!.reconnect();
+        await messageProvider!.channel.ready;
+      }
+      _messageSubscription?.cancel();
+      _messageSubscription = messageProvider!.channel.stream.listen(
+        (message) async {
+          print(message);
+          HapticFeedback.lightImpact();
+        },
+        onDone: () {
+          print('onDone');
+          isListening = false;
+          messageProvider!.setIsConnected = false;
+        },
+        onError: (e) {
+          print('onError');
+          isListening = false;
+          messageProvider!.setIsConnected = false;
+        },
+      );
+    }
+  }
+
+  void createConnectivitySubscription() {
+    _connectivitySubscription =
+        Connectivity().onConnectivityChanged.listen((result) {
+      if (result != ConnectivityResult.none) {
+        if (!messageProvider!.isConnected) {
+          listenSocket();
+        }
+      }
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      listenSocket();
+    }
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    server = ServerProvider.of(context).server;
     fetchData(server);
   }
 
   getToken() async {
-    final acc = await _readAccount();
-    var tok = await loginProcess(context, acc.email, acc.password);
+    final acc = await readAccountFuture();
+    print(acc.email);
+    final tok = await loginProcess(acc.email, acc.password);
+    print(tok);
     setState(() {
       token = tok;
     });
-  }
-
-  Future<Account> _readAccount() async {
-    Account acc = await readAccountFuture();
-    return acc;
   }
 
   Future<http.Response> _getData(String server) async {
