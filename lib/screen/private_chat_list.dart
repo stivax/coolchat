@@ -1,14 +1,11 @@
 import 'dart:convert';
 
 import 'package:coolchat/account.dart';
-import 'package:coolchat/animation_start.dart';
 import 'package:coolchat/bloc/token_blok.dart';
 import 'package:coolchat/menu.dart';
 import 'package:coolchat/my_appbar.dart';
 import 'package:coolchat/private_rooms.dart';
 import 'package:coolchat/server/server.dart';
-import 'package:coolchat/servises/message_provider_container.dart';
-import 'package:coolchat/servises/token_provider.dart';
 import 'package:coolchat/servises/token_repository.dart';
 import 'package:coolchat/theme_provider.dart';
 import 'package:flutter/material.dart';
@@ -74,7 +71,8 @@ class _PrivateChatListState extends State<PrivateChatList> {
         String responseBody = utf8.decode(response.bodyBytes);
         List<dynamic> jsonList = jsonDecode(responseBody);
         List<RoomPrivate> rooms =
-            RoomPrivate.fromJsonList(jsonList, account, context).toList();
+            RoomPrivate.fromJsonList(jsonList, account, token, context)
+                .toList();
         if (mounted) {
           setState(() {
             roomsList = rooms;

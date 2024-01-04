@@ -4,7 +4,9 @@ import 'dart:convert';
 import 'package:connectivity/connectivity.dart';
 import 'package:coolchat/animation_start.dart';
 import 'package:coolchat/message_provider.dart';
+import 'package:coolchat/model/message_privat_push.dart';
 import 'package:coolchat/server/server.dart';
+import 'package:coolchat/servises/message_private_push_container.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
 import 'package:coolchat/servises/token_repository.dart';
 import 'package:flutter/material.dart';
@@ -108,7 +110,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     print(token["access_token"].toString());
     if (token["access_token"].toString().isNotEmpty) {
       await createProvider();
-      await listenSocket();
+      listenSocket();
     }
   }
 
@@ -118,7 +120,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     const delayBetweenAttempts = Duration(milliseconds: 500);
     for (int attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        print('Token ${token["access_token"]}');
         messageProvider = MessageProvider(
             'wss://$server/notification?token=${token["access_token"]}');
         await messageProvider!.channel.ready;
@@ -128,9 +129,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         print('Error $e');
         if (attempt < maxAttempts) {
           await Future.delayed(delayBetweenAttempts);
-          print('Reconnecting... Attempt $attempt');
+          print('Reconnecting... in Main Attempt $attempt');
         } else {
-          print('Max attempts reached. Connection failed.');
+          print('Max attempts reached. Connection failed in Main.');
         }
       }
     }
@@ -138,8 +139,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   }
 
   Future<void> listenSocket() async {
-    messageProvider ??= MessageProviderContainer.instance.getProvider('mail')!;
+    messageProvider ??= MessageProviderContainer.instance.getProvider('main')!;
     if (!isListening || _messageSubscription!.isPaused) {
+      print('start listen global socket');
       isListening = true;
       if (!messageProvider!.isConnected) {
         await messageProvider!.reconnect();
@@ -148,8 +150,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       _messageSubscription?.cancel();
       _messageSubscription = messageProvider!.channel.stream.listen(
         (message) async {
-          print(message);
-          HapticFeedback.lightImpact();
+          dynamic jsonMessage = jsonDecode(message);
+          final messagePush = MessagePrivatPush.fromJson(jsonMessage);
+          print(messagePush.messageId);
+          MessagePrivatePushContainer.addObject(messagePush);
+          print(MessagePrivatePushContainer.viewSet().length);
+          MessagePrivatePushContainer.removeOldObjects();
         },
         onDone: () {
           print('onDone');
@@ -192,9 +198,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
   getToken() async {
     final acc = await readAccountFuture();
-    print(acc.email);
     final tok = await loginProcess(acc.email, acc.password);
-    print(tok);
     setState(() {
       token = tok;
     });

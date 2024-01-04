@@ -2,6 +2,7 @@
 import 'dart:async';
 
 import 'package:coolchat/screen/private_chat_list.dart';
+import 'package:coolchat/servises/message_private_push_container.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
@@ -64,11 +65,35 @@ class MainDropdownMenu extends StatefulWidget {
 class _MainDropdownMenuState extends State<MainDropdownMenu> {
   Account _account =
       Account(email: '', userName: '', password: '', avatar: '', id: 0);
+  late Timer _timer;
+  bool haveNewMessages = false;
 
   @override
   void initState() {
     super.initState();
     _readDataFromFile();
+    _timer = Timer.periodic(const Duration(seconds: 1), (Timer timer) {
+      checkNewMessage();
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  void checkNewMessage() {
+    MessagePrivatePushContainer.removeOldObjects();
+    if (MessagePrivatePushContainer.viewSet().isNotEmpty) {
+      setState(() {
+        haveNewMessages = true;
+      });
+    } else {
+      setState(() {
+        haveNewMessages = false;
+      });
+    }
   }
 
   void _readDataFromFile() async {
@@ -161,8 +186,27 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                     }
                   }
                 },
-                icon: Icon(Icons.menu_rounded,
-                    color: themeProvider.currentTheme.primaryColor),
+                icon: Stack(
+                  alignment: Alignment.centerRight,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(6.0),
+                      child: Image.asset(
+                        'assets/images/menu.png',
+                        color: themeProvider.currentTheme.primaryColor,
+                      ),
+                    ),
+                    SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: haveNewMessages
+                          ? Image.asset(themeProvider.isLightMode
+                              ? 'assets/images/fenix_light.png'
+                              : 'assets/images/fenix_dark.png')
+                          : Container(),
+                    )
+                  ],
+                ),
                 itemBuilder: (context) => [
                   PopupMenuItem<String>(
                     value: 'item1',
@@ -174,10 +218,26 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                   ),
                   PopupMenuItem<String>(
                     value: 'item2',
-                    child: Text(
-                      'Personal chats',
-                      style: TextStyle(
-                          color: themeProvider.currentTheme.primaryColor),
+                    child: Row(
+                      children: [
+                        Text(
+                          'Personal chats',
+                          style: TextStyle(
+                              color: themeProvider.currentTheme.primaryColor),
+                        ),
+                        const SizedBox(
+                          width: 8,
+                        ),
+                        SizedBox(
+                          height: 16,
+                          width: 16,
+                          child: haveNewMessages
+                              ? Image.asset(themeProvider.isLightMode
+                                  ? 'assets/images/mail_light.png'
+                                  : 'assets/images/mail_dark.png')
+                              : Container(),
+                        ),
+                      ],
                     ),
                   ),
                   PopupMenuItem<String>(
@@ -229,7 +289,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                   PopupMenuItem<String>(
                     value: 'item8',
                     child: Text(
-                      'Version: v0.13.25',
+                      'Version: v0.13.26',
                       style: TextStyle(
                           color: themeProvider.currentTheme.primaryColor
                               .withOpacity(0.5),

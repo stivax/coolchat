@@ -1,5 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:coolchat/screen/private_chat.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +16,7 @@ class RoomPrivate extends StatelessWidget {
   bool isRead;
   final Account account;
   final BuildContext contextPrivateRoom;
+  final Map<dynamic, dynamic> token;
 
   RoomPrivate(
       {required this.recipientId,
@@ -25,10 +24,11 @@ class RoomPrivate extends StatelessWidget {
       required this.recipientAvatar,
       required this.isRead,
       required this.account,
-      required this.contextPrivateRoom});
+      required this.contextPrivateRoom,
+      required this.token});
 
-  static List<RoomPrivate> fromJsonList(
-      List<dynamic> jsonList, Account account, BuildContext context) {
+  static List<RoomPrivate> fromJsonList(List<dynamic> jsonList, Account account,
+      Map<dynamic, dynamic> token, BuildContext context) {
     return jsonList.map((json) {
       return RoomPrivate(
         recipientId: json['recipient_id'],
@@ -37,6 +37,7 @@ class RoomPrivate extends StatelessWidget {
         isRead: json['is_read'],
         account: account,
         contextPrivateRoom: context,
+        token: token,
       );
     }).toList();
   }
@@ -44,20 +45,17 @@ class RoomPrivate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () async {
+      onTap: () {
         late MessageProvider messageProvider;
         bool messageProviderCreated = false;
         const server = Server.server;
         final String id = recipientId.toString();
-        final account = await readAccountFuture();
         const maxAttempts = 5;
-        const delayBetweenAttempts = Duration(milliseconds: 500);
+        //const delayBetweenAttempts = Duration(milliseconds: 500);
         for (int attempt = 1; attempt <= maxAttempts; attempt++) {
           try {
-            final token = await loginProcess(account.email, account.password);
             messageProvider = MessageProvider(
                 'wss://$server/private/$id?token=${token["access_token"]}');
-            await messageProvider.channel.ready;
             messageProviderCreated = true;
             // new
             MessageProviderContainer.instance
@@ -66,7 +64,7 @@ class RoomPrivate extends StatelessWidget {
           } catch (e) {
             print('Error $e');
             if (attempt < maxAttempts) {
-              await Future.delayed(delayBetweenAttempts);
+              //await Future.delayed(delayBetweenAttempts);
               print('Reconnecting... Attempt $attempt');
             } else {
               print('Max attempts reached. Connection failed.');
