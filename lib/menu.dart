@@ -121,6 +121,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
         _account =
             Account(email: '', userName: '', password: '', avatar: '', id: 0);
       });
+      await writeAccount(_account);
       showPopupLogOut(acc, tokenBloc, context);
     }
   }

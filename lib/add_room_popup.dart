@@ -8,7 +8,6 @@ import 'screen/common_chat.dart';
 import 'main.dart';
 import 'message_provider.dart';
 import 'server/server.dart';
-import 'server_provider.dart';
 import 'theme_provider.dart';
 import 'account.dart';
 import 'rooms.dart';
@@ -36,7 +35,7 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    server = ServerProvider.of(context).server;
+    server = Server.server;
     fetchRoomList(server);
   }
 
@@ -60,7 +59,7 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
   }
 
   MessageProvider socketConnect(BuildContext context) {
-    final server = ServerProvider.of(context).server;
+    const server = Server.server;
     Map<dynamic, dynamic> token = myHomePageStateKey.currentState!.token;
     MessageProvider messageProvider = MessageProvider(
         'wss://$server/ws/${_nameRoomController.text}?token=${token["access_token"]}');

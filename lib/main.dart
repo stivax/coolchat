@@ -6,12 +6,12 @@ import 'package:coolchat/animation_start.dart';
 import 'package:coolchat/message_provider.dart';
 import 'package:coolchat/model/message_privat_push.dart';
 import 'package:coolchat/server/server.dart';
+import 'package:coolchat/servises/account_provider.dart';
 import 'package:coolchat/servises/message_private_push_container.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
 import 'package:coolchat/servises/token_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -23,17 +23,19 @@ import 'menu.dart';
 import 'my_appbar.dart';
 import 'theme_provider.dart';
 import 'rooms.dart';
-import 'server_provider.dart';
 import 'servises/favorite_room_provider.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => ThemeProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<ThemeProvider>(
+            create: (context) => ThemeProvider()),
+        ChangeNotifierProvider<AccountProvider>(
+            create: (context) => AccountProvider()),
+      ],
       child: RepositoryProvider(
-          create: (context) => TokenRepository(),
-          child:
-              const ServerProvider(server: 'cool-chat.club', child: MyApp())),
+          create: (context) => TokenRepository(), child: const MyApp()),
     ),
   );
 }
@@ -123,7 +125,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         messageProvider = MessageProvider(
             'wss://$server/notification?token=${token["access_token"]}');
         await messageProvider!.channel.ready;
-        MessageProviderContainer.instance.addProvider('main', messageProvider!);
+        //MessageProviderContainer.instance.addProvider('main', messageProvider!);
         break;
       } catch (e) {
         print('Error $e');
@@ -139,7 +141,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   }
 
   Future<void> listenSocket() async {
-    messageProvider ??= MessageProviderContainer.instance.getProvider('main')!;
+    //messageProvider ??= MessageProviderContainer.instance.getProvider('main')!;
     if (!isListening || _messageSubscription!.isPaused) {
       print('start listen global socket');
       isListening = true;

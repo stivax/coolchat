@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:beholder_flutter/beholder_flutter.dart';
 import 'package:coolchat/bloc/token_blok.dart';
 import 'package:coolchat/model/token.dart';
+import 'package:coolchat/server/server.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
 import 'package:coolchat/servises/token_repository.dart';
 import 'package:coolchat/widget/write.dart';
@@ -25,7 +26,6 @@ import '../menu.dart';
 import '../message_provider.dart';
 import '../messages.dart';
 import '../my_appbar.dart';
-import '../server_provider.dart';
 import '../theme_provider.dart';
 import '../beholder/scroll_chat_controll.dart';
 
@@ -281,8 +281,7 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
   }
 
   _overloadMain() async {
-    await myHomePageStateKey.currentState
-        ?.fetchData(ServerProvider.of(context).server);
+    await myHomePageStateKey.currentState?.fetchData(Server.server);
   }
 
   @override

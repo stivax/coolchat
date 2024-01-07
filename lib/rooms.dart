@@ -3,7 +3,6 @@
 import 'dart:convert';
 
 import 'package:coolchat/add_room_popup.dart';
-import 'package:coolchat/server_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -321,7 +320,7 @@ void addRoomDialog(BuildContext context) async {
 Future<String> sendRoom(BuildContext context, String roomName, String roomImage,
     Account acc) async {
   final token = await loginProcess(acc.email, acc.password);
-  final server = ServerProvider.of(context).server;
+  const server = Server.server;
   final url = Uri.https(server, '/rooms/');
 
   final jsonBody = {

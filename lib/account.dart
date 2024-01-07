@@ -9,11 +9,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'bloc/token_blok.dart';
 import 'bloc/token_event.dart';
-import 'bloc/token_state.dart';
 import 'error_answer.dart';
 
 import 'main.dart';
-import 'server_provider.dart';
 import 'theme_provider.dart';
 
 class Account {
@@ -105,7 +103,7 @@ Future<Account> readAccountFuture() async {
 }
 
 Future<String> sendUser(Account account, BuildContext context) async {
-  String server = ServerProvider.of(context).server;
+  const server = Server.server;
   final url = Uri.https(server, '/users/');
 
   final jsonBody = {
@@ -133,7 +131,7 @@ Future<String> sendUser(Account account, BuildContext context) async {
 
 Future<Account> readAccountFromServer(
     BuildContext context, String emailUser, String password) async {
-  String server = ServerProvider.of(context).server;
+  const server = Server.server;
   final url = Uri.https(server, '/users/$emailUser');
 
   final response = await http.get(url);
