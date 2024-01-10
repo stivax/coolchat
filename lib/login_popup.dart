@@ -53,7 +53,7 @@ class _LoginDialogState extends State<LoginDialog> {
           context, _emailController.text, _passwordController.text);
       if (acc.userName.isNotEmpty &&
           token["access_token"].toString().isNotEmpty) {
-        await writeAccount(acc);
+        await writeAccount(acc, context);
         await showPopupWelcome(acc, context);
         Navigator.pop(context, acc);
       } else if (acc.userName.isNotEmpty &&

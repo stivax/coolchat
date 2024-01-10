@@ -291,26 +291,33 @@ class TheirMessege extends StatelessWidget {
                                 ? Positioned(
                                     bottom: 10,
                                     right: 10,
-                                    child: SizedBox(
-                                      height: 10,
-                                      width: 20,
+                                    child: Container(
+                                      height: 16,
+                                      width: 32,
+                                      alignment: Alignment.centerRight,
                                       child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
                                         children: [
-                                          const Icon(
-                                            Icons.favorite,
-                                            size: 12,
-                                            color: Colors.pink,
-                                          ),
                                           Text(
                                             vote.toString(),
                                             style: TextStyle(
                                               color: themeProvider
                                                   .currentTheme.primaryColor,
-                                              fontSize: 9,
+                                              fontSize: 12,
                                               fontFamily: 'Manrope',
                                               fontWeight: FontWeight.w400,
                                             ),
                                           ),
+                                          Image.asset(
+                                            'assets/images/like.png',
+                                            width: 16,
+                                            height: 16,
+                                            color: themeProvider
+                                                .currentTheme.shadowColor,
+                                          )
                                         ],
                                       ),
                                     ),
@@ -499,24 +506,35 @@ class MyMessege extends StatelessWidget {
                                 ? Positioned(
                                     bottom: 10,
                                     right: 10,
-                                    child: Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.favorite,
-                                          size: 12,
-                                          color: Colors.pink,
-                                        ),
-                                        Text(
-                                          vote.toString(),
-                                          style: TextStyle(
-                                            color: themeProvider
-                                                .currentTheme.primaryColor,
-                                            fontSize: 9,
-                                            fontFamily: 'Manrope',
-                                            fontWeight: FontWeight.w400,
+                                    child: Container(
+                                      height: 16,
+                                      width: 32,
+                                      alignment: Alignment.centerRight,
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            vote.toString(),
+                                            style: TextStyle(
+                                              color: themeProvider
+                                                  .currentTheme.primaryColor,
+                                              fontSize: 12,
+                                              fontFamily: 'Manrope',
+                                              fontWeight: FontWeight.w400,
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                          Image.asset(
+                                            'assets/images/like.png',
+                                            width: 16,
+                                            height: 16,
+                                            color: themeProvider
+                                                .currentTheme.shadowColor,
+                                          )
+                                        ],
+                                      ),
                                     ),
                                   )
                                 : const SizedBox(),

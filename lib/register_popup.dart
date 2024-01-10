@@ -75,7 +75,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
             await loginProcess(_emailController.text, _passwordController.text);
         Account acc = await readAccountFromServer(
             context, _emailController.text, _passwordController.text);
-        await writeAccount(acc);
+        await writeAccount(acc, context);
         final answer = await _showPopupWelcome(acc, context);
         Navigator.pop(context, acc);
       } else {

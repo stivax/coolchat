@@ -45,34 +45,17 @@ class RoomPrivate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
         late MessageProvider messageProvider;
         bool messageProviderCreated = false;
         const server = Server.server;
         final String id = recipientId.toString();
-        const maxAttempts = 5;
-        //const delayBetweenAttempts = Duration(milliseconds: 500);
-        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
-          try {
-            messageProvider = MessageProvider(
-                'wss://$server/private/$id?token=${token["access_token"]}');
-            messageProviderCreated = true;
-            // new
-            MessageProviderContainer.instance
-                .addProvider('direct', messageProvider);
-            break;
-          } catch (e) {
-            print('Error $e');
-            if (attempt < maxAttempts) {
-              //await Future.delayed(delayBetweenAttempts);
-              print('Reconnecting... Attempt $attempt');
-            } else {
-              print('Max attempts reached. Connection failed.');
-            }
-          }
-        }
+        messageProvider = await MessageProvider.create(
+            'wss://$server/private/$id?token=${token["access_token"]}');
+        messageProviderCreated = true;
+        MessageProviderContainer.instance
+            .addProvider('direct', messageProvider);
         print('start chat with ${recipientName.toString()}');
-        //Navigator.pop(context);
         if (messageProviderCreated) {
           Navigator.push(
             contextPrivateRoom,

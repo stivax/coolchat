@@ -105,29 +105,12 @@ class AvatarMember extends StatelessWidget {
             const server = Server.server;
             final String id = memberID.toString();
             final account = await readAccountFuture();
-            const maxAttempts = 5;
-            const delayBetweenAttempts = Duration(milliseconds: 500);
-            for (int attempt = 1; attempt <= maxAttempts; attempt++) {
-              try {
-                final token =
-                    await loginProcess(account.email, account.password);
-                messageProvider = MessageProvider(
-                    'wss://$server/private/$id?token=${token["access_token"]}');
-                await messageProvider.channel.ready;
-                messageProviderCreated = true;
-                break;
-              } catch (e) {
-                print('Error $e');
-                if (attempt < maxAttempts) {
-                  await Future.delayed(delayBetweenAttempts);
-                  print('Reconnecting... Attempt $attempt');
-                } else {
-                  print('Max attempts reached. Connection failed.');
-                }
-              }
-            }
+            final token = await loginProcess(account.email, account.password);
+            messageProvider = await MessageProvider.create(
+                'wss://$server/private/$id?token=${token["access_token"]}');
+            await messageProvider.channel.ready;
+            messageProviderCreated = true;
             print('start chat with ${name.toString()}');
-            //Navigator.pop(contextAvatarMember);
             if (messageProviderCreated) {
               Navigator.push(
                 contextAvatarMember,

@@ -89,22 +89,48 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   bool isListening = false;
   StreamSubscription? _messageSubscription;
   late StreamSubscription<ConnectivityResult> _connectivitySubscription;
+  late AccountProvider _accountProvider;
+  late Timer _timerCheckAndRefreshListenWebsocket;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
     requestPermissions();
+    _accountProvider = Provider.of<AccountProvider>(context, listen: false);
+    _accountProvider.addListener(_onAccountChange);
     startListenSocket();
+    _timerCheckAndRefreshListenWebsocket =
+        Timer.periodic(const Duration(seconds: 10), (Timer timer) {
+      if (_accountProvider.isLoginProvider &&
+          (_messageSubscription!.isPaused || _messageSubscription == null)) {
+        startListenSocket();
+      }
+    });
   }
 
   @override
   void dispose() {
+    _accountProvider.removeListener(_onAccountChange);
     messageProvider?.channel.sink.close();
     _messageSubscription?.cancel();
     _connectivitySubscription.cancel();
-    WidgetsBinding.instance.addObserver(this);
     super.dispose();
+  }
+
+  void _onAccountChange() {
+    if (_accountProvider.isLoginProvider) {
+      startListenSocket();
+    } else {
+      _messageSubscription?.cancel();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _accountProvider = Provider.of<AccountProvider>(context, listen: false);
+    fetchData(server);
   }
 
   Future<void> startListenSocket() async {
@@ -118,39 +144,20 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
   Future<void> createProvider() async {
     print('Starting global socket');
-    const maxAttempts = 5;
-    const delayBetweenAttempts = Duration(milliseconds: 500);
-    for (int attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        messageProvider = MessageProvider(
-            'wss://$server/notification?token=${token["access_token"]}');
-        await messageProvider!.channel.ready;
-        //MessageProviderContainer.instance.addProvider('main', messageProvider!);
-        break;
-      } catch (e) {
-        print('Error $e');
-        if (attempt < maxAttempts) {
-          await Future.delayed(delayBetweenAttempts);
-          print('Reconnecting... in Main Attempt $attempt');
-        } else {
-          print('Max attempts reached. Connection failed in Main.');
-        }
-      }
-    }
+    messageProvider = await MessageProvider.create(
+        'wss://$server/notification?token=${token["access_token"]}');
+    await messageProvider!.channel.ready;
+    MessageProviderContainer.instance.addProvider('main', messageProvider!);
     createConnectivitySubscription();
   }
 
   Future<void> listenSocket() async {
-    //messageProvider ??= MessageProviderContainer.instance.getProvider('main')!;
-    if (!isListening || _messageSubscription!.isPaused) {
+    messageProvider ??= MessageProviderContainer.instance.getProvider('main')!;
+    if ((_messageSubscription != null && _messageSubscription!.isPaused) ||
+        _messageSubscription == null) {
       print('start listen global socket');
-      isListening = true;
-      if (!messageProvider!.isConnected) {
-        await messageProvider!.reconnect();
-        await messageProvider!.channel.ready;
-      }
       _messageSubscription?.cancel();
-      _messageSubscription = messageProvider!.channel.stream.listen(
+      _messageSubscription = messageProvider!.messagesStream.listen(
         (message) async {
           dynamic jsonMessage = jsonDecode(message);
           final messagePush = MessagePrivatPush.fromJson(jsonMessage);
@@ -161,13 +168,11 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         },
         onDone: () {
           print('onDone');
-          isListening = false;
-          messageProvider!.setIsConnected = false;
+          listenSocket();
         },
         onError: (e) {
           print('onError');
-          isListening = false;
-          messageProvider!.setIsConnected = false;
+          listenSocket();
         },
       );
     }
@@ -190,12 +195,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       listenSocket();
     }
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    fetchData(server);
   }
 
   getToken() async {

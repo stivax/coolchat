@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:coolchat/server/server.dart';
+import 'package:coolchat/servises/account_provider.dart';
 import 'package:coolchat/servises/token_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -83,10 +84,12 @@ class Account {
   }
 }
 
-Future<void> writeAccount(Account account) async {
+Future<void> writeAccount(Account account, BuildContext context) async {
   final acc = await SharedPreferences.getInstance();
   final toWrite = jsonEncode(account);
   acc.setString("account", toWrite);
+  final accountProvider = Provider.of<AccountProvider>(context, listen: false);
+  accountProvider.addAccount(account);
 }
 
 Future<Account> readAccountFuture() async {
@@ -277,12 +280,14 @@ showPopupLogOut(Account acc, TokenBloc tokenBloc, BuildContext context) async {
                     onPressed: () async {
                       FocusManager.instance.primaryFocus?.unfocus();
                       tokenBloc.add(TokenClearEvent());
-                      await writeAccount(Account(
-                          email: '',
-                          userName: '',
-                          password: '',
-                          avatar: '',
-                          id: 0));
+                      await writeAccount(
+                          Account(
+                              email: '',
+                              userName: '',
+                              password: '',
+                              avatar: '',
+                              id: 0),
+                          context);
                       Navigator.pop(context);
                       Navigator.pop(context);
                       Navigator.push(

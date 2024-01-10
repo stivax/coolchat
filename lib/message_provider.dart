@@ -1,13 +1,16 @@
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:web_socket_channel/io.dart';
 
 class MessageProvider {
   final String serverUrl;
   late WebSocketChannel channel;
   bool _isConnected = false;
 
-  MessageProvider(this.serverUrl) {
-    _connect();
+  MessageProvider._(this.serverUrl);
+
+  static Future<MessageProvider> create(String serverUrl) async {
+    final messageProvider = MessageProvider._(serverUrl);
+    await messageProvider._connect();
+    return messageProvider;
   }
 
   Future<void> _connect() async {

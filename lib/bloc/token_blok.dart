@@ -25,7 +25,7 @@ class TokenBloc extends Bloc<TokenEvent, TokenState> {
             Account account = await readAccountFuture();
             token =
                 await tokenRepository.getToken(account.email, account.password);
-            messageProvider = MessageProvider(
+            messageProvider = await MessageProvider.create(
                 'wss://$server/ws/${event.roomName!}?token=${token!.token["access_token"]}');
             await messageProvider.channel.ready;
             MessageProviderContainer.instance

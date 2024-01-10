@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
 
+import 'package:coolchat/main.dart';
 import 'package:coolchat/screen/private_chat_list.dart';
 import 'package:coolchat/servises/message_private_push_container.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
@@ -121,7 +122,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
         _account =
             Account(email: '', userName: '', password: '', avatar: '', id: 0);
       });
-      await writeAccount(_account);
+      await writeAccount(_account, context);
       showPopupLogOut(acc, tokenBloc, context);
     }
   }
@@ -185,6 +186,11 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                         );
                       }
                     }
+                  } else if (value == 'item1') {
+                    //Navigator.of(context).pushAndRemoveUntil(
+                    //  MaterialPageRoute(builder: (context) => MyHomePage()),
+                    //  (route) => false,
+                    //);
                   }
                 },
                 icon: Stack(
@@ -244,7 +250,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                   PopupMenuItem<String>(
                     value: 'item3',
                     child: Text(
-                      'Setting',
+                      'Settings',
                       style: TextStyle(
                           color: themeProvider.currentTheme.primaryColor),
                     ),
@@ -290,7 +296,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                   PopupMenuItem<String>(
                     value: 'item8',
                     child: Text(
-                      'Version: v0.13.26',
+                      'Version: v0.13.28',
                       style: TextStyle(
                           color: themeProvider.currentTheme.primaryColor
                               .withOpacity(0.5),

@@ -58,10 +58,10 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
     });
   }
 
-  MessageProvider socketConnect(BuildContext context) {
+  Future<MessageProvider> socketConnect() async {
     const server = Server.server;
     Map<dynamic, dynamic> token = myHomePageStateKey.currentState!.token;
-    MessageProvider messageProvider = MessageProvider(
+    MessageProvider messageProvider = await MessageProvider.create(
         'wss://$server/ws/${_nameRoomController.text}?token=${token["access_token"]}');
     return messageProvider;
   }
