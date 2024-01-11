@@ -2,7 +2,9 @@
 import 'dart:async';
 
 import 'package:coolchat/main.dart';
+import 'package:coolchat/screen/privacy_policy.dart';
 import 'package:coolchat/screen/private_chat_list.dart';
+import 'package:coolchat/screen/rools.dart';
 import 'package:coolchat/servises/message_private_push_container.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
 import 'package:equatable/equatable.dart';
@@ -187,10 +189,21 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                       }
                     }
                   } else if (value == 'item1') {
-                    //Navigator.of(context).pushAndRemoveUntil(
-                    //  MaterialPageRoute(builder: (context) => MyHomePage()),
-                    //  (route) => false,
-                    //);
+                    //myHomePageStateKey.currentState?.popUntil((route) => route.isFirst);
+                  } else if (value == 'item5') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PrivacyPolicy(),
+                      ),
+                    );
+                  } else if (value == 'item4') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const RoolsOfChat(),
+                      ),
+                    );
                   }
                 },
                 icon: Stack(

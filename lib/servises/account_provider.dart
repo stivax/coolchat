@@ -25,6 +25,8 @@ class AccountProvider with ChangeNotifier {
     _accountCurentState = account;
     if (_accountCurentState.email.isNotEmpty) {
       _isLogin = true;
+    } else {
+      _isLogin = false;
     }
     notifyListeners();
   }

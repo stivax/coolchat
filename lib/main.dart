@@ -101,10 +101,15 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     _accountProvider.addListener(_onAccountChange);
     startListenSocket();
     _timerCheckAndRefreshListenWebsocket =
-        Timer.periodic(const Duration(seconds: 10), (Timer timer) {
-      if (_accountProvider.isLoginProvider &&
-          (_messageSubscription!.isPaused || _messageSubscription == null)) {
-        startListenSocket();
+        Timer.periodic(const Duration(seconds: 10), (timer) {
+      print('timer ${timer.isActive.toString()}');
+      if (_accountProvider.isLoginProvider && _messageSubscription == null) {
+        print('timer listenSocket()');
+        listenSocket();
+      } else if (_accountProvider.isLoginProvider &&
+          _messageSubscription!.isPaused) {
+        print('timer messageSubscription resume');
+        _messageSubscription!.resume();
       }
     });
   }
@@ -115,6 +120,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     messageProvider?.channel.sink.close();
     _messageSubscription?.cancel();
     _connectivitySubscription.cancel();
+    _timerCheckAndRefreshListenWebsocket.cancel();
     super.dispose();
   }
 
