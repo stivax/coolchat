@@ -59,6 +59,33 @@ class Messages extends StatelessWidget {
     );
   }
 
+  static List<Messages> fromJsonList(dynamic jsonList,
+      BuildContext contextMessage, String roomName, int accountId) {
+    int previousMemberID = 0;
+    final timeZone = DateTime.now().timeZoneOffset;
+    List<Messages> messages = [];
+    jsonList.map((jsonMessage) {
+      bool isSameMember = jsonMessage['receiver_id'] == previousMemberID;
+      previousMemberID = jsonMessage['receiver_id'];
+      //print(jsonMessage);
+
+      messages.add(Messages(
+        message: jsonMessage['message'],
+        id: jsonMessage['id'],
+        createdAt: DateTime.parse(jsonMessage['created_at']).add(timeZone),
+        avatar: jsonMessage['avatar'],
+        userName: jsonMessage['user_name'],
+        ownerId: jsonMessage['receiver_id'],
+        isPreviousSameMember: isSameMember,
+        vote: jsonMessage['vote'],
+        contextMessage: contextMessage,
+        roomName: roomName,
+        accountId: accountId,
+      ));
+    }).toList();
+    return messages;
+  }
+
   static String formatTime(String created) {
     DateTime dateTime = DateTime.parse(created);
     DateTime now = DateTime.now();
@@ -470,7 +497,7 @@ class MyMessege extends StatelessWidget {
                               child: SelectableLinkify(
                                 onOpen: (url) async {
                                   await launchUrlString(url.url,
-                                      mode: LaunchMode.externalApplication);
+                                      mode: LaunchMode.platformDefault);
                                 },
                                 text: message,
                                 style: TextStyle(

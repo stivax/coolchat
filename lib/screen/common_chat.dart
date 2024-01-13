@@ -188,7 +188,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               topicName: widget.topicName,
               server: widget.server,
               account: widget.account,
-              messageData: widget.messageData,
+              messageData: state.messagesList,
               hasMessage: widget.hasMessage,
             );
           } else if (state is TokenLoadedState) {
@@ -210,7 +210,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               messageProvider: providerInScreen,
               server: widget.server,
               account: acc,
-              messageData: widget.messageData,
+              messageData: const [],
               hasMessage: widget.hasMessage,
             );
           } else if (state is TokenErrorState) {
@@ -219,7 +219,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               topicName: widget.topicName,
               server: widget.server,
               account: widget.account,
-              messageData: widget.messageData,
+              messageData: const [],
+              hasMessage: widget.hasMessage,
+            );
+          } else if (state is TokenLoadingState) {
+            return CommonChatScreen(
+              state: 'loading',
+              topicName: widget.topicName,
+              server: widget.server,
+              account: widget.account,
+              messageData: const [],
               hasMessage: widget.hasMessage,
             );
           } else {
@@ -237,7 +246,7 @@ class CommonChatScreen extends StatefulWidget {
   final String server;
   final Account account;
   final String state;
-  final MessageData messageData;
+  final List<Messages> messageData;
   final bool hasMessage;
   const CommonChatScreen(
       {super.key,
@@ -254,14 +263,17 @@ class CommonChatScreen extends StatefulWidget {
 }
 
 class _CommonChatScreenState extends State<CommonChatScreen> {
-  late MessageData messageData;
+  late List<Messages> messageData;
   @override
   void initState() {
     super.initState();
     messageData = widget.messageData;
+    final TokenBloc tokenBloc = context.read<TokenBloc>();
     if (widget.account.email.isNotEmpty) {
-      final TokenBloc tokenBloc = context.read<TokenBloc>();
       tokenBloc.add(TokenLoadEvent(roomName: widget.topicName));
+    } else {
+      tokenBloc.add(
+          TokenLoadFromGetEvent(roomName: widget.topicName, context: context));
     }
   }
 
@@ -330,6 +342,7 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
                             setState(() {});
                           },
                           hasMessage: widget.hasMessage,
+                          roomName: widget.topicName,
                         ),
                       ),
                       TextAndSend(
@@ -544,11 +557,12 @@ class _ChatMembersState extends State<ChatMembers> {
 }
 
 class BlockMessages extends StatefulWidget {
-  final MessageData messageData;
+  final List<Messages> messageData;
   final Function updateState;
   final String state;
   final BuildContext? checkContext;
   final bool hasMessage;
+  final String roomName;
   const BlockMessages({
     super.key,
     this.checkContext,
@@ -556,6 +570,7 @@ class BlockMessages extends StatefulWidget {
     required this.updateState,
     required this.state,
     required this.hasMessage,
+    required this.roomName,
   });
 
   @override
@@ -568,6 +583,7 @@ class _BlockMessagesState extends State<BlockMessages> {
   final _controller = ScrollController();
   bool showArrow = true;
   final scrollChatController = ScrollChatControll();
+  late double screenWidth;
 
   whenWriting(String name) async {
     setState(() {
@@ -621,22 +637,24 @@ class _BlockMessagesState extends State<BlockMessages> {
                 children: [
                   widget.state == 'loaded'
                       ? messageView(themeProvider)
-                      : Center(
-                          child: widget.state == 'empty'
-                              ? const CircularProgressIndicator()
-                              : Center(
-                                  child: Text(
-                                    widget.state,
-                                    style: TextStyle(
-                                      color: themeProvider
-                                          .currentTheme.primaryColor,
-                                      fontSize: 14,
-                                      fontFamily: 'Manrope',
-                                      fontWeight: FontWeight.w600,
-                                      height: 1.30,
-                                    ),
-                                  ),
-                                )),
+                      : widget.state == 'empty'
+                          ? messegeViewFromGet(themeProvider)
+                          : Center(
+                              child: widget.state == 'loading'
+                                  ? const CircularProgressIndicator()
+                                  : Center(
+                                      child: Text(
+                                        widget.state,
+                                        style: TextStyle(
+                                          color: themeProvider
+                                              .currentTheme.primaryColor,
+                                          fontSize: 14,
+                                          fontFamily: 'Manrope',
+                                          fontWeight: FontWeight.w600,
+                                          height: 1.30,
+                                        ),
+                                      ),
+                                    )),
                   showWrite ? const WriteAnimated() : Container(),
                 ],
               ),
@@ -724,38 +742,142 @@ class _BlockMessagesState extends State<BlockMessages> {
           ],
         );
       });
-    } else if (widget.state == 'loaded') {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const Image(
-              image: AssetImage('assets/images/clear_block_messages.png'),
-              fit: BoxFit.cover,
+    } else {
+      return ClearBlockMessages(
+        themeProvider: themeProvider,
+      );
+    }
+  }
+
+  Widget messegeViewFromGet(ThemeProvider themeProvider) {
+    MediaQueryData mediaQuery = MediaQuery.of(context);
+    double fontSize = mediaQuery.size.width * 0.033;
+    if (widget.messageData.isNotEmpty) {
+      _cachedMessages = _messages.reversed.toList();
+      return Stack(
+        children: [
+          Container(
+            padding: const EdgeInsets.only(bottom: 74),
+            child: ListView.builder(
+              reverse: true,
+              itemCount: widget.messageData.length,
+              itemBuilder: (context, index) {
+                return widget.messageData[index];
+              },
             ),
-            const SizedBox(
-              height: 8,
-            ),
-            Text(
-              'Oops.. there are no messages here yet \nWrite first!',
-              textAlign: TextAlign.center,
-              textScaleFactor: 1,
-              style: TextStyle(
-                color: themeProvider.currentTheme.primaryColor.withOpacity(0.5),
-                fontSize: 16,
-                fontFamily: 'Manrope',
-                fontWeight: FontWeight.w500,
-                height: 1.16,
+          ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            left: 0,
+            child: Container(
+              height: 74,
+              width: 200,
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(10),
+                  bottomRight: Radius.circular(10),
+                ),
+                color: themeProvider.currentTheme.cardColor,
+              ),
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Image.asset(
+                      'assets/images/logo_not_register.png',
+                      color: themeProvider.currentTheme.shadowColor,
+                      width: 32,
+                      height: 32,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text:
+                                'In order to read new messages, be able to\nwrite and create your own rooms - REGISTER\n(',
+                            style: TextStyle(
+                              color: themeProvider.currentTheme.primaryColor,
+                              fontSize: fontSize,
+                              fontFamily: 'Manrope',
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                          TextSpan(
+                            text: 'button in the upper right corner',
+                            style: TextStyle(
+                              color: const Color(0xFFC6000F),
+                              fontSize: fontSize,
+                              fontFamily: 'Manrope',
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                          TextSpan(
+                            text: ')',
+                            style: TextStyle(
+                              color: themeProvider.currentTheme.primaryColor,
+                              fontSize: fontSize,
+                              fontFamily: 'Manrope',
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          )
+        ],
       );
     } else {
-      return const Center(child: CircularProgressIndicator());
+      return ClearBlockMessages(
+        themeProvider: themeProvider,
+      );
     }
+  }
+}
+
+class ClearBlockMessages extends StatelessWidget {
+  final ThemeProvider themeProvider;
+  const ClearBlockMessages({
+    super.key,
+    required this.themeProvider,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.max,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Image(
+            image: AssetImage('assets/images/clear_block_messages.png'),
+            fit: BoxFit.cover,
+          ),
+          const SizedBox(
+            height: 8,
+          ),
+          Text(
+            'Oops.. there are no messages here yet \nWrite first!',
+            textAlign: TextAlign.center,
+            textScaleFactor: 1,
+            style: TextStyle(
+              color: themeProvider.currentTheme.primaryColor.withOpacity(0.5),
+              fontSize: 16,
+              fontFamily: 'Manrope',
+              fontWeight: FontWeight.w500,
+              height: 1.16,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -862,8 +984,10 @@ class _TextAndSendState extends State<TextAndSend> {
                     ),
                     decoration: InputDecoration(
                       hintText: widget.state == 'empty'
-                          ? 'Please log in or register'
-                          : 'Write message...',
+                          ? 'Please log in or register...'
+                          : widget.state == 'loaded'
+                              ? 'Write message...'
+                              : 'Loading...',
                       hintStyle: TextStyle(
                         color: themeProvider.currentTheme.primaryColor
                             .withOpacity(0.5),
@@ -906,6 +1030,10 @@ class _TextAndSendState extends State<TextAndSend> {
                     final message = messageController.text;
                     if (message.isNotEmpty && widget.state == 'loaded') {
                       _sendMessage(message);
+                      blockMessageStateKey.currentState!._controller.animateTo(
+                          0.0,
+                          duration: const Duration(milliseconds: 500),
+                          curve: Curves.linear);
                       messageController.clear();
                     }
                   },

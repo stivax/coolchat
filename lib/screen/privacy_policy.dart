@@ -27,6 +27,7 @@ class PrivacyPolicy extends StatelessWidget {
         child: Consumer<ThemeProvider>(
           builder: (context, themeProvider, child) {
             return Scaffold(
+              backgroundColor: themeProvider.currentTheme.primaryColorDark,
               appBar: MyAppBar(),
               body: Container(
                 padding: const EdgeInsets.all(16),

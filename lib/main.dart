@@ -101,7 +101,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     _accountProvider.addListener(_onAccountChange);
     startListenSocket();
     _timerCheckAndRefreshListenWebsocket =
-        Timer.periodic(const Duration(seconds: 10), (timer) {
+        Timer.periodic(const Duration(seconds: 15), (timer) {
       print('timer ${timer.isActive.toString()}');
       if (_accountProvider.isLoginProvider && _messageSubscription == null) {
         print('timer listenSocket()');
@@ -162,14 +162,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     if ((_messageSubscription != null && _messageSubscription!.isPaused) ||
         _messageSubscription == null) {
       print('start listen global socket');
-      _messageSubscription?.cancel();
       _messageSubscription = messageProvider!.messagesStream.listen(
         (message) async {
           dynamic jsonMessage = jsonDecode(message);
           final messagePush = MessagePrivatPush.fromJson(jsonMessage);
           print(messagePush.messageId);
           MessagePrivatePushContainer.addObject(messagePush);
-          print(MessagePrivatePushContainer.viewSet().length);
           MessagePrivatePushContainer.removeOldObjects();
         },
         onDone: () {

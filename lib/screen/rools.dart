@@ -55,19 +55,19 @@ class RoolsOfChat extends StatelessWidget {
                           true),
                       pointRools(
                           'assets/images/rools02.png',
-                          'Avoid spam and flooding.',
+                          'Avoid spam and flooding. ',
                           'Do not send many messages at once, do not write unrelated or unnecessary texts.',
                           themeProvider,
                           false),
                       pointRools(
                           'assets/images/rools03.png',
-                          'Do not use caps lock or lots of punctuation.',
+                          'Do not use caps lock or lots of punctuation. ',
                           'It can look like yelling or being overly emotional.',
                           themeProvider,
                           true),
                       pointRools(
                           'assets/images/rools04.png',
-                          'Avoid political and religious discussions unless it is the topic of the chat.',
+                          'Avoid political and religious discussions unless it is the topic of the chat. ',
                           'Such topics can cause conflicts and misunderstandings.',
                           themeProvider,
                           false),
@@ -91,7 +91,7 @@ class RoolsOfChat extends StatelessWidget {
                           true),
                       pointRools(
                           'assets/images/rools08.png',
-                          'Do not post unnatural or false information.',
+                          'Do not post unnatural or false information. ',
                           'Avoid spreading myths, deception or false information.',
                           themeProvider,
                           false),
