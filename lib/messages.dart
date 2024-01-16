@@ -207,6 +207,7 @@ class TheirMessege extends StatelessWidget {
                                     ? Container()
                                     : Text(
                                         userName,
+                                        textScaler: TextScaler.noScaling,
                                         style: TextStyle(
                                           color: themeProvider
                                               .currentTheme.primaryColor,
@@ -225,6 +226,7 @@ class TheirMessege extends StatelessWidget {
                                 opacity: 0.50,
                                 child: Text(
                                   createdAt,
+                                  textScaler: TextScaler.noScaling,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color:
@@ -330,6 +332,7 @@ class TheirMessege extends StatelessWidget {
                                         children: [
                                           Text(
                                             vote.toString(),
+                                            textScaler: TextScaler.noScaling,
                                             style: TextStyle(
                                               color: themeProvider
                                                   .currentTheme.primaryColor,
@@ -423,6 +426,7 @@ class MyMessege extends StatelessWidget {
                                 opacity: 0.50,
                                 child: Text(
                                   createdAt,
+                                  textScaler: TextScaler.noScaling,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color:
@@ -442,6 +446,7 @@ class MyMessege extends StatelessWidget {
                                       alignment: Alignment.centerRight,
                                       child: Text(
                                         userName,
+                                        textScaler: TextScaler.noScaling,
                                         style: TextStyle(
                                           color: themeProvider
                                               .currentTheme.primaryColor,
@@ -545,6 +550,7 @@ class MyMessege extends StatelessWidget {
                                         children: [
                                           Text(
                                             vote.toString(),
+                                            textScaler: TextScaler.noScaling,
                                             style: TextStyle(
                                               color: themeProvider
                                                   .currentTheme.primaryColor,

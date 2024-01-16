@@ -21,6 +21,9 @@ class AppColors {
   static const Color decorElementLight1 = Color(0xFFF5FBFF);
   static const Color decorElementLight2 = Color(0xFF01497A);
   static const Color decorElementLight3 = Color(0x4C024A7A);
+
+  static const Color redDark = Color(0xFFE02849);
+  static const Color redLight = Color(0xFFC6000F);
 }
 
 final lightTheme = ThemeData(
@@ -32,6 +35,7 @@ final lightTheme = ThemeData(
   cardColor: AppColors.decorElementLight3,
   highlightColor: AppColors.decorElementLight1,
   primaryColor: AppColors.textDark,
+  splashColor: AppColors.redLight,
 );
 
 final darkTheme = ThemeData(
@@ -43,4 +47,5 @@ final darkTheme = ThemeData(
   cardColor: AppColors.decorElementDark3,
   highlightColor: AppColors.decorElementLight2,
   primaryColor: AppColors.textLight,
+  splashColor: AppColors.redDark,
 );

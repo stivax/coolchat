@@ -338,7 +338,7 @@ class _ChatListWidgetState extends State<ChatListWidget> {
                     children: [
                       Text(
                         'Choose rooms for\ncommunication',
-                        textScaler: const TextScaler.linear(0.97),
+                        textScaler: TextScaler.noScaling,
                         style: TextStyle(
                           color: themeProvider.currentTheme.primaryColor,
                           fontSize: 24,
@@ -402,7 +402,7 @@ class HeaderWidget extends StatelessWidget {
             padding: const EdgeInsets.only(left: 20, right: 20),
             child: Text(
               'Welcome every\ntourist to Teamchat',
-              textScaleFactor: 0.97,
+              textScaler: TextScaler.noScaling,
               style: TextStyle(
                 color: const Color(0xFFF5FBFF),
                 fontSize: screenWidth * 0.095,
@@ -417,7 +417,7 @@ class HeaderWidget extends StatelessWidget {
                 const EdgeInsets.only(left: 20, bottom: 20, top: 10, right: 20),
             child: Text(
               'Chat about a wide variety of tourist equipment.\nCommunicate, get good advice and choose!',
-              textScaleFactor: 0.97,
+              textScaler: TextScaler.noScaling,
               style: TextStyle(
                 color: const Color(0xFFF5FBFF),
                 fontSize: screenWidth * 0.042,

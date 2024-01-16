@@ -3,20 +3,20 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:beholder_flutter/beholder_flutter.dart';
+import 'package:connectivity/connectivity.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:marquee/marquee.dart';
+import 'package:provider/provider.dart';
+
 import 'package:coolchat/bloc/token_blok.dart';
-import 'package:coolchat/model/token.dart';
 import 'package:coolchat/server/server.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
 import 'package:coolchat/servises/token_repository.dart';
 import 'package:coolchat/widget/write.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:http/http.dart' as http;
-import 'package:marquee/marquee.dart';
-import 'package:provider/provider.dart';
-import 'package:connectivity/connectivity.dart';
 
 import '../account.dart';
+import '../beholder/scroll_chat_controll.dart';
 import '../bloc/token_event.dart';
 import '../bloc/token_state.dart';
 import '../login_popup.dart';
@@ -27,7 +27,6 @@ import '../message_provider.dart';
 import '../messages.dart';
 import '../my_appbar.dart';
 import '../theme_provider.dart';
-import '../beholder/scroll_chat_controll.dart';
 
 class MessageData {
   List<Messages> messages;
@@ -299,7 +298,9 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
   @override
   Widget build(BuildContext context) {
     var paddingTop = MediaQuery.of(context).padding.top;
-    var screenHeight = MediaQuery.of(context).size.height - 56 - paddingTop;
+    var paddingButton = MediaQuery.of(context).padding.bottom;
+    var screenHeight =
+        MediaQuery.of(context).size.height - 56 - paddingTop - paddingButton;
 
     return MaterialApp(
       home: Consumer<ThemeProvider>(
@@ -309,9 +310,10 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
               roomName: widget.topicName,
             ),
             body: Container(
+              alignment: Alignment.bottomCenter,
               height: screenHeight,
               padding: const EdgeInsets.only(
-                  left: 16, right: 16, top: 8, bottom: 16),
+                  left: 16, right: 16, top: 0, bottom: 16),
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
                   color: themeProvider.currentTheme.primaryColorDark),
@@ -332,7 +334,7 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
                                 setState(() {});
                               })),
                       SizedBox(
-                        height: (screenHeight - 248) * 1,
+                        height: (screenHeight - 250) * 1,
                         child: BlockMessages(
                           key: blockMessageStateKey,
                           checkContext: context,
@@ -580,7 +582,7 @@ class BlockMessages extends StatefulWidget {
 class _BlockMessagesState extends State<BlockMessages> {
   final List<Messages> _messages = [];
   bool showWrite = false;
-  final _controller = ScrollController();
+  final controller = ScrollController();
   bool showArrow = true;
   final scrollChatController = ScrollChatControll();
   late double screenWidth;
@@ -604,7 +606,7 @@ class _BlockMessagesState extends State<BlockMessages> {
 
   @override
   void dispose() {
-    _controller.dispose();
+    controller.dispose();
     super.dispose();
   }
 
@@ -676,22 +678,22 @@ class _BlockMessagesState extends State<BlockMessages> {
             ListView.builder(
               padding: const EdgeInsets.only(left: 10, right: 10),
               reverse: true,
-              controller: _controller,
+              controller: controller,
               itemCount: _cachedMessages.length,
               itemBuilder: (context, index) {
-                if (_controller.offset > 500 &&
+                if (controller.offset > 500 &&
                     !watch(scrollChatController.showArrow)) {
                   scrollChatController.clearNewMessagess();
                   scrollChatController.showingArrow();
-                } else if (_controller.offset < 500 &&
+                } else if (controller.offset < 500 &&
                     watch(scrollChatController.showArrow)) {
                   scrollChatController.showingArrow();
                   scrollChatController.clearNewMessagess();
                 }
-                if (countNewMessages && _controller.offset > 500) {
+                if (countNewMessages && controller.offset > 500) {
                   countNewMessages = !countNewMessages;
                   scrollChatController.addNewMessage();
-                  _controller.jumpTo(_controller.offset + 82);
+                  controller.jumpTo(controller.offset + 82);
                 }
                 return _cachedMessages[index];
               },
@@ -704,7 +706,7 @@ class _BlockMessagesState extends State<BlockMessages> {
                         onPressed: () {
                           scrollChatController.showingArrow();
                           scrollChatController.clearNewMessagess();
-                          _controller.animateTo(0.0,
+                          controller.animateTo(0.0,
                               duration: const Duration(milliseconds: 500),
                               curve: Curves.linear);
                         },
@@ -792,38 +794,33 @@ class _BlockMessagesState extends State<BlockMessages> {
                     ),
                   ),
                   Expanded(
-                    child: Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(
-                            text:
-                                'In order to read new messages, be able to\nwrite and create your own rooms - REGISTER\n(',
-                            style: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor,
-                              fontSize: fontSize,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w400,
+                    child: MediaQuery(
+                      data: MediaQuery.of(context)
+                          .copyWith(textScaler: TextScaler.noScaling),
+                      child: Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text:
+                                  'In order to read new messages, be able to\nwrite and create your own rooms - REGISTER\nor LOG IN ',
+                              style: TextStyle(
+                                color: themeProvider.currentTheme.primaryColor,
+                                fontSize: fontSize,
+                                fontFamily: 'Manrope',
+                                fontWeight: FontWeight.w400,
+                              ),
                             ),
-                          ),
-                          TextSpan(
-                            text: 'button in the upper right corner',
-                            style: TextStyle(
-                              color: const Color(0xFFC6000F),
-                              fontSize: fontSize,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w400,
+                            TextSpan(
+                              text: '(button in the upper right corner)',
+                              style: TextStyle(
+                                color: themeProvider.currentTheme.splashColor,
+                                fontSize: fontSize,
+                                fontFamily: 'Manrope',
+                                fontWeight: FontWeight.w400,
+                              ),
                             ),
-                          ),
-                          TextSpan(
-                            text: ')',
-                            style: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor,
-                              fontSize: fontSize,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -866,7 +863,7 @@ class ClearBlockMessages extends StatelessWidget {
           Text(
             'Oops.. there are no messages here yet \nWrite first!',
             textAlign: TextAlign.center,
-            textScaleFactor: 1,
+            textScaler: TextScaler.noScaling,
             style: TextStyle(
               color: themeProvider.currentTheme.primaryColor.withOpacity(0.5),
               fontSize: 16,
@@ -970,55 +967,61 @@ class _TextAndSendState extends State<TextAndSend> {
                       ),
                     ],
                   ),
-                  child: TextFormField(
-                    showCursor: true,
-                    cursorColor: themeProvider.currentTheme.shadowColor,
-                    controller: messageController,
-                    textCapitalization: TextCapitalization.sentences,
-                    focusNode: _textFieldFocusNode,
-                    style: TextStyle(
-                      color: themeProvider.currentTheme.primaryColor,
-                      fontSize: 16,
-                      fontFamily: 'Manrope',
-                      fontWeight: FontWeight.w400,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: widget.state == 'empty'
-                          ? 'Please log in or register...'
-                          : widget.state == 'loaded'
-                              ? 'Write message...'
-                              : 'Loading...',
-                      hintStyle: TextStyle(
-                        color: themeProvider.currentTheme.primaryColor
-                            .withOpacity(0.5),
+                  child: MediaQuery(
+                    data: MediaQuery.of(context)
+                        .copyWith(textScaler: TextScaler.noScaling),
+                    child: TextFormField(
+                      showCursor: true,
+                      cursorColor: themeProvider.currentTheme.shadowColor,
+                      controller: messageController,
+                      textCapitalization: TextCapitalization.sentences,
+                      focusNode: _textFieldFocusNode,
+                      style: TextStyle(
+                        color: themeProvider.currentTheme.primaryColor,
                         fontSize: 16,
                         fontFamily: 'Manrope',
                         fontWeight: FontWeight.w400,
                       ),
-                      border: InputBorder.none,
+                      decoration: InputDecoration(
+                        contentPadding:
+                            const EdgeInsets.symmetric(vertical: 14),
+                        hintText: widget.state == 'empty'
+                            ? 'Please log in or register...'
+                            : widget.state == 'loaded'
+                                ? 'Write message...'
+                                : 'Loading...',
+                        hintStyle: TextStyle(
+                          color: themeProvider.currentTheme.primaryColor
+                              .withOpacity(0.5),
+                          fontSize: 16,
+                          fontFamily: 'Manrope',
+                          fontWeight: FontWeight.w400,
+                        ),
+                        border: InputBorder.none,
+                      ),
+                      maxLines: null,
+                      onTap: () async {
+                        if (widget.state == 'empty' &&
+                            widget.account.email.isEmpty) {
+                          FocusScope.of(context).unfocus();
+                          await showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return LoginDialog();
+                            },
+                          );
+                          final TokenBloc tokenBloc = context.read<TokenBloc>();
+                          tokenBloc
+                              .add(TokenLoadEvent(roomName: widget.topicName));
+                        } else {
+                          FocusScope.of(context)
+                              .requestFocus(_textFieldFocusNode);
+                        }
+                      },
+                      onChanged: (_) {
+                        _sendStatus();
+                      },
                     ),
-                    maxLines: null,
-                    onTap: () async {
-                      if (widget.state == 'empty' &&
-                          widget.account.email.isEmpty) {
-                        FocusScope.of(context).unfocus();
-                        await showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return LoginDialog();
-                          },
-                        );
-                        final TokenBloc tokenBloc = context.read<TokenBloc>();
-                        tokenBloc
-                            .add(TokenLoadEvent(roomName: widget.topicName));
-                      } else {
-                        FocusScope.of(context)
-                            .requestFocus(_textFieldFocusNode);
-                      }
-                    },
-                    onChanged: (_) {
-                      _sendStatus();
-                    },
                   ),
                 ),
               ),
@@ -1026,19 +1029,21 @@ class _TextAndSendState extends State<TextAndSend> {
               Expanded(
                 flex: 1,
                 child: GestureDetector(
-                  onTap: () {
+                  onTap: () async {
                     final message = messageController.text;
                     if (message.isNotEmpty && widget.state == 'loaded') {
                       _sendMessage(message);
-                      blockMessageStateKey.currentState!._controller.animateTo(
-                          0.0,
-                          duration: const Duration(milliseconds: 500),
-                          curve: Curves.linear);
                       messageController.clear();
+                      await Future.delayed(const Duration(milliseconds: 500));
+                      blockMessageStateKey.currentState!.controller.jumpTo(0.0);
+                      blockMessageStateKey.currentState!.scrollChatController
+                          .showingArrow();
+                      blockMessageStateKey.currentState!.scrollChatController
+                          .clearNewMessagess();
                     }
                   },
                   child: Container(
-                    padding: const EdgeInsets.only(top: 14, bottom: 14),
+                    padding: const EdgeInsets.only(top: 16, bottom: 16),
                     alignment: Alignment.center,
                     decoration: ShapeDecoration(
                       color: themeProvider.currentTheme.shadowColor,
@@ -1056,7 +1061,7 @@ class _TextAndSendState extends State<TextAndSend> {
                     ),
                     child: const Text(
                       'Send',
-                      textScaleFactor: 1,
+                      textScaler: TextScaler.noScaling,
                       style: TextStyle(
                         color: Color(0xFFF5FBFF),
                         fontSize: 16,

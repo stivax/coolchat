@@ -1,20 +1,15 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:coolchat/bloc/token_blok.dart';
-import 'package:coolchat/bloc/token_event.dart';
+import 'package:coolchat/password_recovery.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 
-import 'main.dart';
-import 'servises/token_repository.dart';
 import 'theme_provider.dart';
 import 'account.dart';
 import 'register_popup.dart';
-import 'add_room_popup.dart';
 
 class LoginDialog extends StatefulWidget {
-  LoginDialog({super.key});
+  const LoginDialog({super.key});
   @override
   _LoginDialogState createState() => _LoginDialogState();
 }
@@ -118,108 +113,39 @@ class _LoginDialogState extends State<LoginDialog> {
                       ),
                     ),
                     // email form
-                    TextFormField(
-                      keyboardType: TextInputType.emailAddress,
-                      validator: _emailValidate,
-                      autofocus: true,
-                      focusNode: _emailFocus,
-                      controller: _emailController,
-                      onTapOutside: (_) {
-                        FocusScope.of(context).unfocus();
-                      },
-                      onFieldSubmitted: (_) {
-                        _fieldFocusChange(context, _emailFocus, _passFocus);
-                      },
-                      style: TextStyle(
-                        color: themeProvider.currentTheme.primaryColor,
-                        fontSize: 16,
-                        fontFamily: 'Manrope',
-                        fontWeight: FontWeight.w400,
-                      ),
-                      decoration: InputDecoration(
-                        helperText: 'E-mail format xxxxx@xxx.xx',
-                        helperStyle: TextStyle(
-                          color: themeProvider.currentTheme.primaryColor
-                              .withOpacity(0.5),
-                        ),
-                        suffixIcon: const Icon(Icons.person),
-                        counterStyle: TextStyle(
-                            color: themeProvider.currentTheme.primaryColor
-                                .withOpacity(0.5)),
-                        border: InputBorder.none,
-                        hintText: 'E-mail *',
-                        hintStyle: TextStyle(
-                            color: themeProvider.currentTheme.primaryColor
-                                .withOpacity(0.6)),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(10.0)),
-                          borderSide: BorderSide(
-                              width: 0.50,
-                              color: themeProvider.currentTheme.shadowColor),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(10.0)),
-                          borderSide: BorderSide(
-                              width: 0.50,
-                              color: themeProvider.currentTheme.shadowColor),
-                        ),
-                        errorBorder: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                          borderSide:
-                              BorderSide(width: 0.50, color: Colors.red),
-                        ),
-                        focusedErrorBorder: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                          borderSide:
-                              BorderSide(width: 0.50, color: Colors.red),
-                        ),
-                      ),
-                    ),
-                    // password form
-                    Padding(
-                      padding: const EdgeInsets.only(top: 15, bottom: 5),
-                      child: Text(
-                        'Write your password',
+                    MediaQuery(
+                      data: MediaQuery.of(context)
+                          .copyWith(textScaler: TextScaler.noScaling),
+                      child: TextFormField(
+                        keyboardType: TextInputType.emailAddress,
+                        validator: _emailValidate,
+                        autofocus: true,
+                        focusNode: _emailFocus,
+                        controller: _emailController,
+                        onTapOutside: (_) {
+                          FocusScope.of(context).unfocus();
+                        },
+                        onFieldSubmitted: (_) {
+                          _fieldFocusChange(context, _emailFocus, _passFocus);
+                        },
                         style: TextStyle(
-                          color: themeProvider.currentTheme.primaryColor
-                              .withOpacity(0.9),
+                          color: themeProvider.currentTheme.primaryColor,
                           fontSize: 16,
                           fontFamily: 'Manrope',
                           fontWeight: FontWeight.w400,
                         ),
-                        textScaleFactor: 1,
-                      ),
-                    ),
-                    TextFormField(
-                      obscureText: _hidePass,
-                      maxLength: 8,
-                      focusNode: _passFocus,
-                      controller: _passwordController,
-                      onTapOutside: (_) {
-                        FocusScope.of(context).unfocus();
-                      },
-                      onFieldSubmitted: (_) {
-                        FocusScope.of(context).unfocus();
-                      },
-                      style: TextStyle(
-                        color: themeProvider.currentTheme.primaryColor,
-                        fontSize: 16,
-                        fontFamily: 'Manrope',
-                        fontWeight: FontWeight.w400,
-                      ),
-                      decoration: InputDecoration(
-                          helperText: 'Remember your password',
+                        decoration: InputDecoration(
+                          helperText: 'E-mail format xxxxx@xxx.xx',
                           helperStyle: TextStyle(
                             color: themeProvider.currentTheme.primaryColor
                                 .withOpacity(0.5),
                           ),
+                          suffixIcon: const Icon(Icons.person),
                           counterStyle: TextStyle(
                               color: themeProvider.currentTheme.primaryColor
                                   .withOpacity(0.5)),
                           border: InputBorder.none,
-                          hintText: 'Password *',
+                          hintText: 'E-mail *',
                           hintStyle: TextStyle(
                               color: themeProvider.currentTheme.primaryColor
                                   .withOpacity(0.6)),
@@ -249,17 +175,124 @@ class _LoginDialogState extends State<LoginDialog> {
                             borderSide:
                                 BorderSide(width: 0.50, color: Colors.red),
                           ),
-                          suffixIcon: IconButton(
-                            icon: Icon(_hidePass
-                                ? Icons.visibility
-                                : Icons.visibility_off),
-                            onPressed: () {
-                              setState(() {
-                                _hidePass = !_hidePass;
-                              });
-                            },
-                          )),
+                        ),
+                      ),
                     ),
+                    // password form
+                    Padding(
+                      padding: const EdgeInsets.only(top: 15, bottom: 5),
+                      child: Text(
+                        'Write your password',
+                        style: TextStyle(
+                          color: themeProvider.currentTheme.primaryColor
+                              .withOpacity(0.9),
+                          fontSize: 16,
+                          fontFamily: 'Manrope',
+                          fontWeight: FontWeight.w400,
+                        ),
+                        textScaler: TextScaler.noScaling,
+                      ),
+                    ),
+                    MediaQuery(
+                      data: MediaQuery.of(context)
+                          .copyWith(textScaler: TextScaler.noScaling),
+                      child: TextFormField(
+                        obscureText: _hidePass,
+                        maxLength: 8,
+                        focusNode: _passFocus,
+                        controller: _passwordController,
+                        onTapOutside: (_) {
+                          FocusScope.of(context).unfocus();
+                        },
+                        onFieldSubmitted: (_) {
+                          FocusScope.of(context).unfocus();
+                        },
+                        style: TextStyle(
+                          color: themeProvider.currentTheme.primaryColor,
+                          fontSize: 16,
+                          fontFamily: 'Manrope',
+                          fontWeight: FontWeight.w400,
+                        ),
+                        decoration: InputDecoration(
+                            helperText: 'Remember your password',
+                            helperStyle: TextStyle(
+                              color: themeProvider.currentTheme.primaryColor
+                                  .withOpacity(0.5),
+                            ),
+                            counterStyle: TextStyle(
+                                color: themeProvider.currentTheme.primaryColor
+                                    .withOpacity(0.5)),
+                            border: InputBorder.none,
+                            hintText: 'Password *',
+                            hintStyle: TextStyle(
+                                color: themeProvider.currentTheme.primaryColor
+                                    .withOpacity(0.6)),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius:
+                                  const BorderRadius.all(Radius.circular(10.0)),
+                              borderSide: BorderSide(
+                                  width: 0.50,
+                                  color:
+                                      themeProvider.currentTheme.shadowColor),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius:
+                                  const BorderRadius.all(Radius.circular(10.0)),
+                              borderSide: BorderSide(
+                                  width: 0.50,
+                                  color:
+                                      themeProvider.currentTheme.shadowColor),
+                            ),
+                            errorBorder: const OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(10.0)),
+                              borderSide:
+                                  BorderSide(width: 0.50, color: Colors.red),
+                            ),
+                            focusedErrorBorder: const OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(10.0)),
+                              borderSide:
+                                  BorderSide(width: 0.50, color: Colors.red),
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Icon(_hidePass
+                                  ? Icons.visibility
+                                  : Icons.visibility_off),
+                              onPressed: () {
+                                setState(() {
+                                  _hidePass = !_hidePass;
+                                });
+                              },
+                            )),
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () async {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return const PasswordRecoveryDialog();
+                              },
+                            );
+                          },
+                          child: Text(
+                            'Forgot password',
+                            textScaler: TextScaler.noScaling,
+                            textAlign: TextAlign.right,
+                            style: TextStyle(
+                              color: themeProvider.currentTheme.shadowColor,
+                              fontSize: 14,
+                              fontFamily: 'Manrope',
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
                   ],
                 ),
               ),
@@ -267,7 +300,10 @@ class _LoginDialogState extends State<LoginDialog> {
                 top: -16.0,
                 right: -16.0,
                 child: IconButton(
-                  icon: Icon(Icons.close),
+                  icon: Icon(
+                    Icons.close,
+                    color: themeProvider.currentTheme.shadowColor,
+                  ),
                   onPressed: () {
                     Navigator.of(context).pop(); // Close the AlertDialog
                   },
