@@ -174,18 +174,20 @@ class RoomPrivate extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Text(
-                              recipientName,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                color: Color(0xFFF5FBFF),
-                                fontSize: 12,
-                                fontFamily: 'Manrope',
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
                             Expanded(
-                              child: Container(width: double.infinity),
+                              child: Container(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  recipientName,
+                                  textAlign: TextAlign.left,
+                                  style: const TextStyle(
+                                    color: Color(0xFFF5FBFF),
+                                    fontSize: 12,
+                                    fontFamily: 'Manrope',
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              ),
                             ),
                             Icon(
                               Icons.mail,

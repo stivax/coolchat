@@ -2,6 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:connectivity/connectivity.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:http/http.dart' as http;
+import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
+
 import 'package:coolchat/animation_start.dart';
 import 'package:coolchat/message_provider.dart';
 import 'package:coolchat/model/message_privat_push.dart';
@@ -10,20 +17,14 @@ import 'package:coolchat/servises/account_provider.dart';
 import 'package:coolchat/servises/message_private_push_container.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
 import 'package:coolchat/servises/token_repository.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:provider/provider.dart';
-import 'package:http/http.dart' as http;
-import 'package:permission_handler/permission_handler.dart';
 
 import 'account.dart';
 import 'bloc/token_blok.dart';
 import 'menu.dart';
 import 'my_appbar.dart';
-import 'theme_provider.dart';
 import 'rooms.dart';
 import 'servises/favorite_room_provider.dart';
+import 'theme_provider.dart';
 
 void main() {
   runApp(
@@ -88,7 +89,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   bool scale = true;
   bool isListening = false;
   StreamSubscription? _messageSubscription;
-  late StreamSubscription<ConnectivityResult> _connectivitySubscription;
+  StreamSubscription<ConnectivityResult>? _connectivitySubscription;
   late AccountProvider _accountProvider;
   late Timer _timerCheckAndRefreshListenWebsocket;
 
@@ -119,7 +120,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     _accountProvider.removeListener(_onAccountChange);
     messageProvider?.channel.sink.close();
     _messageSubscription?.cancel();
-    _connectivitySubscription.cancel();
+    _connectivitySubscription?.cancel();
     _timerCheckAndRefreshListenWebsocket.cancel();
     super.dispose();
   }
@@ -420,7 +421,7 @@ class HeaderWidget extends StatelessWidget {
               textScaler: TextScaler.noScaling,
               style: TextStyle(
                 color: const Color(0xFFF5FBFF),
-                fontSize: screenWidth * 0.042,
+                fontSize: screenWidth * 0.038,
                 fontFamily: 'Manrope',
                 fontWeight: FontWeight.w400,
               ),
