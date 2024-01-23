@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import 'screen/common_chat.dart';
-import 'main.dart';
 import 'message_provider.dart';
 import 'server/server.dart';
 import 'theme_provider.dart';
@@ -60,7 +59,8 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
 
   Future<MessageProvider> socketConnect() async {
     const server = Server.server;
-    Map<dynamic, dynamic> token = myHomePageStateKey.currentState!.token;
+    final acc = await readAccountFuture();
+    Map<dynamic, dynamic> token = await loginProcess(acc.email, acc.password);
     MessageProvider messageProvider = await MessageProvider.create(
         'wss://$server/ws/${_nameRoomController.text}?token=${token["access_token"]}');
     return messageProvider;

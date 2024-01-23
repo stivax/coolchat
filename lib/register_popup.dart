@@ -898,7 +898,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
       r'^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!])(?!.*\s).{4,8}$',
     );
     if (!passRegExp.hasMatch(_passwordController.text)) {
-      return 'Please enter a password with at least one digit (0-9), one lowercase letter (a-z), one uppercase letter (A-Z), one special character from @#\$%^&+=!, no spaces, and a length between 4 and 8 characters.';
+      return 'Use at least one: (0-9), (a-z),\n(A-Z), (@#\$%^&+=!) length 4-8';
     } else if (_passwordController.text != _confirmPasswordController.text) {
       return 'Password does not much';
     } else {

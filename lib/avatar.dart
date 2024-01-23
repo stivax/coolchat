@@ -116,7 +116,10 @@ class AvatarMember extends StatelessWidget {
                 contextAvatarMember,
                 MaterialPageRoute(
                     builder: (contextAvatarMember) => PrivateChatScreen(
-                        receiverName: name, messageProvider: messageProvider)),
+                          receiverName: name,
+                          messageProvider: messageProvider,
+                          recipientId: account.id,
+                        )),
               );
             }
           },

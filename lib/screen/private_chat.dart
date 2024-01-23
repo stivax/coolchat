@@ -29,10 +29,14 @@ final blockMessageStateKey = GlobalKey<_BlockMessagesState>();
 class PrivateChatScreen extends StatefulWidget {
   final String receiverName;
   final MessageProvider messageProvider;
+  final int recipientId;
   MessageData messagePrivatData;
 
   PrivateChatScreen(
-      {super.key, required this.receiverName, required this.messageProvider})
+      {super.key,
+      required this.receiverName,
+      required this.messageProvider,
+      required this.recipientId})
       : messagePrivatData = MessageData({}, 0, '[]');
 
   @override
@@ -41,6 +45,7 @@ class PrivateChatScreen extends StatefulWidget {
 
 class _PrivateChatScreenState extends State<PrivateChatScreen> {
   bool isListening = false;
+  bool emptyMessages = true;
   StreamSubscription? _messageSubscription;
   late StreamSubscription<ConnectivityResult> _connectivitySubscription;
 
@@ -66,22 +71,31 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
   }
 
   void messageListen(MessageProvider messageProvider) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (!isListening || _messageSubscription!.isPaused) {
+    //await Future.delayed(const Duration(milliseconds: 500));
+    if (!isListening) {
+      //|| _messageSubscription!.isPaused) {
       isListening = true;
       if (!messageProvider.isConnected) {
         await messageProvider.reconnect();
         await messageProvider.channel.ready;
       }
       print('listen private messages begin');
-      clearMessages();
-      _messageSubscription?.cancel();
+      //clearMessages();
+      //_messageSubscription?.cancel();
+      print('empty messages');
+      //setState(() {
+      emptyMessages = false;
+      //});
       _messageSubscription = messageProvider.messagesStream.listen(
         (event) async {
           print(event);
           if (event.toString().startsWith('{"created_at"')) {
             formMessage(event.toString());
-          } else {}
+          }
+          if (event.toString().startsWith('{"message":"Vote posted "}')) {
+            print('clear');
+            clearMessages();
+          }
         },
         onDone: () {
           print('onDone');
@@ -110,8 +124,8 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
 
   void formMessage(String responseBody) {
     dynamic jsonMessage = jsonDecode(responseBody);
-    MessagesPrivat message = MessagesPrivat.fromJsonMessage(
-        jsonMessage, widget.messagePrivatData.previousMemberID);
+    MessagesPrivat message = MessagesPrivat.fromJsonMessage(jsonMessage,
+        widget.messagePrivatData.previousMemberID, widget.recipientId);
     widget.messagePrivatData.previousMemberID = message.senderId.toInt();
     blockMessageStateKey.currentState!._messages.add(message);
     blockMessageStateKey.currentState!.widget.updateState();
@@ -119,6 +133,7 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
 
   void clearMessages() {
     blockMessageStateKey.currentState!._messages.clear();
+    blockMessageStateKey.currentState!.widget.updateState();
   }
 
   @override
@@ -138,6 +153,7 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
         topicName: widget.receiverName,
         messageProvider: widget.messageProvider,
         messageData: widget.messagePrivatData,
+        emptyMessages: emptyMessages,
       ),
     );
   }
@@ -147,11 +163,14 @@ class CommonChatScreen extends StatefulWidget {
   final String topicName;
   final MessageProvider messageProvider;
   MessageData messageData;
+  bool emptyMessages;
+
   CommonChatScreen(
       {super.key,
       required this.topicName,
       required this.messageProvider,
-      required this.messageData});
+      required this.messageData,
+      required this.emptyMessages});
 
   @override
   State<CommonChatScreen> createState() => _CommonChatScreenState();
@@ -170,44 +189,43 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
     var paddingTop = MediaQuery.of(context).padding.top;
     var screenHeight = MediaQuery.of(context).size.height - 56 - paddingTop;
 
-    return MaterialApp(
-      home: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, child) {
-          return Scaffold(
-            appBar: MyAppBar(),
-            body: Container(
-              height: screenHeight,
-              padding: const EdgeInsets.only(
-                  left: 16, right: 16, top: 8, bottom: 16),
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
-                  color: themeProvider.currentTheme.primaryColorDark),
-              child: SingleChildScrollView(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                          height: 27,
-                          child: TopicName(topicName: widget.topicName)),
-                      SizedBox(
-                        height: (screenHeight - 108) * 1,
-                        child: BlockMessages(
-                            key: blockMessageStateKey,
-                            messageData: widget.messageData,
-                            updateState: () {
-                              setState(() {});
-                            }),
-                      ),
-                      TextAndSend(
-                        topicName: widget.topicName,
-                        messageProvider: widget.messageProvider,
-                      ),
-                    ]),
-              ),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return Scaffold(
+          appBar: MyAppBar(),
+          body: Container(
+            height: screenHeight,
+            padding:
+                const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 16),
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+                color: themeProvider.currentTheme.primaryColorDark),
+            child: SingleChildScrollView(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                        height: 27,
+                        child: TopicName(topicName: widget.topicName)),
+                    SizedBox(
+                      height: (screenHeight - 108) * 1,
+                      child: BlockMessages(
+                          key: blockMessageStateKey,
+                          messageData: widget.messageData,
+                          emptyMessages: widget.emptyMessages,
+                          updateState: () {
+                            setState(() {});
+                          }),
+                    ),
+                    TextAndSend(
+                      topicName: widget.topicName,
+                      messageProvider: widget.messageProvider,
+                    ),
+                  ]),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -306,10 +324,12 @@ class _TopicNameState extends State<TopicName> {
 class BlockMessages extends StatefulWidget {
   final MessageData messageData;
   final Function updateState;
+  final bool emptyMessages;
   const BlockMessages({
     Key? key,
     required this.messageData,
     required this.updateState,
+    required this.emptyMessages,
   }) : super(key: key);
 
   @override
@@ -350,7 +370,12 @@ class _BlockMessagesState extends State<BlockMessages> {
                   )
                 ],
               ),
-              child: messageView(themeProvider),
+              child: widget.emptyMessages
+                  ? Center(
+                      child: CircularProgressIndicator(
+                      color: themeProvider.currentTheme.shadowColor,
+                    ))
+                  : messageView(themeProvider),
             ));
       },
     );
@@ -482,34 +507,39 @@ class _TextAndSendState extends State<TextAndSend> {
                       ),
                     ],
                   ),
-                  child: TextFormField(
-                    showCursor: true,
-                    cursorColor: themeProvider.currentTheme.shadowColor,
-                    controller: messageController,
-                    textCapitalization: TextCapitalization.sentences,
-                    focusNode: _textFieldFocusNode,
-                    style: TextStyle(
-                      color: themeProvider.currentTheme.primaryColor,
-                      fontSize: 16,
-                      fontFamily: 'Manrope',
-                      fontWeight: FontWeight.w400,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'Write message...',
-                      hintStyle: TextStyle(
-                        color: themeProvider.currentTheme.primaryColor
-                            .withOpacity(0.5),
+                  child: MediaQuery(
+                    data: MediaQuery.of(context)
+                        .copyWith(textScaler: TextScaler.noScaling),
+                    child: TextFormField(
+                      showCursor: true,
+                      cursorColor: themeProvider.currentTheme.shadowColor,
+                      controller: messageController,
+                      textCapitalization: TextCapitalization.sentences,
+                      focusNode: _textFieldFocusNode,
+                      style: TextStyle(
+                        color: themeProvider.currentTheme.primaryColor,
                         fontSize: 16,
                         fontFamily: 'Manrope',
                         fontWeight: FontWeight.w400,
                       ),
-                      border: InputBorder.none,
+                      decoration: InputDecoration(
+                        hintText: 'Write message...',
+                        hintStyle: TextStyle(
+                          color: themeProvider.currentTheme.primaryColor
+                              .withOpacity(0.5),
+                          fontSize: 16,
+                          fontFamily: 'Manrope',
+                          fontWeight: FontWeight.w400,
+                        ),
+                        border: InputBorder.none,
+                      ),
+                      maxLines: null,
+                      onTap: () {
+                        print(context.widget);
+                        FocusScope.of(context)
+                            .requestFocus(_textFieldFocusNode);
+                      },
                     ),
-                    maxLines: null,
-                    onTap: () {
-                      print(context.widget);
-                      FocusScope.of(context).requestFocus(_textFieldFocusNode);
-                    },
                   ),
                 ),
               ),

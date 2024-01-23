@@ -2,9 +2,7 @@ import 'dart:convert';
 
 import 'package:coolchat/server/server.dart';
 import 'package:coolchat/servises/account_provider.dart';
-import 'package:coolchat/servises/token_repository.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -213,7 +211,7 @@ showPopupLogOut(Account acc, TokenBloc tokenBloc, BuildContext context) async {
                     height: 250,
                     width: 260,
                     alignment: Alignment.bottomLeft,
-                    child: Image(
+                    child: const Image(
                       image: AssetImage('assets/images/sova.png'),
                       fit: BoxFit.fitHeight,
                     ),
@@ -288,12 +286,7 @@ showPopupLogOut(Account acc, TokenBloc tokenBloc, BuildContext context) async {
                               avatar: '',
                               id: 0),
                           context);
-                      Navigator.pop(context);
-                      Navigator.pop(context);
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => MyHomePage()));
+                      Navigator.popUntil(context, ModalRoute.withName('/'));
                     },
                   ),
                 )

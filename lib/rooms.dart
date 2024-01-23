@@ -3,6 +3,7 @@
 import 'dart:convert';
 
 import 'package:coolchat/add_room_popup.dart';
+import 'package:coolchat/servises/account_setting_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -11,34 +12,31 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'screen/common_chat.dart';
 import 'error_answer.dart';
 import 'login_popup.dart';
-import 'main.dart';
 import 'server/server.dart';
 import 'theme_provider.dart';
 import 'account.dart';
-import 'servises/favorite_room_provider.dart';
 
-final roomStateKey = GlobalKey<_RoomState>();
+class Room extends StatelessWidget {
+  final String name;
+  final int id;
+  final String createdAt;
+  final ImageProvider image;
+  final int countPeopleOnline;
+  final int countMessages;
+  final bool isFavorite;
+  final bool scale;
 
-class Room extends StatefulWidget {
-  String name;
-  int id;
-  String createdAt;
-  ImageProvider image;
-  int countPeopleOnline;
-  int countMessages;
-  bool isFavorite;
-  bool scale;
-
-  Room(
-      {super.key,
-      required this.name,
-      required this.id,
-      required this.createdAt,
-      required this.image,
-      required this.countPeopleOnline,
-      required this.countMessages,
-      required this.isFavorite,
-      required this.scale});
+  const Room({
+    super.key,
+    required this.name,
+    required this.id,
+    required this.createdAt,
+    required this.image,
+    required this.countPeopleOnline,
+    required this.countMessages,
+    required this.isFavorite,
+    required this.scale,
+  });
 
   static List<Room> fromJsonList(
       List<dynamic> jsonList, List<String> favoriteRoomList, bool scale) {
@@ -59,7 +57,7 @@ class Room extends StatefulWidget {
       ..add(Room(
         id: 999,
         name: 'Add room',
-        image: AssetImage('assets/images/add_room_dark.jpg'),
+        image: const AssetImage('assets/images/add_room_dark.jpg'),
         countPeopleOnline: 0,
         countMessages: 0,
         createdAt: '',
@@ -75,13 +73,9 @@ class Room extends StatefulWidget {
   }
 
   @override
-  State<Room> createState() => _RoomState();
-}
-
-class _RoomState extends State<Room> {
-  @override
   Widget build(BuildContext context) {
-    bool isFavorite = widget.isFavorite;
+    final _accountSettingProvider =
+        Provider.of<AccountSettingProvider>(context, listen: false);
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return Container(
@@ -92,7 +86,7 @@ class _RoomState extends State<Room> {
               BoxShadow(
                 color: themeProvider.currentTheme.primaryColorDark,
                 blurRadius: 0,
-                offset: Offset(1, 1),
+                offset: const Offset(1, 1),
                 spreadRadius: 0,
               )
             ],
@@ -108,17 +102,17 @@ class _RoomState extends State<Room> {
                   onTap: () async {
                     const server = Server.server;
                     final account = await readAccountFuture();
-                    widget.id == 999
+                    id == 999
                         ? addRoomDialog(context)
                         : Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => ChatScreen(
-                                topicName: widget.name,
-                                id: widget.id,
+                                topicName: name,
+                                id: id,
                                 server: server,
                                 account: account,
-                                hasMessage: widget.countMessages > 0,
+                                hasMessage: countMessages > 0,
                               ),
                             ),
                           );
@@ -128,8 +122,8 @@ class _RoomState extends State<Room> {
                     alignment: Alignment.bottomCenter,
                     decoration: ShapeDecoration(
                       image: DecorationImage(
-                        image: widget.id != 999
-                            ? widget.image
+                        image: id != 999
+                            ? image
                             : themeProvider.isLightMode
                                 ? const AssetImage(
                                     'assets/images/add_room_light.jpg')
@@ -150,14 +144,14 @@ class _RoomState extends State<Room> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        widget.id == 999
+                        id == 999
                             ? Image(
                                 image: themeProvider.isLightMode
                                     ? const AssetImage(
                                         'assets/images/add_light.png')
                                     : const AssetImage(
                                         'assets/images/add_dark.png'),
-                                height: widget.scale ? 28 : 14,
+                                height: scale ? 28 : 14,
                               )
                             : Container(),
                         Container(
@@ -166,13 +160,13 @@ class _RoomState extends State<Room> {
                           decoration: BoxDecoration(
                               color: const Color(0xFF0F1E28).withOpacity(0.40)),
                           child: Text(
-                            widget.name,
+                            name,
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: widget.id == 999
+                              color: id == 999
                                   ? themeProvider.currentTheme.primaryColor
                                   : const Color(0xFFF5FBFF),
-                              fontSize: widget.scale ? 14 : 10,
+                              fontSize: scale ? 14 : 10,
                               fontFamily: 'Manrope',
                               fontWeight: FontWeight.w600,
                               height: 1.30,
@@ -187,7 +181,7 @@ class _RoomState extends State<Room> {
               Expanded(
                 flex: 1,
                 child: Container(
-                  padding: widget.scale
+                  padding: scale
                       ? const EdgeInsets.only(
                           right: 8, left: 8, top: 6, bottom: 6)
                       : const EdgeInsets.only(
@@ -205,7 +199,7 @@ class _RoomState extends State<Room> {
                       ),
                     ),
                   ),
-                  child: widget.id == 999
+                  child: id == 999
                       ? Container()
                       : Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -213,19 +207,14 @@ class _RoomState extends State<Room> {
                             FittedBox(
                               fit: BoxFit.contain,
                               child: GestureDetector(
-                                onTap: () {
-                                  widget.isFavorite = !isFavorite;
+                                onTap: () async {
                                   if (isFavorite) {
-                                    FavoriteList.removeRoomIntoFavorite(
-                                        widget.name);
+                                    await _accountSettingProvider
+                                        .removeRoomIntoFavorite(name, context);
                                   } else {
-                                    FavoriteList.addRoomToFavorite(widget.name);
+                                    await _accountSettingProvider
+                                        .addRoomToFavorite(name, context);
                                   }
-                                  setState(() {
-                                    isFavorite = isFavorite ? false : true;
-                                  });
-                                  myHomePageStateKey.currentState!
-                                      .fetchData(Server.server);
                                 },
                                 child: Icon(
                                   Icons.favorite,
@@ -247,7 +236,7 @@ class _RoomState extends State<Room> {
                                   ),
                                   const SizedBox(width: 2),
                                   Text(
-                                    widget.countMessages.toString(),
+                                    countMessages.toString(),
                                     textAlign: TextAlign.center,
                                     style: const TextStyle(
                                       color: Color(0xFFF5FBFF),
@@ -265,7 +254,7 @@ class _RoomState extends State<Room> {
                                   ),
                                   const SizedBox(width: 2),
                                   Text(
-                                    widget.countPeopleOnline.toString(),
+                                    countPeopleOnline.toString(),
                                     textAlign: TextAlign.center,
                                     style: const TextStyle(
                                       color: Color(0xFFF5FBFF),

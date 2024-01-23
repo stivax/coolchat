@@ -10,7 +10,6 @@ import 'package:marquee/marquee.dart';
 import 'package:provider/provider.dart';
 
 import 'package:coolchat/bloc/token_blok.dart';
-import 'package:coolchat/server/server.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
 import 'package:coolchat/servises/token_repository.dart';
 import 'package:coolchat/widget/write.dart';
@@ -20,7 +19,6 @@ import '../beholder/scroll_chat_controll.dart';
 import '../bloc/token_event.dart';
 import '../bloc/token_state.dart';
 import '../login_popup.dart';
-import '../main.dart';
 import '../members.dart';
 import '../menu.dart';
 import '../message_provider.dart';
@@ -277,22 +275,12 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _overloadMain();
-  }
-
-  @override
   void dispose() {
     if (widget.messageProvider != null) {
       widget.messageProvider!.channel.sink.close();
       print('dispose in screen');
     }
     super.dispose();
-  }
-
-  _overloadMain() async {
-    await myHomePageStateKey.currentState?.fetchData(Server.server);
   }
 
   @override
@@ -302,64 +290,62 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
     var screenHeight =
         MediaQuery.of(context).size.height - 56 - paddingTop - paddingButton;
 
-    return MaterialApp(
-      home: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, child) {
-          return Scaffold(
-            appBar: MyAppBar(
-              roomName: widget.topicName,
-            ),
-            body: Container(
-              alignment: Alignment.bottomCenter,
-              height: screenHeight,
-              padding: const EdgeInsets.only(
-                  left: 16, right: 16, top: 0, bottom: 16),
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
-                  color: themeProvider.currentTheme.primaryColorDark),
-              child: SingleChildScrollView(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                          height: 27,
-                          child: TopicName(topicName: widget.topicName)),
-                      SizedBox(
-                          height: 140,
-                          child: ChatMembers(
-                              key: chatMembersStateKey,
-                              topicName: widget.topicName,
-                              server: widget.server,
-                              updateState: () {
-                                setState(() {});
-                              })),
-                      SizedBox(
-                        height: (screenHeight - 250) * 1,
-                        child: BlockMessages(
-                          key: blockMessageStateKey,
-                          checkContext: context,
-                          state: widget.state,
-                          messageData: widget.messageData,
-                          updateState: () {
-                            setState(() {});
-                          },
-                          hasMessage: widget.hasMessage,
-                          roomName: widget.topicName,
-                        ),
-                      ),
-                      TextAndSend(
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return Scaffold(
+          appBar: MyAppBar(
+            roomName: widget.topicName,
+          ),
+          body: Container(
+            alignment: Alignment.bottomCenter,
+            height: screenHeight,
+            padding:
+                const EdgeInsets.only(left: 16, right: 16, top: 0, bottom: 16),
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+                color: themeProvider.currentTheme.primaryColorDark),
+            child: SingleChildScrollView(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                        height: 27,
+                        child: TopicName(topicName: widget.topicName)),
+                    SizedBox(
+                        height: 140,
+                        child: ChatMembers(
+                            key: chatMembersStateKey,
+                            topicName: widget.topicName,
+                            server: widget.server,
+                            updateState: () {
+                              setState(() {});
+                            })),
+                    SizedBox(
+                      height: (screenHeight - 250) * 1,
+                      child: BlockMessages(
+                        key: blockMessageStateKey,
+                        checkContext: context,
                         state: widget.state,
-                        topicName: widget.topicName,
-                        server: widget.server,
-                        messageProvider: widget.messageProvider,
-                        account: widget.account,
+                        messageData: widget.messageData,
+                        updateState: () {
+                          setState(() {});
+                        },
+                        hasMessage: widget.hasMessage,
+                        roomName: widget.topicName,
                       ),
-                    ]),
-              ),
+                    ),
+                    TextAndSend(
+                      state: widget.state,
+                      topicName: widget.topicName,
+                      server: widget.server,
+                      messageProvider: widget.messageProvider,
+                      account: widget.account,
+                    ),
+                  ]),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

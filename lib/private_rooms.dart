@@ -61,8 +61,10 @@ class RoomPrivate extends StatelessWidget {
             contextPrivateRoom,
             MaterialPageRoute(
                 builder: (contextPrivateRoom) => PrivateChatScreen(
-                    receiverName: recipientName,
-                    messageProvider: messageProvider)),
+                      receiverName: recipientName,
+                      messageProvider: messageProvider,
+                      recipientId: recipientId,
+                    )),
           );
         }
       },

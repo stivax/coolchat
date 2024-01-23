@@ -189,7 +189,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                       }
                     }
                   } else if (value == 'item1') {
-                    //myHomePageStateKey.currentState?.popUntil((route) => route.isFirst);
+                    Navigator.popUntil(context, ModalRoute.withName('/'));
                   } else if (value == 'item5') {
                     Navigator.push(
                       context,
@@ -232,8 +232,14 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                     value: 'item1',
                     child: Text(
                       'Chat rooms',
+                      textScaler: TextScaler.noScaling,
                       style: TextStyle(
-                          color: themeProvider.currentTheme.primaryColor),
+                        color: themeProvider.currentTheme.primaryColor,
+                        fontSize: 16,
+                        fontFamily: 'Manrope',
+                        fontWeight: FontWeight.w500,
+                        height: 1.16,
+                      ),
                     ),
                   ),
                   PopupMenuItem<String>(
@@ -242,8 +248,14 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                       children: [
                         Text(
                           'Personal chats',
+                          textScaler: TextScaler.noScaling,
                           style: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor),
+                            color: themeProvider.currentTheme.primaryColor,
+                            fontSize: 16,
+                            fontFamily: 'Manrope',
+                            fontWeight: FontWeight.w500,
+                            height: 1.16,
+                          ),
                         ),
                         const SizedBox(
                           width: 8,
@@ -264,32 +276,56 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                     value: 'item3',
                     child: Text(
                       'Settings',
+                      textScaler: TextScaler.noScaling,
                       style: TextStyle(
-                          color: themeProvider.currentTheme.primaryColor),
+                        color: themeProvider.currentTheme.primaryColor,
+                        fontSize: 16,
+                        fontFamily: 'Manrope',
+                        fontWeight: FontWeight.w500,
+                        height: 1.16,
+                      ),
                     ),
                   ),
                   PopupMenuItem<String>(
                     value: 'item4',
                     child: Text(
                       'Rules of the chat',
+                      textScaler: TextScaler.noScaling,
                       style: TextStyle(
-                          color: themeProvider.currentTheme.primaryColor),
+                        color: themeProvider.currentTheme.primaryColor,
+                        fontSize: 16,
+                        fontFamily: 'Manrope',
+                        fontWeight: FontWeight.w500,
+                        height: 1.16,
+                      ),
                     ),
                   ),
                   PopupMenuItem<String>(
                     value: 'item5',
                     child: Text(
                       'Privacy Policy',
+                      textScaler: TextScaler.noScaling,
                       style: TextStyle(
-                          color: themeProvider.currentTheme.primaryColor),
+                        color: themeProvider.currentTheme.primaryColor,
+                        fontSize: 16,
+                        fontFamily: 'Manrope',
+                        fontWeight: FontWeight.w500,
+                        height: 1.16,
+                      ),
                     ),
                   ),
                   PopupMenuItem<String>(
                     value: 'item6',
                     child: Text(
                       'Go to our website',
+                      textScaler: TextScaler.noScaling,
                       style: TextStyle(
-                          color: themeProvider.currentTheme.primaryColor),
+                        color: themeProvider.currentTheme.primaryColor,
+                        fontSize: 16,
+                        fontFamily: 'Manrope',
+                        fontWeight: FontWeight.w500,
+                        height: 1.16,
+                      ),
                     ),
                   ),
                   PopupMenuItem<String>(
@@ -297,23 +333,40 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                     child: _account.userName != ''
                         ? Text(
                             'Log out: ${_account.userName}',
+                            textScaler: TextScaler.noScaling,
                             style: TextStyle(
-                                color: themeProvider.currentTheme.primaryColor),
+                              color: themeProvider.currentTheme.primaryColor,
+                              fontSize: 16,
+                              fontFamily: 'Manrope',
+                              fontWeight: FontWeight.w500,
+                              height: 1.16,
+                            ),
                           )
                         : Text(
                             'Log in',
+                            textScaler: TextScaler.noScaling,
                             style: TextStyle(
-                                color: themeProvider.currentTheme.primaryColor),
+                              color: themeProvider.currentTheme.primaryColor,
+                              fontSize: 16,
+                              fontFamily: 'Manrope',
+                              fontWeight: FontWeight.w500,
+                              height: 1.16,
+                            ),
                           ),
                   ),
                   PopupMenuItem<String>(
                     value: 'item8',
                     child: Text(
-                      'Version: v0.13.32',
+                      'Version: v0.13.34',
+                      textScaler: TextScaler.noScaling,
                       style: TextStyle(
-                          color: themeProvider.currentTheme.primaryColor
-                              .withOpacity(0.5),
-                          fontSize: 12),
+                        color: themeProvider.currentTheme.primaryColor
+                            .withOpacity(0.5),
+                        fontSize: 12,
+                        fontFamily: 'Manrope',
+                        fontWeight: FontWeight.w500,
+                        height: 1.16,
+                      ),
                     ),
                   ),
                 ],

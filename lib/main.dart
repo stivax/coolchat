@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:connectivity/connectivity.dart';
+import 'package:coolchat/screen/private_chat_list.dart';
+import 'package:coolchat/servises/account_setting_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -23,7 +25,6 @@ import 'bloc/token_blok.dart';
 import 'menu.dart';
 import 'my_appbar.dart';
 import 'rooms.dart';
-import 'servises/favorite_room_provider.dart';
 import 'theme_provider.dart';
 
 void main() {
@@ -34,15 +35,36 @@ void main() {
             create: (context) => ThemeProvider()),
         ChangeNotifierProvider<AccountProvider>(
             create: (context) => AccountProvider()),
+        ChangeNotifierProvider<AccountSettingProvider>(
+            create: (context) => AccountSettingProvider()),
       ],
       child: RepositoryProvider(
-          create: (context) => TokenRepository(), child: const MyApp()),
+          create: (context) => TokenRepository(), child: const StartScreen()),
     ),
   );
 }
 
-final myHomePageStateKey = GlobalKey<_MyHomePageState>();
-final scrollRoomsListStateKey = GlobalKey<_ScrollRoomsListState>();
+class StartScreen extends StatelessWidget {
+  const StartScreen({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    return FutureBuilder(
+      future: Future.delayed(const Duration(seconds: 2)),
+      builder: (context, snapshot) {
+        if (themeProvider.isThemeChange &&
+            snapshot.connectionState == ConnectionState.waiting) {
+          return const AnimationStart();
+        } else {
+          return const MyApp();
+        }
+      },
+    );
+  }
+}
 
 class MyApp extends StatelessWidget {
   static final MessageProviderContainer messageProviderContainer =
@@ -56,25 +78,20 @@ class MyApp extends StatelessWidget {
         GlobalKey<ScaffoldMessengerState>();
 
     return MaterialApp(
+      title: 'Cool Chat',
+      initialRoute: '/',
+      routes: {
+        '/': (context) => MyHomePage(),
+        '/p': (context) => PrivateChatList(),
+      },
       scaffoldMessengerKey: scaffoldMessengerKey,
       theme: themeProvider.currentTheme,
-      home: FutureBuilder(
-        future: Future.delayed(const Duration(seconds: 3)),
-        builder: (context, snapshot) {
-          if (themeProvider.isThemeChange &&
-              snapshot.connectionState == ConnectionState.waiting) {
-            return const AnimationStart();
-          } else {
-            return MyHomePage(key: myHomePageStateKey);
-          }
-        },
-      ),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({super.key});
+  const MyHomePage({super.key});
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -83,14 +100,17 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   final _scrollController = ScrollController();
   List<Room> roomsList = [];
+  List<String> favoriteroomsList = [];
   MessageProvider? messageProvider;
   final server = Server.server;
   late Map<dynamic, dynamic> token;
-  bool scale = true;
+  bool scale = false;
   bool isListening = false;
+  bool refresh = false;
   StreamSubscription? _messageSubscription;
   StreamSubscription<ConnectivityResult>? _connectivitySubscription;
   late AccountProvider _accountProvider;
+  late AccountSettingProvider _accountSettingProvider;
   late Timer _timerCheckAndRefreshListenWebsocket;
 
   @override
@@ -100,7 +120,14 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     requestPermissions();
     _accountProvider = Provider.of<AccountProvider>(context, listen: false);
     _accountProvider.addListener(_onAccountChange);
-    startListenSocket();
+    _accountSettingProvider =
+        Provider.of<AccountSettingProvider>(context, listen: false);
+    _accountSettingProvider.addListener(_onScaleChange);
+    scale = _accountSettingProvider.accountSettingProvider.scale;
+    _accountSettingProvider.addListener(_onFavoriteRoomChange);
+    favoriteroomsList =
+        _accountSettingProvider.accountSettingProvider.favoriteroomList;
+    //startListenSocket();
     _timerCheckAndRefreshListenWebsocket =
         Timer.periodic(const Duration(seconds: 15), (timer) {
       print('timer ${timer.isActive.toString()}');
@@ -118,6 +145,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   @override
   void dispose() {
     _accountProvider.removeListener(_onAccountChange);
+    _accountSettingProvider.removeListener(_onScaleChange);
+    _accountSettingProvider.removeListener(_onFavoriteRoomChange);
     messageProvider?.channel.sink.close();
     _messageSubscription?.cancel();
     _connectivitySubscription?.cancel();
@@ -133,10 +162,23 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     }
   }
 
+  void _onScaleChange() async {
+    setState(() {
+      scale = _accountSettingProvider.accountSettingProvider.scale;
+    });
+  }
+
+  void _onFavoriteRoomChange() async {
+    setState(() {
+      favoriteroomsList =
+          _accountSettingProvider.accountSettingProvider.favoriteroomList;
+    });
+    await fetchData(server);
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _accountProvider = Provider.of<AccountProvider>(context, listen: false);
     fetchData(server);
   }
 
@@ -202,7 +244,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     }
   }
 
-  getToken() async {
+  Future<void> getToken() async {
     final acc = await readAccountFuture();
     final tok = await loginProcess(acc.email, acc.password);
     setState(() {
@@ -216,14 +258,13 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   }
 
   Future<void> fetchData(String server) async {
-    List<String> roomList = await FavoriteList.readFavoriteRoomList();
     try {
       http.Response response = await _getData(server);
       if (response.statusCode == 200) {
         String responseBody = utf8.decode(response.bodyBytes);
         List<dynamic> jsonList = jsonDecode(responseBody);
         List<Room> rooms =
-            Room.fromJsonList(jsonList, roomList, scale).toList();
+            Room.fromJsonList(jsonList, favoriteroomsList, scale).toList();
         if (mounted) {
           rooms.sort((a, b) {
             if (a.isFavorite == b.isFavorite) {
@@ -248,12 +289,23 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     if (offset >= maxOffset &&
         _scrollController.position.userScrollDirection ==
             ScrollDirection.reverse) {
-      _handleScrollDown();
+      _updateScreen();
     }
   }
 
-  void _handleScrollDown() {
-    fetchData(server);
+  Future<void> _updateScreen() async {
+    await fetchData(server);
+  }
+
+  Future<void> refreshScreen() async {
+    setState(() {
+      refresh = !refresh;
+    });
+    await _updateScreen();
+    await Future.delayed(const Duration(seconds: 1));
+    setState(() {
+      refresh = !refresh;
+    });
   }
 
   Future<void> requestPermissions() async {
@@ -265,117 +317,120 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: MultiBlocProvider(
-        providers: [
-          BlocProvider<MenuBloc>(
-            create: (context) => MenuBloc(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<MenuBloc>(
+          create: (context) => MenuBloc(),
+        ),
+        BlocProvider<TokenBloc>(
+          create: (context) => TokenBloc(
+            tokenRepository: context.read<TokenRepository>(),
           ),
-          BlocProvider<TokenBloc>(
-            create: (context) => TokenBloc(
-              tokenRepository: context.read<TokenRepository>(),
-            ),
-          )
-        ],
-        child: Consumer<ThemeProvider>(
-          builder: (context, themeProvider, child) {
-            return Scaffold(
-              appBar: MyAppBar(),
-              body: Column(
-                children: [
-                  Expanded(
-                    child: Container(
-                      clipBehavior: Clip.antiAlias,
-                      decoration: BoxDecoration(
-                          color: themeProvider.currentTheme.primaryColorDark),
-                      child: ChatListWidget(
-                        scrollController: _scrollController,
-                        roomsList: roomsList,
+        )
+      ],
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return Scaffold(
+            appBar: MyAppBar(),
+            body: Column(
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 400),
+                  height: refresh ? 70 : 0,
+                  alignment: Alignment.center,
+                  color: themeProvider.currentTheme.primaryColorDark,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: themeProvider.currentTheme.shadowColor,
                       ),
                     ),
                   ),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class ChatListWidget extends StatefulWidget {
-  final ScrollController scrollController;
-  List<Room> roomsList;
-  ChatListWidget(
-      {super.key, required this.scrollController, required this.roomsList});
-
-  @override
-  State<ChatListWidget> createState() => _ChatListWidgetState();
-}
-
-class _ChatListWidgetState extends State<ChatListWidget> {
-  bool scale = true;
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomScrollView(
-      controller: widget.scrollController,
-      slivers: [
-        const SliverToBoxAdapter(child: HeaderWidget()),
-        const SliverToBoxAdapter(
-          child: SizedBox(height: 30),
-        ),
-        Consumer<ThemeProvider>(
-          builder: (context, themeProvider, child) {
-            return SliverToBoxAdapter(
-              child: SizedBox(
-                width: double.infinity,
-                child: Padding(
-                  padding:
-                      const EdgeInsets.only(left: 20, bottom: 5, right: 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Choose rooms for\ncommunication',
-                        textScaler: TextScaler.noScaling,
-                        style: TextStyle(
-                          color: themeProvider.currentTheme.primaryColor,
-                          fontSize: 24,
-                          fontFamily: 'Manrope',
-                          fontWeight: FontWeight.w500,
-                          height: 1.24,
-                        ),
+                ),
+                Expanded(
+                  child: Container(
+                    clipBehavior: Clip.antiAlias,
+                    decoration: BoxDecoration(
+                        color: themeProvider.currentTheme.primaryColorDark),
+                    child: NotificationListener(
+                      onNotification: (notification) {
+                        if (notification is OverscrollNotification &&
+                            !refresh) {
+                          if (notification.overscroll < 0) {
+                            refreshScreen();
+                          }
+                        }
+                        return false;
+                      },
+                      child: CustomScrollView(
+                        controller: _scrollController,
+                        slivers: [
+                          const SliverToBoxAdapter(child: HeaderWidget()),
+                          const SliverToBoxAdapter(
+                            child: SizedBox(height: 30),
+                          ),
+                          Consumer<ThemeProvider>(
+                            builder: (context, themeProvider, child) {
+                              return SliverToBoxAdapter(
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                        left: 20, bottom: 5, right: 20),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Choose rooms for\ncommunication',
+                                          textScaler: TextScaler.noScaling,
+                                          style: TextStyle(
+                                            color: themeProvider
+                                                .currentTheme.primaryColor,
+                                            fontSize: 24,
+                                            fontFamily: 'Manrope',
+                                            fontWeight: FontWeight.w500,
+                                            height: 1.24,
+                                          ),
+                                        ),
+                                        Container(),
+                                        IconButton(
+                                            onPressed: () async {
+                                              await _accountSettingProvider
+                                                  .changeScale(context);
+                                              await fetchData(Server.server);
+                                            },
+                                            icon: Icon(
+                                                scale
+                                                    ? Icons.grid_on
+                                                    : Icons.grid_view,
+                                                color: themeProvider
+                                                    .currentTheme.primaryColor))
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          ScrollRoomsList(
+                            roomsList: roomsList,
+                            scale: scale,
+                          ),
+                          const SliverToBoxAdapter(
+                              child:
+                                  SizedBox(height: 8, width: double.infinity)),
+                        ],
                       ),
-                      Container(),
-                      IconButton(
-                          onPressed: () {
-                            scale = !scale;
-                            scrollRoomsListStateKey.currentState!.scale =
-                                !scrollRoomsListStateKey.currentState!.scale;
-                            //scrollRoomsListStateKey.currentState!.changeScale();
-                            myHomePageStateKey.currentState!.scale =
-                                !myHomePageStateKey.currentState!.scale;
-                            myHomePageStateKey.currentState!
-                                .fetchData(Server.server);
-                          },
-                          icon: Icon(scale ? Icons.grid_on : Icons.grid_view,
-                              color: themeProvider.currentTheme.primaryColor))
-                    ],
+                    ),
                   ),
                 ),
-              ),
-            );
-          },
-        ),
-        ScrollRoomsList(
-          key: scrollRoomsListStateKey,
-          roomsList: widget.roomsList,
-        ),
-        const SliverToBoxAdapter(
-            child: SizedBox(height: 8, width: double.infinity)),
-      ],
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -433,25 +488,14 @@ class HeaderWidget extends StatelessWidget {
   }
 }
 
-class ScrollRoomsList extends StatefulWidget {
-  List<Room> roomsList;
-  ScrollRoomsList({super.key, required this.roomsList});
-
-  @override
-  State<ScrollRoomsList> createState() => _ScrollRoomsListState();
-}
-
-class _ScrollRoomsListState extends State<ScrollRoomsList> {
-  bool scale = true;
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  void changeScale() {
-    setState(() {});
-  }
+class ScrollRoomsList extends StatelessWidget {
+  final List<Room> roomsList;
+  final bool scale;
+  const ScrollRoomsList({
+    super.key,
+    required this.roomsList,
+    required this.scale,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -459,8 +503,8 @@ class _ScrollRoomsListState extends State<ScrollRoomsList> {
       padding: const EdgeInsets.all(16.0),
       sliver: SliverGrid(
         delegate: SliverChildBuilderDelegate(
-          (context, index) => widget.roomsList[index],
-          childCount: widget.roomsList.length,
+          (context, index) => roomsList[index],
+          childCount: roomsList.length,
         ),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: scale ? 2 : 3,
