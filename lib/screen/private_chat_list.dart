@@ -6,6 +6,7 @@ import 'package:coolchat/menu.dart';
 import 'package:coolchat/my_appbar.dart';
 import 'package:coolchat/private_rooms.dart';
 import 'package:coolchat/server/server.dart';
+import 'package:coolchat/servises/account_setting_provider.dart';
 import 'package:coolchat/servises/token_repository.dart';
 import 'package:coolchat/theme_provider.dart';
 import 'package:flutter/material.dart';
@@ -27,6 +28,7 @@ class _PrivateChatListState extends State<PrivateChatList> {
   bool emptyChat = true;
   bool refresh = false;
   final server = Server.server;
+  late AccountSettingProvider _accountSettingProvider;
   late Account account;
   late Map<dynamic, dynamic> token;
 
@@ -34,6 +36,9 @@ class _PrivateChatListState extends State<PrivateChatList> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    _accountSettingProvider =
+        Provider.of<AccountSettingProvider>(context, listen: false);
+    _accountSettingProvider.addListener(_onRefresh);
     getToken();
   }
 
@@ -41,6 +46,12 @@ class _PrivateChatListState extends State<PrivateChatList> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     fetchData(server);
+  }
+
+  void _onRefresh() async {
+    print('onRefresh');
+    await fetchData(server);
+    setState(() {});
   }
 
   getToken() async {

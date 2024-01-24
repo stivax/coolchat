@@ -40,9 +40,8 @@ class AccountSettingProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /*Future<void> addFavoriteRoom(String roomName, BuildContext context) async {
-    _accountSettingCurentState.roomList.add(roomName);
-    await writeAccount(_accountSettingCurentState, context);
+  Future<void> refreshScreen() async {
+    print('refreshMainScreen');
     notifyListeners();
-  }*/
+  }
 }

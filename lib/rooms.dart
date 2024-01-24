@@ -115,7 +115,8 @@ class Room extends StatelessWidget {
                                 hasMessage: countMessages > 0,
                               ),
                             ),
-                          );
+                          ).then((value) =>
+                            {_accountSettingProvider.refreshScreen()});
                   },
                   child: Container(
                     width: double.infinity,

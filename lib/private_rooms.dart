@@ -1,4 +1,5 @@
 import 'package:coolchat/screen/private_chat.dart';
+import 'package:coolchat/servises/account_setting_provider.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -44,6 +45,8 @@ class RoomPrivate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final _accountSettingProvider =
+        Provider.of<AccountSettingProvider>(context, listen: false);
     return GestureDetector(
       onTap: () async {
         late MessageProvider messageProvider;
@@ -60,12 +63,13 @@ class RoomPrivate extends StatelessWidget {
           Navigator.push(
             contextPrivateRoom,
             MaterialPageRoute(
-                builder: (contextPrivateRoom) => PrivateChatScreen(
-                      receiverName: recipientName,
-                      messageProvider: messageProvider,
-                      recipientId: recipientId,
-                    )),
-          );
+              builder: (contextPrivateRoom) => PrivateChatScreen(
+                receiverName: recipientName,
+                messageProvider: messageProvider,
+                recipientId: recipientId,
+              ),
+            ),
+          ).then((value) => {_accountSettingProvider.refreshScreen()});
         }
       },
       child: Consumer<ThemeProvider>(

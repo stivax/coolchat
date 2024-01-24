@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:coolchat/servises/account_setting_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -67,6 +68,8 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
   }
 
   Future<void> _saveDataAndClosePopup() async {
+    final _accountSettingProvider =
+        Provider.of<AccountSettingProvider>(context, listen: false);
     const server = Server.server;
     if (_formKey.currentState!.validate() && _selectedItems != '') {
       final acc = await readAccountFuture();
@@ -87,7 +90,7 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
               hasMessage: false,
             ),
           ),
-        );
+        ).then((value) => {_accountSettingProvider.refreshScreen()});
       } else {
         // ignore: use_build_context_synchronously
         _showPopupErrorInput(answer, context);
@@ -139,133 +142,161 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
             borderRadius: BorderRadius.circular(20.0),
           ),
           backgroundColor: themeProvider.currentTheme.primaryColorDark,
-          content: Container(
-            height: screenSize.height * 0.6,
-            width: screenSize.width * 0.8,
-            child: CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Center(
-                          child: Text(
-                            'Add a new \nchat room',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor,
-                              fontSize: 20,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w500,
-                              height: 1.24,
-                            ),
-                            textScaleFactor: 1,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 15, bottom: 5),
-                          child: Text(
-                            'Name of the chat room',
-                            style: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor
-                                  .withOpacity(0.9),
-                              fontSize: 16,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w400,
-                            ),
-                            textScaleFactor: 1,
-                          ),
-                        ),
-                        // room name form
-                        TextFormField(
-                          keyboardType: TextInputType.name,
-                          textCapitalization: TextCapitalization.sentences,
-                          maxLength: 50,
-                          validator: _roomNameValidate,
-                          autofocus: true,
-                          focusNode: _nameRoomFocus,
-                          controller: _nameRoomController,
-                          onTapOutside: (_) {
-                            FocusScope.of(context).unfocus();
-                          },
-                          onFieldSubmitted: (_) {
-                            _fieldFocusChange(
-                                context, _nameRoomFocus, FocusNode());
-                          },
-                          style: TextStyle(
-                            color: themeProvider.currentTheme.primaryColor,
-                            fontSize: 16,
-                            fontFamily: 'Manrope',
-                            fontWeight: FontWeight.w400,
-                          ),
-                          decoration: InputDecoration(
-                            helperText: 'Max 50 characters',
-                            helperStyle: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor
-                                  .withOpacity(0.5),
-                            ),
-                            suffixIcon: Icon(Icons.door_front_door_outlined),
-                            counterStyle: TextStyle(
-                                color: themeProvider.currentTheme.primaryColor
-                                    .withOpacity(0.5)),
-                            border: InputBorder.none,
-                            hintText: 'Name room *',
-                            hintStyle: TextStyle(
-                                color: themeProvider.currentTheme.primaryColor
-                                    .withOpacity(0.6)),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(10.0)),
-                              borderSide: BorderSide(
-                                  width: 0.50,
+          content: MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: TextScaler.noScaling),
+            child: Stack(
+              alignment: Alignment.topRight,
+              children: [
+                SizedBox(
+                  height: screenSize.height * 0.6,
+                  width: screenSize.width * 0.8,
+                  child: CustomScrollView(
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Center(
+                                child: Text(
+                                  'Add a new \nchat room',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color:
+                                        themeProvider.currentTheme.primaryColor,
+                                    fontSize: 20,
+                                    fontFamily: 'Manrope',
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.24,
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.only(top: 15, bottom: 5),
+                                child: Text(
+                                  'Name of the chat room',
+                                  style: TextStyle(
+                                    color: themeProvider
+                                        .currentTheme.primaryColor
+                                        .withOpacity(0.9),
+                                    fontSize: 16,
+                                    fontFamily: 'Manrope',
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              ),
+                              // room name form
+                              TextFormField(
+                                keyboardType: TextInputType.name,
+                                textCapitalization:
+                                    TextCapitalization.sentences,
+                                maxLength: 50,
+                                validator: _roomNameValidate,
+                                focusNode: _nameRoomFocus,
+                                controller: _nameRoomController,
+                                onTapOutside: (_) {
+                                  FocusScope.of(context).unfocus();
+                                },
+                                onFieldSubmitted: (_) {
+                                  _fieldFocusChange(
+                                      context, _nameRoomFocus, FocusNode());
+                                },
+                                style: TextStyle(
                                   color:
-                                      themeProvider.currentTheme.shadowColor),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(10.0)),
-                              borderSide: BorderSide(
-                                  width: 0.50,
-                                  color:
-                                      themeProvider.currentTheme.shadowColor),
-                            ),
-                            errorBorder: const OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(10.0)),
-                              borderSide:
-                                  BorderSide(width: 0.50, color: Colors.red),
-                            ),
-                            focusedErrorBorder: const OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(10.0)),
-                              borderSide:
-                                  BorderSide(width: 0.50, color: Colors.red),
-                            ),
+                                      themeProvider.currentTheme.primaryColor,
+                                  fontSize: 16,
+                                  fontFamily: 'Manrope',
+                                  fontWeight: FontWeight.w400,
+                                ),
+                                decoration: InputDecoration(
+                                  helperText: 'Max 50 characters',
+                                  helperStyle: TextStyle(
+                                    color: themeProvider
+                                        .currentTheme.primaryColor
+                                        .withOpacity(0.5),
+                                  ),
+                                  suffixIcon:
+                                      Icon(Icons.door_front_door_outlined),
+                                  counterStyle: TextStyle(
+                                      color: themeProvider
+                                          .currentTheme.primaryColor
+                                          .withOpacity(0.5)),
+                                  border: InputBorder.none,
+                                  hintText: 'Name room *',
+                                  hintStyle: TextStyle(
+                                      color: themeProvider
+                                          .currentTheme.primaryColor
+                                          .withOpacity(0.6)),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: const BorderRadius.all(
+                                        Radius.circular(10.0)),
+                                    borderSide: BorderSide(
+                                        width: 0.50,
+                                        color: themeProvider
+                                            .currentTheme.shadowColor),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: const BorderRadius.all(
+                                        Radius.circular(10.0)),
+                                    borderSide: BorderSide(
+                                        width: 0.50,
+                                        color: themeProvider
+                                            .currentTheme.shadowColor),
+                                  ),
+                                  errorBorder: const OutlineInputBorder(
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(10.0)),
+                                    borderSide: BorderSide(
+                                        width: 0.50, color: Colors.red),
+                                  ),
+                                  focusedErrorBorder: const OutlineInputBorder(
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(10.0)),
+                                    borderSide: BorderSide(
+                                        width: 0.50, color: Colors.red),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                      SliverPadding(
+                        padding: const EdgeInsets.only(top: 16),
+                        sliver: SliverGrid(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) => makeListRoomAvatar()[index],
+                            childCount: makeListRoomAvatar().length,
+                          ),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 8.0,
+                            mainAxisSpacing: 8.0,
+                            childAspectRatio: 0.84,
+                          ),
+                        ),
+                      )
+                    ],
                   ),
                 ),
-                SliverPadding(
-                  padding: const EdgeInsets.only(top: 16),
-                  sliver: SliverGrid(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) => makeListRoomAvatar()[index],
-                      childCount: makeListRoomAvatar().length,
+                Positioned(
+                  top: -16.0,
+                  right: -16.0,
+                  child: IconButton(
+                    icon: Icon(
+                      Icons.close,
+                      color: themeProvider.currentTheme.shadowColor,
                     ),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 8.0,
-                      mainAxisSpacing: 8.0,
-                      childAspectRatio: 0.84,
-                    ),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
                   ),
-                )
+                ),
               ],
             ),
           ),
@@ -399,6 +430,7 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
     final _nameExp = RegExp(
         r'^[0-9a-zA-Z\u0430-\u044F\u0410-\u042F\u0456\u0406\u0457\u0407\u0491\u0490\u0454\u0404\u04E7\u04E6 ()_.]+$');
     if (value!.isEmpty) {
+      _nameRoomFocus.requestFocus();
       return 'Name is reqired';
     } else if (!_nameExp.hasMatch(value)) {
       return 'Please input correct Name (char, number and _)';

@@ -62,6 +62,7 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool isListening = false;
+  late bool hasMessages;
   final messageData = MessageData();
   Account acc =
       Account(email: '', userName: '', password: '', avatar: '', id: 0);
@@ -72,6 +73,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    hasMessages = widget.hasMessage;
     WidgetsBinding.instance.addObserver(this);
     if (widget.account.email != '') {
       acc = widget.account;
@@ -101,7 +103,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       _messageSubscription?.cancel();
       _messageSubscription = providerInScreen!.messagesStream.listen(
         (event) async {
-          //print(event);
+          print(event);
           if (event.toString().startsWith('{"created_at"')) {
             formMessage(event.toString());
           } else if (event.toString().startsWith('{"type":"active_users"')) {
@@ -140,6 +142,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   void clearMessages() {
+    messageData.previousMemberID = 0;
     blockMessageStateKey.currentState!._messages.clear();
   }
 
@@ -186,7 +189,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               server: widget.server,
               account: widget.account,
               messageData: state.messagesList,
-              hasMessage: widget.hasMessage,
+              hasMessage: hasMessages,
             );
           } else if (state is TokenLoadedState) {
             acc = state.account;
@@ -208,7 +211,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               server: widget.server,
               account: acc,
               messageData: const [],
-              hasMessage: widget.hasMessage,
+              hasMessage: hasMessages,
             );
           } else if (state is TokenErrorState) {
             return CommonChatScreen(
@@ -217,7 +220,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               server: widget.server,
               account: widget.account,
               messageData: const [],
-              hasMessage: widget.hasMessage,
+              hasMessage: hasMessages,
             );
           } else if (state is TokenLoadingState) {
             return CommonChatScreen(
@@ -226,7 +229,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               server: widget.server,
               account: widget.account,
               messageData: const [],
-              hasMessage: widget.hasMessage,
+              hasMessage: hasMessages,
             );
           } else {
             return const Center(child: LinearProgressIndicator());
@@ -655,7 +658,7 @@ class _BlockMessagesState extends State<BlockMessages> {
 
   Widget messageView(ThemeProvider themeProvider) {
     bool countNewMessages = (_messages.length - _cachedMessages.length) == 1;
-    if (widget.hasMessage) {
+    if (widget.hasMessage || _messages.isNotEmpty) {
       _cachedMessages = _messages.reversed.toList();
       return Observer(builder: (context, watch) {
         return Stack(
@@ -684,49 +687,51 @@ class _BlockMessagesState extends State<BlockMessages> {
                 return _cachedMessages[index];
               },
             ),
-            watch(scrollChatController.showArrow)
-                ? Stack(
-                    alignment: Alignment.bottomRight,
-                    children: [
-                      FloatingActionButton(
-                        onPressed: () {
-                          scrollChatController.showingArrow();
-                          scrollChatController.clearNewMessagess();
-                          controller.animateTo(0.0,
-                              duration: const Duration(milliseconds: 500),
-                              curve: Curves.linear);
-                        },
-                        backgroundColor: themeProvider.currentTheme.cardColor,
-                        mini: true,
-                        child: Icon(
-                          Icons.arrow_downward,
-                          color: themeProvider.currentTheme.primaryColor,
-                        ),
-                      ),
-                      watch(scrollChatController.countNewMessages) != 0
-                          ? Padding(
-                              padding: const EdgeInsets.all(2.0),
-                              child: Container(
-                                height: 14,
-                                width: 14,
-                                alignment: Alignment.center,
-                                decoration: const BoxDecoration(
-                                  color: Colors.red,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Text(
-                                  watch(
-                                    scrollChatController.countNewMessages,
-                                  ).toString(),
-                                  style: const TextStyle(
-                                      fontSize: 10, color: Colors.white),
-                                ),
-                              ),
-                            )
-                          : Container(),
-                    ],
-                  )
-                : Container()
+            AnimatedOpacity(
+              opacity: watch(scrollChatController.showArrow) ? 1 : 0,
+              duration: const Duration(milliseconds: 500),
+              child: Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  FloatingActionButton(
+                    onPressed: () {
+                      scrollChatController.showingArrow();
+                      scrollChatController.clearNewMessagess();
+                      controller.animateTo(0.0,
+                          duration: const Duration(milliseconds: 500),
+                          curve: Curves.linear);
+                    },
+                    backgroundColor: themeProvider.currentTheme.cardColor,
+                    mini: true,
+                    child: Icon(
+                      Icons.arrow_downward,
+                      color: themeProvider.currentTheme.primaryColor,
+                    ),
+                  ),
+                  watch(scrollChatController.countNewMessages) != 0
+                      ? Padding(
+                          padding: const EdgeInsets.all(2.0),
+                          child: Container(
+                            height: 14,
+                            width: 14,
+                            alignment: Alignment.center,
+                            decoration: const BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Text(
+                              watch(
+                                scrollChatController.countNewMessages,
+                              ).toString(),
+                              style: const TextStyle(
+                                  fontSize: 10, color: Colors.white),
+                            ),
+                          ),
+                        )
+                      : Container(),
+                ],
+              ),
+            )
           ],
         );
       });
@@ -797,9 +802,9 @@ class _BlockMessagesState extends State<BlockMessages> {
                               ),
                             ),
                             TextSpan(
-                              text: '(button in the upper right corner)',
+                              text: '(look for this option in the menu)',
                               style: TextStyle(
-                                color: themeProvider.currentTheme.splashColor,
+                                color: themeProvider.currentTheme.disabledColor,
                                 fontSize: fontSize,
                                 fontFamily: 'Manrope',
                                 fontWeight: FontWeight.w400,

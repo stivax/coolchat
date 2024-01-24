@@ -127,6 +127,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     _accountSettingProvider.addListener(_onFavoriteRoomChange);
     favoriteroomsList =
         _accountSettingProvider.accountSettingProvider.favoriteroomList;
+    _accountSettingProvider.addListener(_onRefresh);
     //startListenSocket();
     _timerCheckAndRefreshListenWebsocket =
         Timer.periodic(const Duration(seconds: 15), (timer) {
@@ -166,6 +167,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     setState(() {
       scale = _accountSettingProvider.accountSettingProvider.scale;
     });
+  }
+
+  void _onRefresh() async {
+    print('onRefresh');
+    await fetchData(server);
+    setState(() {});
   }
 
   void _onFavoriteRoomChange() async {
@@ -239,6 +246,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
+    fetchData(server);
     if (state == AppLifecycleState.resumed) {
       listenSocket();
     }

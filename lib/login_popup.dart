@@ -417,105 +417,111 @@ class _LoginDialogState extends State<LoginDialog> {
               ),
               backgroundColor: themeProvider.currentTheme.primaryColorDark,
               scrollable: true,
-              content: SizedBox(
-                width: 250,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: 80,
-                      height: 100,
-                      child: Avatar(
-                          image: NetworkImage(account.avatar), isChoise: false),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(
-                            text: 'Hello, ',
-                            style: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor,
-                              fontSize: 24,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w500,
-                              height: 1.24,
-                            ),
-                          ),
-                          TextSpan(
-                            text: account.userName,
-                            style: TextStyle(
-                              color: themeProvider.currentTheme.shadowColor,
-                              fontSize: 24,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w500,
-                              height: 1.24,
-                            ),
-                          ),
-                          TextSpan(
-                            text: '!',
-                            style: TextStyle(
-                              color: themeProvider.currentTheme.primaryColor,
-                              fontSize: 24,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w500,
-                              height: 1.24,
-                            ),
-                          ),
-                        ],
+              content: MediaQuery(
+                data: MediaQuery.of(context)
+                    .copyWith(textScaler: TextScaler.noScaling),
+                child: SizedBox(
+                  width: 250,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 80,
+                        height: 100,
+                        child: Avatar(
+                            image: NetworkImage(account.avatar),
+                            isChoise: false),
                       ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Text(
-                      'Welcome \nto the TeamChat',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: themeProvider.currentTheme.primaryColor,
-                        fontSize: 16,
-                        fontFamily: 'Manrope',
-                        fontWeight: FontWeight.w400,
-                        height: 1.24,
+                      const SizedBox(
+                        height: 10,
                       ),
-                    ),
-                    const SizedBox(
-                      height: 16,
-                    ),
-                    Center(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 30, vertical: 10),
-                          backgroundColor:
-                              themeProvider.currentTheme.shadowColor,
-                          shape: RoundedRectangleBorder(
-                            side: BorderSide(
-                                width: 0.50,
-                                color: themeProvider.currentTheme.shadowColor),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
+                      Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: 'Hello, ',
+                              style: TextStyle(
+                                color: themeProvider.currentTheme.primaryColor,
+                                fontSize: 24,
+                                fontFamily: 'Manrope',
+                                fontWeight: FontWeight.w500,
+                                height: 1.24,
+                              ),
+                            ),
+                            TextSpan(
+                              text: account.userName,
+                              style: TextStyle(
+                                color: themeProvider.currentTheme.shadowColor,
+                                fontSize: 24,
+                                fontFamily: 'Manrope',
+                                fontWeight: FontWeight.w500,
+                                height: 1.24,
+                              ),
+                            ),
+                            TextSpan(
+                              text: '!',
+                              style: TextStyle(
+                                color: themeProvider.currentTheme.primaryColor,
+                                fontSize: 24,
+                                fontFamily: 'Manrope',
+                                fontWeight: FontWeight.w500,
+                                height: 1.24,
+                              ),
+                            ),
+                          ],
                         ),
-                        child: const Text(
-                          'Chat',
-                          textScaleFactor: 1,
-                          style: TextStyle(
-                            color: Color(0xFFF5FBFF),
-                            fontSize: 24,
-                            fontFamily: 'Manrope',
-                            fontWeight: FontWeight.w500,
-                            height: 1.24,
-                          ),
-                        ),
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
                       ),
-                    ),
-                  ],
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Text(
+                        'Welcome \nto the TeamChat',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: themeProvider.currentTheme.primaryColor,
+                          fontSize: 16,
+                          fontFamily: 'Manrope',
+                          fontWeight: FontWeight.w400,
+                          height: 1.24,
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 16,
+                      ),
+                      Center(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 30, vertical: 10),
+                            backgroundColor:
+                                themeProvider.currentTheme.shadowColor,
+                            shape: RoundedRectangleBorder(
+                              side: BorderSide(
+                                  width: 0.50,
+                                  color:
+                                      themeProvider.currentTheme.shadowColor),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Text(
+                            'Chat',
+                            textScaleFactor: 1,
+                            style: TextStyle(
+                              color: Color(0xFFF5FBFF),
+                              fontSize: 24,
+                              fontFamily: 'Manrope',
+                              fontWeight: FontWeight.w500,
+                              height: 1.24,
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -537,77 +543,82 @@ class _LoginDialogState extends State<LoginDialog> {
               ),
               backgroundColor: themeProvider.currentTheme.primaryColorDark,
               scrollable: true,
-              content: SizedBox(
-                width: 250,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    SizedBox(
-                      height: 120,
-                      width: 105,
-                      child: Image.asset('assets/images/fire.png'),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16),
-                      child: Text(
-                        'Fire!',
-                        style: TextStyle(
-                          color: themeProvider.currentTheme.primaryColor,
-                          fontSize: 20,
-                          fontFamily: 'Manrope',
-                          fontWeight: FontWeight.w500,
-                          height: 1.24,
-                        ),
+              content: MediaQuery(
+                data: MediaQuery.of(context)
+                    .copyWith(textScaler: TextScaler.noScaling),
+                child: SizedBox(
+                  width: 250,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      SizedBox(
+                        height: 120,
+                        width: 105,
+                        child: Image.asset('assets/images/fire.png'),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16, top: 8),
-                      child: Container(
-                        alignment: Alignment.center,
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16),
                         child: Text(
-                          text,
-                          textAlign: TextAlign.center,
+                          'Fire!',
                           style: TextStyle(
                             color: themeProvider.currentTheme.primaryColor,
-                            fontSize: 16,
-                            fontFamily: 'Manrope',
-                            fontWeight: FontWeight.w400,
-                            height: 1.24,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Center(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 30, vertical: 10),
-                          backgroundColor:
-                              themeProvider.currentTheme.shadowColor,
-                          shape: RoundedRectangleBorder(
-                            side: BorderSide(
-                                width: 0.50,
-                                color: themeProvider.currentTheme.shadowColor),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: const Text(
-                          'OK',
-                          textScaleFactor: 1,
-                          style: TextStyle(
-                            color: Color(0xFFF5FBFF),
-                            fontSize: 24,
+                            fontSize: 20,
                             fontFamily: 'Manrope',
                             fontWeight: FontWeight.w500,
                             height: 1.24,
                           ),
                         ),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
                       ),
-                    ),
-                  ],
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16, top: 8),
+                        child: Container(
+                          alignment: Alignment.center,
+                          child: Text(
+                            text,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: themeProvider.currentTheme.primaryColor,
+                              fontSize: 16,
+                              fontFamily: 'Manrope',
+                              fontWeight: FontWeight.w400,
+                              height: 1.24,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Center(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 30, vertical: 10),
+                            backgroundColor:
+                                themeProvider.currentTheme.shadowColor,
+                            shape: RoundedRectangleBorder(
+                              side: BorderSide(
+                                  width: 0.50,
+                                  color:
+                                      themeProvider.currentTheme.shadowColor),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Text(
+                            'OK',
+                            textScaleFactor: 1,
+                            style: TextStyle(
+                              color: Color(0xFFF5FBFF),
+                              fontSize: 24,
+                              fontFamily: 'Manrope',
+                              fontWeight: FontWeight.w500,
+                              height: 1.24,
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );

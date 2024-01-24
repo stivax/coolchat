@@ -35,7 +35,7 @@ final lightTheme = ThemeData(
   cardColor: AppColors.decorElementLight3,
   highlightColor: AppColors.decorElementLight1,
   primaryColor: AppColors.textDark,
-  splashColor: AppColors.redLight,
+  disabledColor: AppColors.redLight,
 );
 
 final darkTheme = ThemeData(
@@ -47,5 +47,5 @@ final darkTheme = ThemeData(
   cardColor: AppColors.decorElementDark3,
   highlightColor: AppColors.decorElementLight2,
   primaryColor: AppColors.textLight,
-  splashColor: AppColors.redDark,
+  disabledColor: AppColors.redDark,
 );

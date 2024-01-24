@@ -272,7 +272,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                       ],
                     ),
                   ),
-                  PopupMenuItem<String>(
+                  /*PopupMenuItem<String>(
                     value: 'item3',
                     child: Text(
                       'Settings',
@@ -285,7 +285,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                         height: 1.16,
                       ),
                     ),
-                  ),
+                  ),*/
                   PopupMenuItem<String>(
                     value: 'item4',
                     child: Text(
@@ -314,7 +314,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                       ),
                     ),
                   ),
-                  PopupMenuItem<String>(
+                  /*PopupMenuItem<String>(
                     value: 'item6',
                     child: Text(
                       'Go to our website',
@@ -327,7 +327,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                         height: 1.16,
                       ),
                     ),
-                  ),
+                  ),*/
                   PopupMenuItem<String>(
                     value: 'item7',
                     child: _account.userName != ''
@@ -357,7 +357,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                   PopupMenuItem<String>(
                     value: 'item8',
                     child: Text(
-                      'Version: v0.13.34',
+                      'Version: v0.13.35',
                       textScaler: TextScaler.noScaling,
                       style: TextStyle(
                         color: themeProvider.currentTheme.primaryColor

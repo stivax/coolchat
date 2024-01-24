@@ -16,12 +16,13 @@ import '../messages_privat.dart';
 import '../my_appbar.dart';
 import '../theme_provider.dart';
 
-class MessageData {
-  Set<MessagesPrivat> messages = {};
-  int previousMemberID = 0;
-  String responseBody;
+class MessagePrivatData {
+  List<MessagesPrivat> messages;
+  int previousMemberID;
 
-  MessageData(this.messages, this.previousMemberID, this.responseBody);
+  MessagePrivatData()
+      : messages = [],
+        previousMemberID = 0;
 }
 
 final blockMessageStateKey = GlobalKey<_BlockMessagesState>();
@@ -30,14 +31,12 @@ class PrivateChatScreen extends StatefulWidget {
   final String receiverName;
   final MessageProvider messageProvider;
   final int recipientId;
-  MessageData messagePrivatData;
 
   PrivateChatScreen(
       {super.key,
       required this.receiverName,
       required this.messageProvider,
-      required this.recipientId})
-      : messagePrivatData = MessageData({}, 0, '[]');
+      required this.recipientId});
 
   @override
   State<PrivateChatScreen> createState() => _PrivateChatScreenState();
@@ -45,6 +44,7 @@ class PrivateChatScreen extends StatefulWidget {
 
 class _PrivateChatScreenState extends State<PrivateChatScreen> {
   bool isListening = false;
+  final messagePrivatData = MessagePrivatData();
   bool emptyMessages = true;
   StreamSubscription? _messageSubscription;
   late StreamSubscription<ConnectivityResult> _connectivitySubscription;
@@ -124,14 +124,15 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
 
   void formMessage(String responseBody) {
     dynamic jsonMessage = jsonDecode(responseBody);
-    MessagesPrivat message = MessagesPrivat.fromJsonMessage(jsonMessage,
-        widget.messagePrivatData.previousMemberID, widget.recipientId);
-    widget.messagePrivatData.previousMemberID = message.senderId.toInt();
+    MessagesPrivat message = MessagesPrivat.fromJsonMessage(
+        jsonMessage, messagePrivatData.previousMemberID, widget.recipientId);
+    messagePrivatData.previousMemberID = message.senderId.toInt();
     blockMessageStateKey.currentState!._messages.add(message);
     blockMessageStateKey.currentState!.widget.updateState();
   }
 
   void clearMessages() {
+    messagePrivatData.previousMemberID = 0;
     blockMessageStateKey.currentState!._messages.clear();
     blockMessageStateKey.currentState!.widget.updateState();
   }
@@ -152,7 +153,7 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
       child: CommonChatScreen(
         topicName: widget.receiverName,
         messageProvider: widget.messageProvider,
-        messageData: widget.messagePrivatData,
+        messageData: messagePrivatData,
         emptyMessages: emptyMessages,
       ),
     );
@@ -162,7 +163,7 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
 class CommonChatScreen extends StatefulWidget {
   final String topicName;
   final MessageProvider messageProvider;
-  MessageData messageData;
+  MessagePrivatData messageData;
   bool emptyMessages;
 
   CommonChatScreen(
@@ -177,7 +178,7 @@ class CommonChatScreen extends StatefulWidget {
 }
 
 class _CommonChatScreenState extends State<CommonChatScreen> {
-  late MessageData messageData;
+  late MessagePrivatData messageData;
   @override
   void initState() {
     super.initState();
@@ -322,7 +323,7 @@ class _TopicNameState extends State<TopicName> {
 }
 
 class BlockMessages extends StatefulWidget {
-  final MessageData messageData;
+  final MessagePrivatData messageData;
   final Function updateState;
   final bool emptyMessages;
   const BlockMessages({
