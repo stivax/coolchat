@@ -270,7 +270,7 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
     messageData = widget.messageData;
     final TokenBloc tokenBloc = context.read<TokenBloc>();
     if (widget.account.email.isNotEmpty) {
-      tokenBloc.add(TokenLoadEvent(roomName: widget.topicName));
+      tokenBloc.add(TokenLoadEvent(roomName: widget.topicName, type: 'ws'));
     } else {
       tokenBloc.add(
           TokenLoadFromGetEvent(roomName: widget.topicName, context: context));
@@ -632,7 +632,10 @@ class _BlockMessagesState extends State<BlockMessages> {
                           ? messegeViewFromGet(themeProvider)
                           : Center(
                               child: widget.state == 'loading'
-                                  ? const CircularProgressIndicator()
+                                  ? CircularProgressIndicator(
+                                      color: themeProvider
+                                          .currentTheme.shadowColor,
+                                    )
                                   : Center(
                                       child: Text(
                                         widget.state,
@@ -1002,8 +1005,8 @@ class _TextAndSendState extends State<TextAndSend> {
                             },
                           );
                           final TokenBloc tokenBloc = context.read<TokenBloc>();
-                          tokenBloc
-                              .add(TokenLoadEvent(roomName: widget.topicName));
+                          tokenBloc.add(TokenLoadEvent(
+                              roomName: widget.topicName, type: 'ws'));
                         } else {
                           FocusScope.of(context)
                               .requestFocus(_textFieldFocusNode);

@@ -145,7 +145,8 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                     final TokenBloc tokenBloc = context.read<TokenBloc>();
                     await handleLogIn(_account, tokenBloc, context);
                     if (_account.id != 0 && widget.roomName != null) {
-                      tokenBloc.add(TokenLoadEvent(roomName: widget.roomName));
+                      tokenBloc.add(TokenLoadEvent(
+                          roomName: widget.roomName, type: 'ws'));
                     } else {
                       //tokenBloc.add(TokenClearEvent());
                     }

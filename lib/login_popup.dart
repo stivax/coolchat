@@ -88,7 +88,7 @@ class _LoginDialogState extends State<LoginDialog> {
                       children: [
                         Center(
                           child: Text(
-                            'Login \nin TeamChat',
+                            'Login \nin Coolchat',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: themeProvider.currentTheme.primaryColor,
@@ -476,7 +476,7 @@ class _LoginDialogState extends State<LoginDialog> {
                         height: 10,
                       ),
                       Text(
-                        'Welcome \nto the TeamChat',
+                        'Welcome \nto the Coolchat',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: themeProvider.currentTheme.primaryColor,

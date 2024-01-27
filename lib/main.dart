@@ -57,7 +57,9 @@ class StartScreen extends StatelessWidget {
       builder: (context, snapshot) {
         if (themeProvider.isThemeChange &&
             snapshot.connectionState == ConnectionState.waiting) {
-          return const AnimationStart();
+          return AnimationStart(
+            size: 200,
+          );
         } else {
           return const MyApp();
         }
@@ -347,13 +349,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                   height: refresh ? 70 : 0,
                   alignment: Alignment.center,
                   color: themeProvider.currentTheme.primaryColorDark,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        color: themeProvider.currentTheme.shadowColor,
-                      ),
-                    ),
+                  child: const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Center(child: AnimationMain(size: 38)),
                   ),
                 ),
                 Expanded(
@@ -465,7 +463,7 @@ class HeaderWidget extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(left: 20, right: 20),
             child: Text(
-              'Welcome every\ntourist to Teamchat',
+              'Welcome every\ntourist to Coolchat',
               textScaler: TextScaler.noScaling,
               style: TextStyle(
                 color: const Color(0xFFF5FBFF),

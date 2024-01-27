@@ -240,7 +240,7 @@ showPopupLogOut(Account acc, TokenBloc tokenBloc, BuildContext context) async {
                     top: 75,
                     child: Container(
                       child: Text(
-                        'Are you sure\nyou want to leave\nthe TeamChat?',
+                        'Are you sure\nyou want to leave\nthe Coolchat?',
                         textScaleFactor: 1,
                         style: TextStyle(
                           color: themeProvider.currentTheme.primaryColor,

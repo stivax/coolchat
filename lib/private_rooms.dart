@@ -48,29 +48,18 @@ class RoomPrivate extends StatelessWidget {
     final _accountSettingProvider =
         Provider.of<AccountSettingProvider>(context, listen: false);
     return GestureDetector(
-      onTap: () async {
-        late MessageProvider messageProvider;
-        bool messageProviderCreated = false;
-        const server = Server.server;
-        final String id = recipientId.toString();
-        messageProvider = await MessageProvider.create(
-            'wss://$server/private/$id?token=${token["access_token"]}');
-        messageProviderCreated = true;
-        MessageProviderContainer.instance
-            .addProvider('direct', messageProvider);
+      onTap: () {
         print('start chat with ${recipientName.toString()}');
-        if (messageProviderCreated) {
-          Navigator.push(
-            contextPrivateRoom,
-            MaterialPageRoute(
-              builder: (contextPrivateRoom) => PrivateChatScreen(
-                receiverName: recipientName,
-                messageProvider: messageProvider,
-                recipientId: recipientId,
-              ),
+        Navigator.push(
+          contextPrivateRoom,
+          MaterialPageRoute(
+            builder: (contextPrivateRoom) => PrivateChatScreen(
+              receiverName: recipientName,
+              recipientId: recipientId,
+              myId: account.id,
             ),
-          ).then((value) => {_accountSettingProvider.refreshScreen()});
-        }
+          ),
+        ).then((value) => {_accountSettingProvider.refreshScreen()});
       },
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {

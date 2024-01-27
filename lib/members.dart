@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'theme_provider.dart';
-import 'messages.dart';
 
 class Member extends StatelessWidget {
   ImageProvider avatar;
@@ -66,6 +65,7 @@ class Member extends StatelessWidget {
                       isOnline: isOnline,
                       memberID: memberID,
                       contextAvatarMember: contextMember,
+                      big: true,
                     ),
                   ),
                   Container(

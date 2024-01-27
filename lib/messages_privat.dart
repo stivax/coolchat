@@ -259,7 +259,7 @@ class TheirMessege extends StatelessWidget {
                           GestureDetector(
                             onDoubleTap: () {
                               MessageProviderContainer.instance
-                                  .getProvider('direct')
+                                  .getProvider(recipientId.toString())
                                   ?.channel
                                   .sink
                                   .add(json.encode({
@@ -269,7 +269,7 @@ class TheirMessege extends StatelessWidget {
                             },
                             onHorizontalDragEnd: (_) {
                               final provider = MessageProviderContainer.instance
-                                  .getProvider('direct');
+                                  .getProvider(recipientId.toString());
                               provider?.channel.sink.add(json.encode({
                                 "vote": {"message_id": id, "dir": -1}
                               }));
@@ -483,7 +483,7 @@ class MyMessege extends StatelessWidget {
                           GestureDetector(
                             onDoubleTap: () {
                               MessageProviderContainer.instance
-                                  .getProvider('direct')
+                                  .getProvider(recipientId.toString())
                                   ?.channel
                                   .sink
                                   .add(json.encode({
@@ -493,7 +493,7 @@ class MyMessege extends StatelessWidget {
                             },
                             onHorizontalDragEnd: (_) {
                               final provider = MessageProviderContainer.instance
-                                  .getProvider('direct');
+                                  .getProvider(recipientId.toString());
                               provider?.channel.sink.add(json.encode({
                                 "vote": {"message_id": id, "dir": -1}
                               }));

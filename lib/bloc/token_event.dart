@@ -4,8 +4,9 @@ abstract class TokenEvent {}
 
 class TokenLoadEvent extends TokenEvent {
   final String? roomName;
+  final String? type;
 
-  TokenLoadEvent({required this.roomName});
+  TokenLoadEvent({required this.roomName, required this.type});
 }
 
 class TokenLoadFromGetEvent extends TokenEvent {

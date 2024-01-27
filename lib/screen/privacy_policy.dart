@@ -58,7 +58,7 @@ class PrivacyPolicy extends StatelessWidget {
                                 height: 4,
                               ),
                               Text(
-                                'This privacy policy sets out the obligations and rules regarding the collection, use and disclosure of user’s personal information when communicating on TeamChat. ',
+                                'This privacy policy sets out the obligations and rules regarding the collection, use and disclosure of user’s personal information when communicating on Coolchat. ',
                                 style: TextStyle(
                                   color:
                                       themeProvider.currentTheme.primaryColor,
@@ -110,7 +110,7 @@ class PrivacyPolicy extends StatelessWidget {
                               themeProvider),
                           buildListRow(
                               '4.',
-                              'Use of cookies: Our Chat for communication may use cookies and other technologies to collect information and improve the user experience. Users have the option to disable cookies in their web browser settings, but this may affect the functionality of TeamChat.',
+                              'Use of cookies: Our Chat for communication may use cookies and other technologies to collect information and improve the user experience. Users have the option to disable cookies in their web browser settings, but this may affect the functionality of Coolchat.',
                               themeProvider),
                           buildListRow(
                               '5.',
@@ -120,7 +120,7 @@ class PrivacyPolicy extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'This privacy policy is for your protection and remains binding on all TeamChat users. If you have any questions about our privacy policy, please contact us using the contact information provided on our website.',
+                      'This privacy policy is for your protection and remains binding on all Coolchat users. If you have any questions about our privacy policy, please contact us using the contact information provided on our website.',
                       style: TextStyle(
                         color: themeProvider.currentTheme.primaryColor,
                         fontSize: 14,

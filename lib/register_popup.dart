@@ -123,7 +123,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
                               children: [
                                 Center(
                                   child: Text(
-                                    'Register \nin TeamChat',
+                                    'Register \nin Coolchat',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       color: themeProvider
@@ -812,7 +812,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
                         height: 10,
                       ),
                       Text(
-                        'Welcome \nto the TeamChat',
+                        'Welcome \nto the Coolchat',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: themeProvider.currentTheme.primaryColor,

@@ -190,6 +190,7 @@ class TheirMessege extends StatelessWidget {
                             isOnline: true,
                             memberID: ownerId,
                             contextAvatarMember: contextMessage,
+                            big: false,
                           ),
                   ),
                   Expanded(
@@ -589,6 +590,7 @@ class MyMessege extends StatelessWidget {
                             isOnline: true,
                             memberID: ownerId,
                             contextAvatarMember: contextMessage,
+                            big: false,
                           ),
                   ),
                 ]),

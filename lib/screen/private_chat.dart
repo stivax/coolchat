@@ -4,6 +4,9 @@ import 'dart:convert';
 
 import 'package:connectivity/connectivity.dart';
 import 'package:coolchat/bloc/token_blok.dart';
+import 'package:coolchat/bloc/token_event.dart';
+import 'package:coolchat/bloc/token_state.dart';
+import 'package:coolchat/servises/message_provider_container.dart';
 import 'package:coolchat/servises/token_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -25,18 +28,18 @@ class MessagePrivatData {
         previousMemberID = 0;
 }
 
-final blockMessageStateKey = GlobalKey<_BlockMessagesState>();
+final blockMessageStateKey = GlobalKey<_BlockPrivateMessagesState>();
 
 class PrivateChatScreen extends StatefulWidget {
   final String receiverName;
-  final MessageProvider messageProvider;
   final int recipientId;
+  final int myId;
 
   PrivateChatScreen(
       {super.key,
       required this.receiverName,
-      required this.messageProvider,
-      required this.recipientId});
+      required this.recipientId,
+      required this.myId});
 
   @override
   State<PrivateChatScreen> createState() => _PrivateChatScreenState();
@@ -46,47 +49,36 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
   bool isListening = false;
   final messagePrivatData = MessagePrivatData();
   bool emptyMessages = true;
+  MessageProvider? providerInPrivateScreen;
   StreamSubscription? _messageSubscription;
-  late StreamSubscription<ConnectivityResult> _connectivitySubscription;
+  StreamSubscription<ConnectivityResult>? _connectivitySubscription;
 
   @override
   void initState() {
-    messageListen(widget.messageProvider);
-    _connectivitySubscription =
-        Connectivity().onConnectivityChanged.listen((result) {
-      if (result != ConnectivityResult.none) {
-        if (!widget.messageProvider.isConnected) {
-          messageListen(widget.messageProvider);
-        }
-      }
-    });
     super.initState();
   }
 
   @override
   void dispose() {
     print('dispose private in screen');
-    widget.messageProvider.channel.sink.close();
+    providerInPrivateScreen!.channel.sink.close();
     super.dispose();
   }
 
-  void messageListen(MessageProvider messageProvider) async {
-    //await Future.delayed(const Duration(milliseconds: 500));
-    if (!isListening) {
-      //|| _messageSubscription!.isPaused) {
+  void messageListen() async {
+    providerInPrivateScreen ??= MessageProviderContainer.instance
+        .getProvider(widget.recipientId.toString())!;
+    print('provider ${providerInPrivateScreen!.channel}');
+    if (!isListening || _messageSubscription!.isPaused) {
       isListening = true;
-      if (!messageProvider.isConnected) {
-        await messageProvider.reconnect();
-        await messageProvider.channel.ready;
+      if (!providerInPrivateScreen!.isConnected) {
+        await providerInPrivateScreen!.reconnect();
+        await providerInPrivateScreen!.channel.ready;
       }
-      print('listen private messages begin');
-      //clearMessages();
-      //_messageSubscription?.cancel();
-      print('empty messages');
-      //setState(() {
-      emptyMessages = false;
-      //});
-      _messageSubscription = messageProvider.messagesStream.listen(
+      print('listen begin');
+      clearMessages();
+      _messageSubscription?.cancel();
+      _messageSubscription = providerInPrivateScreen!.messagesStream.listen(
         (event) async {
           print(event);
           if (event.toString().startsWith('{"created_at"')) {
@@ -100,14 +92,17 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
         onDone: () {
           print('onDone');
           isListening = false;
-          messageProvider.setIsConnected = false;
+          providerInPrivateScreen!.setIsConnected = false;
         },
         onError: (e) {
           print('onError');
           isListening = false;
-          messageProvider.setIsConnected = false;
+          providerInPrivateScreen!.setIsConnected = false;
         },
       );
+    } else if (_messageSubscription!.isPaused) {
+      print('messageSubscription resume');
+      _messageSubscription!.resume();
     }
   }
 
@@ -115,8 +110,8 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
     _connectivitySubscription =
         Connectivity().onConnectivityChanged.listen((result) async {
       if (result != ConnectivityResult.none) {
-        if (widget.messageProvider.isConnected) {
-          messageListen(widget.messageProvider);
+        if (providerInPrivateScreen!.isConnected) {
+          messageListen();
         }
       }
     });
@@ -128,6 +123,7 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
         jsonMessage, messagePrivatData.previousMemberID, widget.recipientId);
     messagePrivatData.previousMemberID = message.senderId.toInt();
     blockMessageStateKey.currentState!._messages.add(message);
+    //blockMessageStateKey.currentState!.emptyMessages = false;
     blockMessageStateKey.currentState!.widget.updateState();
   }
 
@@ -150,26 +146,63 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
           ),
         )
       ],
-      child: CommonChatScreen(
-        topicName: widget.receiverName,
-        messageProvider: widget.messageProvider,
-        messageData: messagePrivatData,
-        emptyMessages: emptyMessages,
-      ),
+      child: BlocBuilder<TokenBloc, TokenState>(builder: (context, state) {
+        if (state is TokenLoadingState) {
+          return CommonChatScreen(
+            state: 'loading',
+            topicName: widget.receiverName,
+            recepientId: widget.recipientId,
+            messageData: messagePrivatData,
+            emptyMessages: emptyMessages,
+          );
+        } else if (state is TokenLoadedState) {
+          providerInPrivateScreen ??= MessageProviderContainer.instance
+              .getProvider(widget.recipientId.toString())!;
+          messageListen();
+          _connectivitySubscription =
+              Connectivity().onConnectivityChanged.listen((result) {
+            if (result != ConnectivityResult.none) {
+              if (!providerInPrivateScreen!.isConnected) {
+                messageListen();
+              }
+            }
+          });
+          return CommonChatScreen(
+            state: 'loaded',
+            topicName: widget.receiverName,
+            recepientId: widget.recipientId,
+            messageProvider: providerInPrivateScreen,
+            messageData: messagePrivatData,
+            emptyMessages: emptyMessages,
+          );
+        } else {
+          return CommonChatScreen(
+            state: 'error',
+            topicName: widget.receiverName,
+            recepientId: widget.recipientId,
+            messageData: messagePrivatData,
+            emptyMessages: emptyMessages,
+          );
+        }
+      }),
     );
   }
 }
 
 class CommonChatScreen extends StatefulWidget {
   final String topicName;
-  final MessageProvider messageProvider;
+  final MessageProvider? messageProvider;
+  final String state;
+  final int recepientId;
   MessagePrivatData messageData;
   bool emptyMessages;
 
   CommonChatScreen(
       {super.key,
       required this.topicName,
-      required this.messageProvider,
+      this.messageProvider,
+      required this.state,
+      required this.recepientId,
       required this.messageData,
       required this.emptyMessages});
 
@@ -183,6 +216,9 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
   void initState() {
     super.initState();
     messageData = widget.messageData;
+    final TokenBloc tokenBloc = context.read<TokenBloc>();
+    tokenBloc.add(TokenLoadEvent(
+        roomName: widget.recepientId.toString(), type: 'private'));
   }
 
   @override
@@ -207,11 +243,12 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
                   children: [
                     SizedBox(
                         height: 27,
-                        child: TopicName(topicName: widget.topicName)),
+                        child: ReceiverName(topicName: widget.topicName)),
                     SizedBox(
                       height: (screenHeight - 108) * 1,
-                      child: BlockMessages(
+                      child: BlockPrivateMessages(
                           key: blockMessageStateKey,
+                          state: widget.state,
                           messageData: widget.messageData,
                           emptyMessages: widget.emptyMessages,
                           updateState: () {
@@ -231,16 +268,16 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
   }
 }
 
-class TopicName extends StatefulWidget {
+class ReceiverName extends StatefulWidget {
   // ignore: prefer_typing_uninitialized_variables
   final topicName;
-  const TopicName({super.key, required this.topicName});
+  const ReceiverName({super.key, required this.topicName});
 
   @override
-  State<TopicName> createState() => _TopicNameState();
+  State<ReceiverName> createState() => _ReceiverNameState();
 }
 
-class _TopicNameState extends State<TopicName> {
+class _ReceiverNameState extends State<ReceiverName> {
   bool shouldAnimate = false;
 
   @override
@@ -322,23 +359,32 @@ class _TopicNameState extends State<TopicName> {
   }
 }
 
-class BlockMessages extends StatefulWidget {
+class BlockPrivateMessages extends StatefulWidget {
+  final String state;
   final MessagePrivatData messageData;
   final Function updateState;
   final bool emptyMessages;
-  const BlockMessages({
+  const BlockPrivateMessages({
     Key? key,
+    required this.state,
     required this.messageData,
     required this.updateState,
     required this.emptyMessages,
   }) : super(key: key);
 
   @override
-  State<BlockMessages> createState() => _BlockMessagesState();
+  State<BlockPrivateMessages> createState() => _BlockPrivateMessagesState();
 }
 
-class _BlockMessagesState extends State<BlockMessages> {
+class _BlockPrivateMessagesState extends State<BlockPrivateMessages> {
   final Set<MessagesPrivat> _messages = {};
+  late bool emptyMessages;
+
+  @override
+  void initState() {
+    super.initState();
+    emptyMessages = true;
+  }
 
   @override
   void didChangeDependencies() {
@@ -371,7 +417,7 @@ class _BlockMessagesState extends State<BlockMessages> {
                   )
                 ],
               ),
-              child: widget.emptyMessages
+              child: widget.state == 'loading'
                   ? Center(
                       child: CircularProgressIndicator(
                       color: themeProvider.currentTheme.shadowColor,
@@ -391,7 +437,7 @@ class _BlockMessagesState extends State<BlockMessages> {
           return _messages.toList().reversed.toList()[index];
         },
       );
-    } else {
+    } else if (!emptyMessages) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.max,
@@ -424,17 +470,23 @@ class _BlockMessagesState extends State<BlockMessages> {
           ],
         ),
       );
+    } else {
+      return Center(
+        child: CircularProgressIndicator(
+          color: themeProvider.currentTheme.shadowColor,
+        ),
+      );
     }
   }
 }
 
 class TextAndSend extends StatefulWidget {
   final String topicName;
-  final MessageProvider messageProvider;
+  final MessageProvider? messageProvider;
   const TextAndSend({
     super.key,
     required this.topicName,
-    required this.messageProvider,
+    this.messageProvider,
   });
 
   @override
@@ -464,7 +516,7 @@ class _TextAndSendState extends State<TextAndSend> {
   }
 
   void _sendMessage(String message) {
-    widget.messageProvider.sendMessage(json.encode({
+    widget.messageProvider!.sendMessage(json.encode({
       'messages': message,
     }));
   }

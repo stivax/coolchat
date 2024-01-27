@@ -1,7 +1,4 @@
-import 'package:coolchat/account.dart';
-import 'package:coolchat/message_provider.dart';
 import 'package:coolchat/screen/private_chat.dart';
-import 'package:coolchat/server/server.dart';
 import 'package:coolchat/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -12,13 +9,15 @@ class AvatarMember extends StatelessWidget {
   final int memberID;
   bool isOnline = true;
   final BuildContext contextAvatarMember;
+  bool big;
   AvatarMember(
       {super.key,
       required this.avatar,
       required this.name,
       required this.isOnline,
       required this.memberID,
-      required this.contextAvatarMember});
+      required this.contextAvatarMember,
+      required this.big});
 
   @override
   Widget build(BuildContext context) {
@@ -35,9 +34,9 @@ class AvatarMember extends StatelessWidget {
             clipBehavior: Clip.hardEdge,
             children: [
               Positioned(
-                top: 5,
-                right: 5,
-                left: 5,
+                top: big ? 5 : 2,
+                right: big ? 5 : 2,
+                left: big ? 5 : 2,
                 bottom: 0,
                 child: Container(
                   decoration: ShapeDecoration(
@@ -46,7 +45,7 @@ class AvatarMember extends StatelessWidget {
                       side: BorderSide(
                           width: 0.50,
                           color: themeProvider.currentTheme.shadowColor),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(big ? 10 : 6),
                     ),
                     shadows: const [
                       BoxShadow(
@@ -80,7 +79,7 @@ class AvatarMember extends StatelessWidget {
       ThemeProvider themeProvider, Offset tapPosition) {
     showMenu(
       context: contextAvatarMember,
-      color: themeProvider.currentTheme.primaryColorDark,
+      color: themeProvider.currentTheme.hintColor,
       position: RelativeRect.fromLTRB(
         tapPosition.dx,
         tapPosition.dy,
@@ -99,31 +98,21 @@ class AvatarMember extends StatelessWidget {
       items: [
         PopupMenuItem(
           height: 36,
-          onTap: () async {
-            late MessageProvider messageProvider;
-            bool messageProviderCreated = false;
-            const server = Server.server;
-            final String id = memberID.toString();
-            final account = await readAccountFuture();
-            final token = await loginProcess(account.email, account.password);
-            messageProvider = await MessageProvider.create(
-                'wss://$server/private/$id?token=${token["access_token"]}');
-            await messageProvider.channel.ready;
-            messageProviderCreated = true;
+          onTap: () {
             print('start chat with ${name.toString()}');
-            if (messageProviderCreated) {
-              Navigator.push(
-                contextAvatarMember,
-                MaterialPageRoute(
-                    builder: (contextAvatarMember) => PrivateChatScreen(
-                          receiverName: name,
-                          messageProvider: messageProvider,
-                          recipientId: account.id,
-                        )),
-              );
-            }
+            Navigator.push(
+              contextAvatarMember,
+              MaterialPageRoute(
+                  builder: (contextAvatarMember) => PrivateChatScreen(
+                        receiverName: name,
+                        recipientId: memberID,
+                        myId: memberID,
+                      )),
+            );
           },
-          child: Container(
+          child: MediaQuery(
+            data: MediaQuery.of(contextAvatarMember)
+                .copyWith(textScaler: TextScaler.noScaling),
             child: Text(
               'Send private message',
               style: TextStyle(
@@ -135,7 +124,7 @@ class AvatarMember extends StatelessWidget {
             ),
           ),
         ),
-        PopupMenuItem(
+        /*PopupMenuItem(
           height: 36,
           onTap: () {
             // Add code for handling "Info" here
@@ -152,7 +141,7 @@ class AvatarMember extends StatelessWidget {
               ),
             ),
           ),
-        ),
+        ),*/
       ],
       elevation: 8.0,
       shadowColor: themeProvider.currentTheme.cardColor,
