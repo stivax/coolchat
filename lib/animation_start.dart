@@ -43,3 +43,46 @@ class AnimationMain extends StatelessWidget {
     }));
   }
 }
+
+class AnimationRefresh extends StatefulWidget {
+  final double size;
+  const AnimationRefresh({Key? key, required this.size}) : super(key: key);
+
+  @override
+  _AnimationRefreshState createState() => _AnimationRefreshState();
+}
+
+class _AnimationRefreshState extends State<AnimationRefresh>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<ThemeProvider>(builder: (context, themeProvider, child) {
+      return ScaleTransition(
+        scale: _controller,
+        child: Image.asset(
+          'assets/images/refresh.png',
+          color: themeProvider.currentTheme.primaryColor,
+          width: widget.size,
+          height: widget.size,
+        ),
+      );
+    });
+  }
+}

@@ -351,7 +351,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                   color: themeProvider.currentTheme.primaryColorDark,
                   child: const Padding(
                     padding: EdgeInsets.all(16.0),
-                    child: Center(child: AnimationMain(size: 38)),
+                    child: Center(child: AnimationRefresh(size: 38)),
                   ),
                 ),
                 Expanded(

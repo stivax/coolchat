@@ -106,6 +106,12 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
     }
   }
 
+  Future<void> checkEmptyMessages() async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    print('falseeeeeeeeeeeeeeeeeeeeeeeee');
+    blockMessageStateKey.currentState!.emptyMessagesFalse();
+  }
+
   void connectivitySubscription() async {
     _connectivitySubscription =
         Connectivity().onConnectivityChanged.listen((result) async {
@@ -167,6 +173,7 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
               }
             }
           });
+          checkEmptyMessages();
           return CommonChatScreen(
             state: 'loaded',
             topicName: widget.receiverName,
@@ -390,6 +397,12 @@ class _BlockPrivateMessagesState extends State<BlockPrivateMessages> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     setState(() {});
+  }
+
+  void emptyMessagesFalse() {
+    setState(() {
+      emptyMessages = false;
+    });
   }
 
   @override

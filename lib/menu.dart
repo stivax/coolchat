@@ -358,7 +358,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                   PopupMenuItem<String>(
                     value: 'item8',
                     child: Text(
-                      'Version: v0.13.35',
+                      'Version: v0.13.37',
                       textScaler: TextScaler.noScaling,
                       style: TextStyle(
                         color: themeProvider.currentTheme.primaryColor
