@@ -66,18 +66,14 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
   }
 
   void messageListen() async {
-    providerInPrivateScreen ??= MessageProviderContainer.instance
-        .getProvider(widget.recipientId.toString())!;
-    print('provider ${providerInPrivateScreen!.channel}');
-    if (!isListening || _messageSubscription!.isPaused) {
-      isListening = true;
-      if (!providerInPrivateScreen!.isConnected) {
-        await providerInPrivateScreen!.reconnect();
-        await providerInPrivateScreen!.channel.ready;
-      }
+    print('messagePrivateListen');
+    if (providerInPrivateScreen !=
+        MessageProviderContainer.instance
+            .getProvider(widget.recipientId.toString())!) {
+      providerInPrivateScreen = MessageProviderContainer.instance
+          .getProvider(widget.recipientId.toString())!;
       print('listen begin');
       clearMessages();
-      _messageSubscription?.cancel();
       _messageSubscription = providerInPrivateScreen!.messagesStream.listen(
         (event) async {
           print(event);
@@ -100,15 +96,11 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
           providerInPrivateScreen!.setIsConnected = false;
         },
       );
-    } else if (_messageSubscription!.isPaused) {
-      print('messageSubscription resume');
-      _messageSubscription!.resume();
     }
   }
 
   Future<void> checkEmptyMessages() async {
     await Future.delayed(const Duration(milliseconds: 500));
-    print('falseeeeeeeeeeeeeeeeeeeeeeeee');
     blockMessageStateKey.currentState!.emptyMessagesFalse();
   }
 
@@ -162,8 +154,6 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
             emptyMessages: emptyMessages,
           );
         } else if (state is TokenLoadedState) {
-          providerInPrivateScreen ??= MessageProviderContainer.instance
-              .getProvider(widget.recipientId.toString())!;
           messageListen();
           _connectivitySubscription =
               Connectivity().onConnectivityChanged.listen((result) {
@@ -217,11 +207,14 @@ class CommonChatScreen extends StatefulWidget {
   State<CommonChatScreen> createState() => _CommonChatScreenState();
 }
 
-class _CommonChatScreenState extends State<CommonChatScreen> {
+class _CommonChatScreenState extends State<CommonChatScreen>
+    with WidgetsBindingObserver {
   late MessagePrivatData messageData;
+  BuildContext? _buildContext;
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     messageData = widget.messageData;
     final TokenBloc tokenBloc = context.read<TokenBloc>();
     tokenBloc.add(TokenLoadEvent(
@@ -229,7 +222,29 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
   }
 
   @override
+  void dispose() {
+    if (widget.messageProvider != null) {
+      widget.messageProvider!.channel.sink.close();
+      WidgetsBinding.instance.removeObserver(this);
+      print('dispose in screen');
+    }
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed && _buildContext != null) {
+      print('resume!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+      final TokenBloc tokenBloc = _buildContext!.read<TokenBloc>();
+      tokenBloc.add(TokenLoadEvent(
+          roomName: widget.recepientId.toString(), type: 'private'));
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    _buildContext = context;
     var paddingTop = MediaQuery.of(context).padding.top;
     var screenHeight = MediaQuery.of(context).size.height - 56 - paddingTop;
 

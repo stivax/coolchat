@@ -19,6 +19,7 @@ class AboutChatDialog extends StatelessWidget {
             title: SizedBox(
               width: double.maxFinite,
               child: Stack(
+                alignment: Alignment.centerRight,
                 children: [
                   Center(
                     child: Text(
@@ -33,15 +34,16 @@ class AboutChatDialog extends StatelessWidget {
                     ),
                   ),
                   Positioned(
-                    top: -16.0,
+                    //top: -16.0,
                     right: -16.0,
                     child: IconButton(
+                      padding: const EdgeInsets.all(0),
                       icon: Icon(
                         Icons.close,
                         color: themeProvider.currentTheme.shadowColor,
                       ),
                       onPressed: () {
-                        Navigator.of(context).pop(); // Close the AlertDialog
+                        Navigator.of(context).pop();
                       },
                     ),
                   ),
@@ -154,7 +156,7 @@ class MemberTeam extends StatelessWidget {
                     alignment: Alignment.centerRight,
                     child: Image.asset(
                       'assets/images/linkedin.png',
-                      color: themeProvider.currentTheme.primaryColor,
+                      color: themeProvider.currentTheme.shadowColor,
                     ),
                   ),
                 ),

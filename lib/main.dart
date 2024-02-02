@@ -53,7 +53,7 @@ class StartScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     return FutureBuilder(
-      future: Future.delayed(const Duration(seconds: 2)),
+      future: Future.delayed(const Duration(seconds: 4)),
       builder: (context, snapshot) {
         if (themeProvider.isThemeChange &&
             snapshot.connectionState == ConnectionState.waiting) {
@@ -134,13 +134,20 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     _timerCheckAndRefreshListenWebsocket =
         Timer.periodic(const Duration(seconds: 15), (timer) {
       print('timer ${timer.isActive.toString()}');
-      if (_accountProvider.isLoginProvider && _messageSubscription == null) {
-        print('timer listenSocket()');
-        listenSocket();
-      } else if (_accountProvider.isLoginProvider &&
-          _messageSubscription!.isPaused) {
-        print('timer messageSubscription resume');
-        _messageSubscription!.resume();
+      if (_accountProvider.isLoginProvider) {
+        if (messageProvider == null) {
+          print('timer messageProvider == null');
+          startListenSocket();
+        } else if (!messageProvider!.isConnected) {
+          print('timer messageProvider!.isConnected');
+          startListenSocket();
+        } else if (_messageSubscription == null) {
+          print('timer messageSubscription == null');
+          listenSocket();
+        } else if (_messageSubscription!.isPaused) {
+          print('timer messageSubscription!.isPaused');
+          _messageSubscription!.resume();
+        }
       }
     });
   }

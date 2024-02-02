@@ -85,25 +85,22 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     providerInScreen?.channel.sink.close();
     _messageSubscription?.cancel();
     _connectivitySubscription.cancel();
-    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   void messageListen() async {
-    providerInScreen ??=
-        MessageProviderContainer.instance.getProvider(widget.topicName)!;
-    if (!isListening || _messageSubscription!.isPaused) {
-      isListening = true;
-      if (!providerInScreen!.isConnected) {
-        await providerInScreen!.reconnect();
-        await providerInScreen!.channel.ready;
-      }
+    print('messageListen');
+    if (providerInScreen !=
+        MessageProviderContainer.instance.getProvider(widget.topicName)!) {
+      providerInScreen =
+          MessageProviderContainer.instance.getProvider(widget.topicName)!;
+      await _messageSubscription?.cancel();
       print('listen begin');
       clearMessages();
-      _messageSubscription?.cancel();
       _messageSubscription = providerInScreen!.messagesStream.listen(
         (event) async {
-          print(event);
+          //print(event);
           if (event.toString().startsWith('{"created_at"')) {
             formMessage(event.toString());
           } else if (event.toString().startsWith('{"type":"active_users"')) {
@@ -125,9 +122,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           providerInScreen!.setIsConnected = false;
         },
       );
-    } else if (_messageSubscription!.isPaused) {
-      print('messageSubscription resume');
-      _messageSubscription!.resume();
     }
   }
 
@@ -159,14 +153,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-    if (state == AppLifecycleState.resumed) {
-      messageListen();
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
@@ -181,7 +167,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       ],
       child: BlocBuilder<TokenBloc, TokenState>(
         builder: (context, state) {
-          //print(state.runtimeType);
           if (state is TokenEmptyState) {
             return CommonChatScreen(
               state: 'empty',
@@ -193,8 +178,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             );
           } else if (state is TokenLoadedState) {
             acc = state.account;
-            providerInScreen ??= MessageProviderContainer.instance
-                .getProvider(widget.topicName)!;
+            //providerInScreen = MessageProviderContainer.instance.getProvider(widget.topicName)!;
             messageListen();
             _connectivitySubscription =
                 Connectivity().onConnectivityChanged.listen((result) {
@@ -262,11 +246,14 @@ class CommonChatScreen extends StatefulWidget {
   State<CommonChatScreen> createState() => _CommonChatScreenState();
 }
 
-class _CommonChatScreenState extends State<CommonChatScreen> {
+class _CommonChatScreenState extends State<CommonChatScreen>
+    with WidgetsBindingObserver {
   late List<Messages> messageData;
+  BuildContext? _buildContext;
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     messageData = widget.messageData;
     final TokenBloc tokenBloc = context.read<TokenBloc>();
     if (widget.account.email.isNotEmpty) {
@@ -281,13 +268,29 @@ class _CommonChatScreenState extends State<CommonChatScreen> {
   void dispose() {
     if (widget.messageProvider != null) {
       widget.messageProvider!.channel.sink.close();
+      WidgetsBinding.instance.removeObserver(this);
       print('dispose in screen');
     }
     super.dispose();
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed && _buildContext != null) {
+      final TokenBloc tokenBloc = _buildContext!.read<TokenBloc>();
+      if (widget.account.email.isNotEmpty) {
+        tokenBloc.add(TokenLoadEvent(roomName: widget.topicName, type: 'ws'));
+      } else {
+        tokenBloc.add(TokenLoadFromGetEvent(
+            roomName: widget.topicName, context: context));
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    _buildContext = context;
     var paddingTop = MediaQuery.of(context).padding.top;
     var paddingButton = MediaQuery.of(context).padding.bottom;
     var screenHeight =

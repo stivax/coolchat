@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:gif/gif.dart';
 
 import 'package:coolchat/theme_provider.dart';
 
@@ -32,15 +33,27 @@ class AnimationMain extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(child:
-        Consumer<ThemeProvider>(builder: (context, themeProvider, child) {
-      return Image(
-        image: const AssetImage('assets/animation/animation_start.gif'),
-        width: 200,
-        height: 200,
-        color: themeProvider.currentTheme.shadowColor,
+    return Consumer<ThemeProvider>(builder: (context, themeProvider, child) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Gif(
+            image: AssetImage(themeProvider.isLightMode
+                ? 'assets/animation/animation_start_light.gif'
+                : 'assets/animation/animation_start_dark.gif'),
+            //controller: _controller,
+            //fps: 30,
+            duration: const Duration(milliseconds: 1200),
+            autostart: Autostart.once,
+            //placeholder: (context) => const Text('Loading...'),
+            //onFetchCompleted: () {
+            //  _controller.reset();
+            //  _controller.forward();
+            //},
+          ),
+        ),
       );
-    }));
+    });
   }
 }
 

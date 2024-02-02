@@ -71,12 +71,10 @@ class _RegisterDialogState extends State<RegisterDialog> {
           id: 0);
       final answer = await sendUser(acc, context);
       if (answer.isEmpty) {
-        final token =
-            await loginProcess(_emailController.text, _passwordController.text);
         Account acc = await readAccountFromServer(
             context, _emailController.text, _passwordController.text);
         await writeAccount(acc, context);
-        final answer = await _showPopupWelcome(acc, context);
+        await _showPopupWelcome(acc, context);
         Navigator.pop(context, acc);
       } else {
         _showPopupErrorInput(answer, context);
@@ -739,9 +737,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
     );
   }
 
-  Future<String> _showPopupWelcome(
-      Account account, BuildContext context) async {
-    String answer = '';
+  Future<void> _showPopupWelcome(Account account, BuildContext context) async {
     await showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -865,7 +861,6 @@ class _RegisterDialogState extends State<RegisterDialog> {
         );
       },
     );
-    return answer;
   }
 
   String? _nameValidate(String? value) {
