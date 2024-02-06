@@ -100,7 +100,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
   }
 
   void _readDataFromFile() async {
-    final data = await readAccountFuture();
+    final data = await readAccountFromStorage();
 
     setState(() {
       _account = data;
@@ -124,7 +124,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
         _account =
             Account(email: '', userName: '', password: '', avatar: '', id: 0);
       });
-      await writeAccount(_account, context);
+      await writeAccountInStorage(_account, context);
       showPopupLogOut(acc, tokenBloc, context);
     }
   }
@@ -157,9 +157,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                     if (_account.email.isNotEmpty) {
                       MessageProviderContainer.instance
                           .getProvider('direct')
-                          ?.channel
-                          .sink
-                          .close();
+                          ?.dispose();
                       if (Navigator.canPop(context)) {
                         Navigator.pop(context);
                       }
@@ -176,7 +174,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                           return LoginDialog();
                         },
                       );
-                      final acc = await readAccountFuture();
+                      final acc = await readAccountFromStorage();
                       if (acc.userName != '') {
                         if (Navigator.canPop(context)) {
                           Navigator.pop(context);
@@ -358,7 +356,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                   PopupMenuItem<String>(
                     value: 'item8',
                     child: Text(
-                      'Version: v0.13.38',
+                      'Version: v0.13.39',
                       textScaler: TextScaler.noScaling,
                       style: TextStyle(
                         color: themeProvider.currentTheme.primaryColor

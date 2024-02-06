@@ -55,7 +55,7 @@ class _PrivateChatListState extends State<PrivateChatList> {
   }
 
   getToken() async {
-    final acc = await readAccountFuture();
+    final acc = await readAccountFromStorage();
     final tok = await loginProcess(acc.email, acc.password);
     setState(() {
       token = tok;

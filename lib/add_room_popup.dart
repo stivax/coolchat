@@ -60,7 +60,7 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
 
   Future<MessageProvider> socketConnect() async {
     const server = Server.server;
-    final acc = await readAccountFuture();
+    final acc = await readAccountFromStorage();
     Map<dynamic, dynamic> token = await loginProcess(acc.email, acc.password);
     MessageProvider messageProvider = await MessageProvider.create(
         'wss://$server/ws/${_nameRoomController.text}?token=${token["access_token"]}');
@@ -72,7 +72,7 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
         Provider.of<AccountSettingProvider>(context, listen: false);
     const server = Server.server;
     if (_formKey.currentState!.validate() && _selectedItems != '') {
-      final acc = await readAccountFuture();
+      final acc = await readAccountFromStorage();
       // ignore: use_build_context_synchronously
       final answer = await sendRoom(
           context, _nameRoomController.text, _selectedItems, acc);

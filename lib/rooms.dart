@@ -101,7 +101,7 @@ class Room extends StatelessWidget {
                 child: GestureDetector(
                   onTap: () async {
                     const server = Server.server;
-                    final account = await readAccountFuture();
+                    final account = await readAccountFromStorage();
                     id == 999
                         ? addRoomDialog(context)
                         : Navigator.push(
@@ -280,7 +280,7 @@ class Room extends StatelessWidget {
 }
 
 void addRoomDialog(BuildContext context) async {
-  Account acc = await readAccountFuture();
+  Account acc = await readAccountFromStorage();
   if (acc.userName == '') {
     await showDialog(
       context: context,
@@ -288,7 +288,7 @@ void addRoomDialog(BuildContext context) async {
         return LoginDialog();
       },
     );
-    acc = await readAccountFuture();
+    acc = await readAccountFromStorage();
     if (acc.userName != '') {
       showDialog(
         context: context,

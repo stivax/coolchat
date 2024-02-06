@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'package:coolchat/server/server.dart';
 import 'package:coolchat/servises/account_provider.dart';
@@ -10,7 +11,6 @@ import 'bloc/token_blok.dart';
 import 'bloc/token_event.dart';
 import 'error_answer.dart';
 
-import 'main.dart';
 import 'theme_provider.dart';
 
 class Account {
@@ -82,22 +82,40 @@ class Account {
   }
 }
 
-Future<void> writeAccount(Account account, BuildContext context) async {
-  final acc = await SharedPreferences.getInstance();
-  final toWrite = jsonEncode(account);
-  acc.setString("account", toWrite);
+Future<void> writeAccountInStorage(
+    Account account, BuildContext context) async {
+  final storage = FlutterSecureStorage();
+  await storage.write(key: 'email', value: account.email);
+  await storage.write(key: 'userName', value: account.userName);
+  await storage.write(key: 'password', value: account.password);
+  await storage.write(key: 'avatar', value: account.avatar);
+  await storage.write(key: 'id', value: account.id.toString());
+  //final acc = await SharedPreferences.getInstance();
+  //final toWrite = jsonEncode(account);
+  //acc.setString("account", toWrite);
   final accountProvider = Provider.of<AccountProvider>(context, listen: false);
   accountProvider.addAccount(account);
 }
 
-Future<Account> readAccountFuture() async {
-  final acc = await SharedPreferences.getInstance();
-  final userString = acc.getString("account");
+Future<Account> readAccountFromStorage() async {
+  //final acc = await SharedPreferences.getInstance();
+  //final userString = acc.getString("account");
+  final storage = FlutterSecureStorage();
+  String? email = await storage.read(key: 'email');
 
-  if (userString != null) {
-    Map<String, dynamic> jsonData = json.decode(userString);
-    Account account = Account.fromJson(jsonData);
-    return account;
+  if (email != null) {
+    String? userName = await storage.read(key: 'userName');
+    String? password = await storage.read(key: 'password');
+    String? avatar = await storage.read(key: 'avatar');
+    String? id = await storage.read(key: 'id');
+    //Map<String, dynamic> jsonData = json.decode(userString);
+    //Account account = Account.fromJson(jsonData);
+    return Account(
+        email: email,
+        userName: userName!,
+        password: password!,
+        avatar: avatar!,
+        id: int.parse(id!));
   } else {
     return Account(email: '', userName: '', password: '', avatar: '', id: 0);
   }
@@ -121,7 +139,9 @@ Future<String> sendUser(Account account, BuildContext context) async {
   );
 
   if (response.statusCode == 201) {
-    return '';
+    final responseData = json.decode(response.body);
+    final id = responseData["id"].toString();
+    return id;
   } else {
     final responseData = json.decode(response.body);
     final error = ErrorAnswer.fromJson(responseData);
@@ -281,7 +301,7 @@ showPopupLogOut(Account acc, TokenBloc tokenBloc, BuildContext context) async {
                       onPressed: () async {
                         FocusManager.instance.primaryFocus?.unfocus();
                         tokenBloc.add(TokenClearEvent());
-                        await writeAccount(
+                        await writeAccountInStorage(
                             Account(
                                 email: '',
                                 userName: '',

@@ -82,7 +82,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    providerInScreen?.channel.sink.close();
+    providerInScreen?.dispose();
     _messageSubscription?.cancel();
     _connectivitySubscription.cancel();
     WidgetsBinding.instance.removeObserver(this);
@@ -114,12 +114,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         onDone: () {
           print('onDone');
           isListening = false;
-          providerInScreen!.setIsConnected = false;
+          //providerInScreen!.setIsConnected = false;
         },
         onError: (e) {
           print('onError');
           isListening = false;
-          providerInScreen!.setIsConnected = false;
+          //providerInScreen!.setIsConnected = false;
         },
       );
     }
@@ -267,7 +267,7 @@ class _CommonChatScreenState extends State<CommonChatScreen>
   @override
   void dispose() {
     if (widget.messageProvider != null) {
-      widget.messageProvider!.channel.sink.close();
+      widget.messageProvider!.dispose();
       WidgetsBinding.instance.removeObserver(this);
       print('dispose in screen');
     }

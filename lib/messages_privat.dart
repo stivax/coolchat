@@ -260,9 +260,7 @@ class TheirMessege extends StatelessWidget {
                             onDoubleTap: () {
                               MessageProviderContainer.instance
                                   .getProvider(recipientId.toString())
-                                  ?.channel
-                                  .sink
-                                  .add(json.encode({
+                                  ?.sendMessage(json.encode({
                                     "vote": {"message_id": id, "dir": 1}
                                   }));
                               HapticFeedback.lightImpact();
@@ -270,7 +268,7 @@ class TheirMessege extends StatelessWidget {
                             onHorizontalDragEnd: (_) {
                               final provider = MessageProviderContainer.instance
                                   .getProvider(recipientId.toString());
-                              provider?.channel.sink.add(json.encode({
+                              provider?.sendMessage(json.encode({
                                 "vote": {"message_id": id, "dir": -1}
                               }));
                               HapticFeedback.lightImpact();
@@ -484,9 +482,7 @@ class MyMessege extends StatelessWidget {
                             onDoubleTap: () {
                               MessageProviderContainer.instance
                                   .getProvider(recipientId.toString())
-                                  ?.channel
-                                  .sink
-                                  .add(json.encode({
+                                  ?.sendMessage(json.encode({
                                     "vote": {"message_id": id, "dir": 1}
                                   }));
                               HapticFeedback.lightImpact();
@@ -494,7 +490,7 @@ class MyMessege extends StatelessWidget {
                             onHorizontalDragEnd: (_) {
                               final provider = MessageProviderContainer.instance
                                   .getProvider(recipientId.toString());
-                              provider?.channel.sink.add(json.encode({
+                              provider?.sendMessage(json.encode({
                                 "vote": {"message_id": id, "dir": -1}
                               }));
                               HapticFeedback.lightImpact();

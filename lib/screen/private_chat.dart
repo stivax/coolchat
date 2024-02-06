@@ -61,7 +61,7 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
   @override
   void dispose() {
     print('dispose private in screen');
-    providerInPrivateScreen!.channel.sink.close();
+    providerInPrivateScreen!.dispose();
     super.dispose();
   }
 
@@ -88,12 +88,12 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
         onDone: () {
           print('onDone');
           isListening = false;
-          providerInPrivateScreen!.setIsConnected = false;
+          //providerInPrivateScreen!.setIsConnected = false;
         },
         onError: (e) {
           print('onError');
           isListening = false;
-          providerInPrivateScreen!.setIsConnected = false;
+          //providerInPrivateScreen!.setIsConnected = false;
         },
       );
     }
@@ -224,7 +224,7 @@ class _CommonChatScreenState extends State<CommonChatScreen>
   @override
   void dispose() {
     if (widget.messageProvider != null) {
-      widget.messageProvider!.channel.sink.close();
+      widget.messageProvider!.dispose();
       WidgetsBinding.instance.removeObserver(this);
       print('dispose in screen');
     }

@@ -14,7 +14,7 @@ class AccountProvider with ChangeNotifier {
   bool get isLoginProvider => _isLogin;
 
   Future<void> _loadAccount() async {
-    _accountCurentState = await readAccountFuture();
+    _accountCurentState = await readAccountFromStorage();
     if (_accountCurentState.email.isNotEmpty) {
       _isLogin = true;
     }

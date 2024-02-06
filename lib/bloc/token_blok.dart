@@ -23,12 +23,12 @@ class TokenBloc extends Bloc<TokenEvent, TokenState> {
         var error;
         try {
           late final MessageProvider messageProvider;
-          Account account = await readAccountFuture();
+          Account account = await readAccountFromStorage();
           token =
               await tokenRepository.getToken(account.email, account.password);
           messageProvider = await MessageProvider.create(
               'wss://$server/${event.type!}/${event.roomName!}?token=${token!.token["access_token"]}');
-          await messageProvider.channel.ready;
+          //await messageProvider.channel.ready;
           MessageProviderContainer.instance
               .addProvider(event.roomName!, messageProvider);
           emit(TokenLoadedState(
@@ -45,7 +45,7 @@ class TokenBloc extends Bloc<TokenEvent, TokenState> {
       (event, emit) async {
         List<Messages> messages = [];
         List<Messages> messagesLoaded = [];
-        Account account = await readAccountFuture();
+        Account account = await readAccountFromStorage();
         Future<http.Response> getData() async {
           var url = Uri.https(server, '/messages/${event.roomName}');
           return await http.get(url);

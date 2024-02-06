@@ -107,7 +107,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   final server = Server.server;
   late Map<dynamic, dynamic> token;
   bool scale = false;
-  bool isListening = false;
+  bool isListeningNotofication = false;
   bool refresh = false;
   StreamSubscription? _messageSubscription;
   StreamSubscription<ConnectivityResult>? _connectivitySubscription;
@@ -130,26 +130,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     favoriteroomsList =
         _accountSettingProvider.accountSettingProvider.favoriteroomList;
     _accountSettingProvider.addListener(_onRefresh);
-    //startListenSocket();
-    _timerCheckAndRefreshListenWebsocket =
-        Timer.periodic(const Duration(seconds: 15), (timer) {
-      print('timer ${timer.isActive.toString()}');
-      if (_accountProvider.isLoginProvider) {
-        if (messageProvider == null) {
-          print('timer messageProvider == null');
-          startListenSocket();
-        } else if (!messageProvider!.isConnected) {
-          print('timer messageProvider!.isConnected');
-          startListenSocket();
-        } else if (_messageSubscription == null) {
-          print('timer messageSubscription == null');
-          listenSocket();
-        } else if (_messageSubscription!.isPaused) {
-          print('timer messageSubscription!.isPaused');
-          _messageSubscription!.resume();
-        }
-      }
-    });
+    timerCheckAndRefreshListenWebsocket();
   }
 
   @override
@@ -157,11 +138,40 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     _accountProvider.removeListener(_onAccountChange);
     _accountSettingProvider.removeListener(_onScaleChange);
     _accountSettingProvider.removeListener(_onFavoriteRoomChange);
-    messageProvider?.channel.sink.close();
+    messageProvider?.dispose();
     _messageSubscription?.cancel();
     _connectivitySubscription?.cancel();
     _timerCheckAndRefreshListenWebsocket.cancel();
     super.dispose();
+  }
+
+  void timerCheckAndRefreshListenWebsocket() {
+    _timerCheckAndRefreshListenWebsocket =
+        Timer.periodic(const Duration(seconds: 30), (timer) {
+      print('timer ${timer.isActive.toString()}');
+      if (_accountProvider.isLoginProvider) {
+        print('is Login');
+        print('isListeningNotofication $isListeningNotofication');
+        if (!isListeningNotofication) {
+          print('isListeningNotofication');
+          startListenSocket();
+        } else if (messageProvider == null) {
+          print('timer messageProvider == null');
+          startListenSocket();
+        } else if (!messageProvider!.isConnected) {
+          print('timer messageProvider!.isConnected');
+          startListenSocket();
+        } else if (_messageSubscription == null) {
+          print('timer messageSubscription == null');
+          //listenSocket();
+          startListenSocket();
+        } else if (_messageSubscription!.isPaused) {
+          print('timer messageSubscription!.isPaused');
+          //_messageSubscription!.resume();
+          startListenSocket();
+        }
+      }
+    });
   }
 
   void _onAccountChange() {
@@ -208,45 +218,46 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   }
 
   Future<void> createProvider() async {
-    print('Starting global socket');
+    print('createProvider()');
     messageProvider = await MessageProvider.create(
         'wss://$server/notification?token=${token["access_token"]}');
-    await messageProvider!.channel.ready;
     MessageProviderContainer.instance.addProvider('main', messageProvider!);
     createConnectivitySubscription();
   }
 
   Future<void> listenSocket() async {
     messageProvider ??= MessageProviderContainer.instance.getProvider('main')!;
-    if ((_messageSubscription != null && _messageSubscription!.isPaused) ||
-        _messageSubscription == null) {
-      print('start listen global socket');
-      _messageSubscription = messageProvider!.messagesStream.listen(
-        (message) async {
-          dynamic jsonMessage = jsonDecode(message);
-          final messagePush = MessagePrivatPush.fromJson(jsonMessage);
-          print(messagePush.messageId);
-          MessagePrivatePushContainer.addObject(messagePush);
-          MessagePrivatePushContainer.removeOldObjects();
-        },
-        onDone: () {
-          print('onDone');
-          listenSocket();
-        },
-        onError: (e) {
-          print('onError');
-          listenSocket();
-        },
-      );
-    }
+    //if ((_messageSubscription != null && _messageSubscription!.isPaused) || _messageSubscription == null) {
+    print('listenSocket()');
+    _messageSubscription?.cancel();
+    isListeningNotofication = true;
+    _messageSubscription = messageProvider!.messagesStream.listen(
+      (message) async {
+        dynamic jsonMessage = jsonDecode(message);
+        final messagePush = MessagePrivatPush.fromJson(jsonMessage);
+        print(messagePush.messageId);
+        MessagePrivatePushContainer.addObject(messagePush);
+        MessagePrivatePushContainer.removeOldObjects();
+      },
+      onDone: () {
+        print('onDone');
+        isListeningNotofication = false;
+      },
+      onError: (e) {
+        print('onError');
+        isListeningNotofication = false;
+      },
+    );
+    //}
   }
 
   void createConnectivitySubscription() {
     _connectivitySubscription =
         Connectivity().onConnectivityChanged.listen((result) {
       if (result != ConnectivityResult.none) {
-        if (!messageProvider!.isConnected) {
-          listenSocket();
+        if (!isListeningNotofication) {
+          //listenSocket();
+          startListenSocket();
         }
       }
     });
@@ -257,12 +268,13 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     super.didChangeAppLifecycleState(state);
     fetchData(server);
     if (state == AppLifecycleState.resumed) {
-      listenSocket();
+      //listenSocket();
+      startListenSocket();
     }
   }
 
   Future<void> getToken() async {
-    final acc = await readAccountFuture();
+    final acc = await readAccountFromStorage();
     final tok = await loginProcess(acc.email, acc.password);
     setState(() {
       token = tok;
