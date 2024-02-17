@@ -189,7 +189,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   }
 
   void _onRefresh() async {
-    print('onRefresh');
     await fetchData(server);
     setState(() {});
   }
@@ -268,8 +267,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     super.didChangeAppLifecycleState(state);
     fetchData(server);
     if (state == AppLifecycleState.resumed) {
-      //listenSocket();
-      startListenSocket();
+      if (!isListeningNotofication) {
+        startListenSocket();
+      }
     }
   }
 

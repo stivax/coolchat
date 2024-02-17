@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:beholder_flutter/beholder_flutter.dart';
 import 'package:connectivity/connectivity.dart';
+import 'package:coolchat/servises/account_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marquee/marquee.dart';
@@ -167,6 +168,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       ],
       child: BlocBuilder<TokenBloc, TokenState>(
         builder: (context, state) {
+          print(state.toString());
           if (state is TokenEmptyState) {
             return CommonChatScreen(
               state: 'empty',
@@ -1007,9 +1009,15 @@ class _TextAndSendState extends State<TextAndSend> {
                               return LoginDialog();
                             },
                           );
-                          final TokenBloc tokenBloc = context.read<TokenBloc>();
-                          tokenBloc.add(TokenLoadEvent(
-                              roomName: widget.topicName, type: 'ws'));
+                          AccountProvider _accountProvider =
+                              Provider.of<AccountProvider>(context,
+                                  listen: false);
+                          if (_accountProvider.isLoginProvider) {
+                            final TokenBloc tokenBloc =
+                                context.read<TokenBloc>();
+                            tokenBloc.add(TokenLoadEvent(
+                                roomName: widget.topicName, type: 'ws'));
+                          }
                         } else {
                           FocusScope.of(context)
                               .requestFocus(_textFieldFocusNode);
