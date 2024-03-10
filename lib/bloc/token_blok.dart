@@ -16,6 +16,7 @@ import 'token_state.dart';
 class TokenBloc extends Bloc<TokenEvent, TokenState> {
   final TokenRepository tokenRepository;
   final server = Server.server;
+  final suffix = Server.suffix;
   Token? token;
   TokenBloc({required this.tokenRepository}) : super(TokenLoadingState()) {
     on<TokenLoadEvent>(
@@ -47,7 +48,7 @@ class TokenBloc extends Bloc<TokenEvent, TokenState> {
         List<Messages> messagesLoaded = [];
         Account account = await readAccountFromStorage();
         Future<http.Response> getData() async {
-          var url = Uri.https(server, '/messages/${event.roomName}');
+          var url = Uri.https(server, '/$suffix/messages/${event.roomName}');
           return await http.get(url);
         }
 

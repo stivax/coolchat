@@ -1,8 +1,12 @@
 import 'dart:convert';
 
+import 'package:coolchat/account.dart';
+import 'package:coolchat/server/server.dart';
+import 'package:coolchat/servises/token_container.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -57,6 +61,10 @@ class Messages extends StatelessWidget {
       roomName: roomName,
       accountId: accountId,
     );
+  }
+
+  static bool fromJsonVote(dynamic jsonVote) {
+    return jsonVote;
   }
 
   static List<Messages> fromJsonList(dynamic jsonList,
@@ -243,18 +251,10 @@ class TheirMessege extends StatelessWidget {
                         ),
                         GestureDetector(
                           onDoubleTap: () {
-                            MessageProviderContainer.instance
-                                .getProvider(roomName)
-                                ?.sendMessage(json.encode({
-                                  "vote": {"message_id": id, "dir": 1}
-                                }));
-                            HapticFeedback.lightImpact();
-                          },
-                          onHorizontalDragEnd: (_) {
                             final provider = MessageProviderContainer.instance
                                 .getProvider(roomName);
                             provider?.sendMessage(json.encode({
-                              "vote": {"message_id": id, "dir": -1}
+                              "vote": {"message_id": id, "dir": 1}
                             }));
                             HapticFeedback.lightImpact();
                           },
@@ -465,14 +465,6 @@ class MyMessege extends StatelessWidget {
                                 .getProvider(roomName);
                             provider?.sendMessage(json.encode({
                               "vote": {"message_id": id, "dir": 1}
-                            }));
-                            HapticFeedback.lightImpact();
-                          },
-                          onHorizontalDragEnd: (_) {
-                            final provider = MessageProviderContainer.instance
-                                .getProvider(roomName);
-                            provider?.sendMessage(json.encode({
-                              "vote": {"message_id": id, "dir": -1}
                             }));
                             HapticFeedback.lightImpact();
                           },

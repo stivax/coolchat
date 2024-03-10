@@ -33,6 +33,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
 
   String _selectedItems = '';
   List<String> avatarList = [];
+  bool alreadyPressedAprove = false;
 
   final _emailFocus = FocusNode();
   final _passFocus = FocusNode();
@@ -72,7 +73,8 @@ class _RegisterDialogState extends State<RegisterDialog> {
 
   Future<void> fetchDataAvatarList() async {
     const server = Server.server;
-    final url = Uri.https(server, '/images/Avatar');
+    const suffix = Server.suffix;
+    final url = Uri.https(server, '/$suffix/images/Avatar');
     try {
       http.Response response = await http.get(url);
       if (response.statusCode == 200) {
@@ -108,15 +110,19 @@ class _RegisterDialogState extends State<RegisterDialog> {
             avatar: _selectedItems,
             id: answerInt);
         await writeAccountInStorage(acc, context);
+        alreadyPressedAprove = false;
         await _showPopupWelcome(acc, context);
         Navigator.pop(context, acc);
       } else {
+        alreadyPressedAprove = false;
         _showPopupErrorInput(answer, context);
       }
     } else if (_formKey.currentState!.validate() && _selectedItems == '') {
+      alreadyPressedAprove = false;
       _showPopupErrorInput(
           'It seems that you have not selected your avatar', context);
     } else {
+      alreadyPressedAprove = false;
       FocusScope.of(context).requestFocus(_emailFocus);
     }
   }
@@ -576,32 +582,42 @@ class _RegisterDialogState extends State<RegisterDialog> {
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 30, vertical: 10),
-                                      backgroundColor: themeProvider
-                                          .currentTheme.shadowColor,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                    ),
-                                    onPressed: () {
-                                      handlePopupOpen();
-                                      _saveDataAndClosePopup();
-                                    },
-                                    child: Text(
-                                      'Approve',
-                                      textScaleFactor: 1,
-                                      style: TextStyle(
-                                        color: const Color(0xFFF5FBFF),
-                                        fontSize: screenSize.height * 0.03,
-                                        fontFamily: 'Manrope',
-                                        fontWeight: FontWeight.w500,
-                                        height: 1.24,
-                                      ),
-                                    ),
-                                  ),
+                                  alreadyPressedAprove
+                                      ? CircularProgressIndicator(
+                                          color: themeProvider
+                                              .currentTheme.shadowColor,
+                                        )
+                                      : ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 30, vertical: 10),
+                                            backgroundColor: themeProvider
+                                                .currentTheme.shadowColor,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                          ),
+                                          onPressed: () {
+                                            if (!alreadyPressedAprove) {
+                                              alreadyPressedAprove = true;
+                                              handlePopupOpen();
+                                              _saveDataAndClosePopup();
+                                            }
+                                          },
+                                          child: Text(
+                                            'Approve',
+                                            textScaleFactor: 1,
+                                            style: TextStyle(
+                                              color: const Color(0xFFF5FBFF),
+                                              fontSize:
+                                                  screenSize.height * 0.03,
+                                              fontFamily: 'Manrope',
+                                              fontWeight: FontWeight.w500,
+                                              height: 1.24,
+                                            ),
+                                          ),
+                                        ),
                                   TextButton(
                                     onPressed: () {
                                       Navigator.pop(context);

@@ -87,8 +87,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
   }
 
   void checkNewMessage() {
-    MessagePrivatePushContainer.removeOldObjects();
-    if (MessagePrivatePushContainer.viewSet().isNotEmpty) {
+    if (MessagePrivatePushContainer.viewList().isNotEmpty) {
       setState(() {
         haveNewMessages = true;
       });
@@ -356,7 +355,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                   PopupMenuItem<String>(
                     value: 'item8',
                     child: Text(
-                      'Version: v0.13.39',
+                      'Version: v1.0.4',
                       textScaler: TextScaler.noScaling,
                       style: TextStyle(
                         color: themeProvider.currentTheme.primaryColor

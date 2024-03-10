@@ -2,7 +2,7 @@ import 'package:coolchat/model/message_privat_push.dart';
 
 class MessagePrivatePushContainer {
   // Сет об'єктів з класу MessagePrivatPush
-  static final Set<MessagePrivatPush> _messageSet = {};
+  static final List<MessagePrivatPush> _messageList = [];
 
   // Приватний конструктор для заборони створення об'єктів ззовні
   MessagePrivatePushContainer._();
@@ -14,25 +14,21 @@ class MessagePrivatePushContainer {
   static MessagePrivatePushContainer get instance => _instance;
 
   // Статичний метод для додавання об'єкта з класу MessagePrivatPush до сета
-  static void addObject(MessagePrivatPush object) {
-    _messageSet.add(object);
+  static void addObject(List<MessagePrivatPush> object) {
+    _messageList.addAll(object);
   }
 
 // Статичний метод для видалення об'єктів, чий час "старший" за 5 секунд
-  static void removeOldObjects() {
-    final currentTime = DateTime.now().millisecondsSinceEpoch;
-
-    _messageSet.removeWhere((object) {
-      final objectTime = object.time ?? 0;
-      final differenceInSeconds =
-          (currentTime - objectTime) / 1000; // переведення мілісекунд у секунди
-
-      return differenceInSeconds > 5;
-    });
+  static void removeObjects() {
+    _messageList.clear();
   }
 
   // Статичний метод для перегляду сета з об'єктами класу MessagePrivatPush
-  static Set<MessagePrivatPush> viewSet() {
-    return _messageSet;
+  static List<MessagePrivatPush> viewList() {
+    return _messageList;
+  }
+
+  static bool containsObject(MessagePrivatPush object) {
+    return _messageList.contains(object);
   }
 }

@@ -98,6 +98,8 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
     } else if (_formKey.currentState!.validate() && _selectedItems == '') {
       _showPopupErrorInput(
           'It seems that you have not selected your room image', context);
+    } else {
+      FocusScope.of(context).requestFocus(_nameRoomFocus);
     }
   }
 
@@ -433,7 +435,7 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
       _nameRoomFocus.requestFocus();
       return 'Name is reqired';
     } else if (!_nameExp.hasMatch(value)) {
-      return 'Please input correct Name (char, number and _)';
+      return 'Please input correct Name\n(char, number and _)';
     } else {
       return null;
     }

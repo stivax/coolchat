@@ -10,12 +10,13 @@ class TokenProvider {
     String email = Uri.encodeComponent(emailUser);
     String password = Uri.encodeComponent(passwordUser);
     String server = Server.server;
+    String suffix = Server.suffix;
 
     String body = 'username=$email&password=$password';
 
     try {
       final response = await http.post(
-        Uri.https(server, '/login'),
+        Uri.https(server, '/$suffix/login'),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },

@@ -212,9 +212,57 @@ class Room extends StatelessWidget {
                                   if (isFavorite) {
                                     await _accountSettingProvider
                                         .removeRoomIntoFavorite(name, context);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        backgroundColor: themeProvider
+                                            .currentTheme.cardColor
+                                            .withOpacity(0.9),
+                                        content: MediaQuery(
+                                          data: MediaQuery.of(context).copyWith(
+                                              textScaler: TextScaler.noScaling),
+                                          child: Center(
+                                            child: Text(
+                                              'You deleted room "$name" from favorite',
+                                              textAlign: TextAlign.center,
+                                              style: const TextStyle(
+                                                color: Color(0xFFF5FBFF),
+                                                fontSize: 14,
+                                                fontFamily: 'Manrope',
+                                                fontWeight: FontWeight.w400,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        duration: const Duration(seconds: 2),
+                                      ),
+                                    );
                                   } else {
                                     await _accountSettingProvider
                                         .addRoomToFavorite(name, context);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        backgroundColor: themeProvider
+                                            .currentTheme.cardColor
+                                            .withOpacity(0.9),
+                                        content: MediaQuery(
+                                          data: MediaQuery.of(context).copyWith(
+                                              textScaler: TextScaler.noScaling),
+                                          child: Center(
+                                            child: Text(
+                                              'You added room "$name" to favorite',
+                                              textAlign: TextAlign.center,
+                                              style: const TextStyle(
+                                                color: Color(0xFFF5FBFF),
+                                                fontSize: 14,
+                                                fontFamily: 'Manrope',
+                                                fontWeight: FontWeight.w400,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        duration: const Duration(seconds: 2),
+                                      ),
+                                    );
                                   }
                                 },
                                 child: Icon(
@@ -311,7 +359,8 @@ Future<String> sendRoom(BuildContext context, String roomName, String roomImage,
     Account acc) async {
   final token = await loginProcess(acc.email, acc.password);
   const server = Server.server;
-  final url = Uri.https(server, '/rooms/');
+  const suffix = Server.suffix;
+  final url = Uri.https(server, '/$suffix/rooms/');
 
   final jsonBody = {
     "name_room": roomName,
@@ -336,7 +385,8 @@ Future<String> sendRoom(BuildContext context, String roomName, String roomImage,
 }
 
 Future<http.Response> _getData(String server) async {
-  final url = Uri.https(server, '/images/Home');
+  const suffix = Server.suffix;
+  final url = Uri.https(server, '/$suffix/images/Home');
   return await http.get(url);
 }
 

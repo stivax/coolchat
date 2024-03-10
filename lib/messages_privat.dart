@@ -265,14 +265,7 @@ class TheirMessege extends StatelessWidget {
                                   }));
                               HapticFeedback.lightImpact();
                             },
-                            onHorizontalDragEnd: (_) {
-                              final provider = MessageProviderContainer.instance
-                                  .getProvider(recipientId.toString());
-                              provider?.sendMessage(json.encode({
-                                "vote": {"message_id": id, "dir": -1}
-                              }));
-                              HapticFeedback.lightImpact();
-                            },
+                            onHorizontalDragEnd: (_) {},
                             child: Stack(children: [
                               Container(
                                 alignment: Alignment.topLeft,
@@ -487,14 +480,7 @@ class MyMessege extends StatelessWidget {
                                   }));
                               HapticFeedback.lightImpact();
                             },
-                            onHorizontalDragEnd: (_) {
-                              final provider = MessageProviderContainer.instance
-                                  .getProvider(recipientId.toString());
-                              provider?.sendMessage(json.encode({
-                                "vote": {"message_id": id, "dir": -1}
-                              }));
-                              HapticFeedback.lightImpact();
-                            },
+                            onHorizontalDragEnd: (_) {},
                             child: Stack(children: [
                               Container(
                                 alignment: Alignment.topLeft,

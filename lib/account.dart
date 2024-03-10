@@ -5,11 +5,11 @@ import 'package:coolchat/server/server.dart';
 import 'package:coolchat/servises/account_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'bloc/token_blok.dart';
 import 'bloc/token_event.dart';
 import 'error_answer.dart';
+import 'package:coolchat/servises/message_private_push_container.dart';
 
 import 'theme_provider.dart';
 
@@ -123,7 +123,8 @@ Future<Account> readAccountFromStorage() async {
 
 Future<String> sendUser(Account account, BuildContext context) async {
   const server = Server.server;
-  final url = Uri.https(server, '/users/');
+  const suffix = Server.suffix;
+  final url = Uri.https(server, '/$suffix/users/');
 
   final jsonBody = {
     "email": account.email,
@@ -153,7 +154,8 @@ Future<String> sendUser(Account account, BuildContext context) async {
 Future<Account> readAccountFromServer(
     BuildContext context, String emailUser, String password) async {
   const server = Server.server;
-  final url = Uri.https(server, '/users/$emailUser');
+  const suffix = Server.suffix;
+  final url = Uri.https(server, '/$suffix/users/$emailUser');
 
   final response = await http.get(url);
 
@@ -183,12 +185,13 @@ Future<Map<String, dynamic>> loginProcess(
   String email = Uri.encodeComponent(emailUser);
   String password = Uri.encodeComponent(passwordUser);
   String server = Server.server;
+  String suffix = Server.suffix;
 
   String body = 'username=$email&password=$password';
 
   try {
     final response = await http.post(
-      Uri.https(server, '/login'),
+      Uri.https(server, '/$suffix/login'),
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
@@ -309,6 +312,7 @@ showPopupLogOut(Account acc, TokenBloc tokenBloc, BuildContext context) async {
                                 avatar: '',
                                 id: 0),
                             context);
+                        MessagePrivatePushContainer.removeObjects();
                         Navigator.popUntil(context, ModalRoute.withName('/'));
                       },
                     ),

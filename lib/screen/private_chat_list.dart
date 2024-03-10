@@ -65,7 +65,8 @@ class _PrivateChatListState extends State<PrivateChatList> {
   }
 
   Future<http.Response> _getData(String server) async {
-    final url = Uri.https(server, '/direct/${account.id}');
+    const suffix = Server.suffix;
+    final url = Uri.https(server, '/$suffix/direct/${account.id}');
     return await http.get(url);
   }
 

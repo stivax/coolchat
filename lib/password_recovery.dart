@@ -367,7 +367,8 @@ class _PasswordRecoveryDialogState extends State<PasswordRecoveryDialog> {
 
   Future<String> sendEmailToRecovery(String email) async {
     const server = Server.server;
-    final url = Uri.https(server, '/password/request/');
+    const suffix = Server.suffix;
+    final url = Uri.https(server, '/$suffix/password/request/');
 
     final jsonBody = {"email": email};
     final response = await http.post(

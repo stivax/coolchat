@@ -15,7 +15,7 @@ class MessageProvider {
   }
 
   Future<void> _connect() async {
-    const maxAttempts = 5;
+    const maxAttempts = 1;
     const delayBetweenAttempts = Duration(milliseconds: 5000);
 
     for (int attempt = 1; attempt <= maxAttempts; attempt++) {

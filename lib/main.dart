@@ -1,15 +1,22 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:core';
+import 'dart:io';
 
 import 'package:connectivity/connectivity.dart';
+import 'package:coolchat/model/token.dart';
 import 'package:coolchat/screen/private_chat_list.dart';
 import 'package:coolchat/servises/account_setting_provider.dart';
+import 'package:coolchat/servises/token_container.dart';
+import 'package:coolchat/servises/token_provider.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'package:coolchat/animation_start.dart';
 import 'package:coolchat/message_provider.dart';
@@ -73,8 +80,20 @@ class MyApp extends StatelessWidget {
       MessageProviderContainer.instance;
   const MyApp({super.key});
 
+  void hasNotificationPermission() async {
+    print('Platform.isAndroid ${Platform.isAndroid}');
+    if (Platform.isAndroid) {
+      final status = await Permission.notification.status;
+      print('status $status');
+      if (status != PermissionStatus.granted) {
+        await Permission.notification.request();
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    //hasNotificationPermission();
     final themeProvider = Provider.of<ThemeProvider>(context);
     final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
         GlobalKey<ScaffoldMessengerState>();
@@ -105,15 +124,22 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   List<String> favoriteroomsList = [];
   MessageProvider? messageProvider;
   final server = Server.server;
-  late Map<dynamic, dynamic> token;
+  final suffix = Server.suffix;
+  late Map<String, String> token;
   bool scale = false;
   bool isListeningNotofication = false;
   bool refresh = false;
   StreamSubscription? _messageSubscription;
   StreamSubscription<ConnectivityResult>? _connectivitySubscription;
+  List<MessagePrivatPush> oldMessagePrivatPushList = [];
+  List<MessagePrivatPush> differenceList = [];
   late AccountProvider _accountProvider;
   late AccountSettingProvider _accountSettingProvider;
   late Timer _timerCheckAndRefreshListenWebsocket;
+
+  //
+  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   @override
   void initState() {
@@ -131,6 +157,24 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         _accountSettingProvider.accountSettingProvider.favoriteroomList;
     _accountSettingProvider.addListener(_onRefresh);
     timerCheckAndRefreshListenWebsocket();
+
+    // Ініціалізація плагіна
+    var androidSettings =
+        const AndroidInitializationSettings('@mipmap/ic_launcher');
+    var iosSettings = const DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
+    var initializationSettings = InitializationSettings(
+      android: androidSettings,
+      iOS: iosSettings,
+    );
+    _flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.requestNotificationsPermission();
+    _flutterLocalNotificationsPlugin.initialize(initializationSettings);
   }
 
   @override
@@ -143,6 +187,30 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     _connectivitySubscription?.cancel();
     _timerCheckAndRefreshListenWebsocket.cancel();
     super.dispose();
+  }
+
+  Future<void> _showNotification(String title, String body) async {
+    var androidDetails = AndroidNotificationDetails(
+      'channelId',
+      'Local Notification',
+      channelDescription: 'New messages',
+      importance: Importance.max,
+      priority: Priority.high,
+      vibrationPattern: Int64List?.fromList([0, 100]),
+      playSound: false,
+    );
+    var iosDetails = const DarwinNotificationDetails();
+    var generalNotificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _flutterLocalNotificationsPlugin.show(
+      0,
+      title,
+      body,
+      generalNotificationDetails,
+    );
   }
 
   void timerCheckAndRefreshListenWebsocket() {
@@ -209,8 +277,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
   Future<void> startListenSocket() async {
     await getToken();
-    print(token["access_token"].toString());
     if (token["access_token"].toString().isNotEmpty) {
+      TokenContainer.addToken(Token(token: token));
       await createProvider();
       listenSocket();
     }
@@ -232,11 +300,32 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     isListeningNotofication = true;
     _messageSubscription = messageProvider!.messagesStream.listen(
       (message) async {
-        dynamic jsonMessage = jsonDecode(message);
-        final messagePush = MessagePrivatPush.fromJson(jsonMessage);
-        print(messagePush.messageId);
-        MessagePrivatePushContainer.addObject(messagePush);
-        MessagePrivatePushContainer.removeOldObjects();
+        final messagePushList = MessagePrivatPush.fromJsonList(message);
+        if (messagePushList.isNotEmpty) {
+          differenceList = MessagePrivatPush.differenceList(
+              oldMessagePrivatPushList, messagePushList);
+          if (differenceList.length == 1) {
+            final mes = differenceList.last;
+            _showNotification(
+                mes.sender,
+                mes.message.length > 20
+                    ? '${mes.message.substring(0, 20)} ...'
+                    : mes.message);
+          } else if (MessagePrivatPush.checkSenderIdConsistency(
+              differenceList)) {
+            final mes = differenceList.last;
+            _showNotification(
+                mes.sender, '${differenceList.length.toString()} new messages');
+          } else {
+            _showNotification('Multiple senders',
+                '${differenceList.length.toString()} new messages');
+          }
+        } else {
+          differenceList.clear();
+        }
+        MessagePrivatePushContainer.removeObjects();
+        MessagePrivatePushContainer.addObject(differenceList);
+        oldMessagePrivatPushList = messagePushList;
       },
       onDone: () {
         print('onDone');
@@ -274,15 +363,17 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   }
 
   Future<void> getToken() async {
+    final tokenProvider = TokenProvider();
     final acc = await readAccountFromStorage();
-    final tok = await loginProcess(acc.email, acc.password);
+    final tok = await tokenProvider.loginProcess(acc.email, acc.password);
     setState(() {
-      token = tok;
+      token = tok.token;
     });
   }
 
   Future<http.Response> _getData(String server) async {
-    final url = Uri.https(server, '/rooms/');
+    const suffix = Server.suffix;
+    final url = Uri.https(server, '/$suffix/rooms/');
     return await http.get(url);
   }
 

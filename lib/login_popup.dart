@@ -25,6 +25,8 @@ class _LoginDialogState extends State<LoginDialog> {
   final _emailFocus = FocusNode();
   final _passFocus = FocusNode();
 
+  bool alreadyPressedAprove = false;
+
   @override
   void dispose() {
     super.dispose();
@@ -49,14 +51,19 @@ class _LoginDialogState extends State<LoginDialog> {
       if (acc.userName.isNotEmpty &&
           token["access_token"].toString().isNotEmpty) {
         await writeAccountInStorage(acc, context);
+        alreadyPressedAprove = false;
         await showPopupWelcome(acc, context);
         Navigator.pop(context, acc);
       } else if (acc.userName.isNotEmpty &&
           token["access_token"].toString().isEmpty) {
+        alreadyPressedAprove = false;
         _showPopupErrorInput('Email or password is not valid', context);
       } else {
+        alreadyPressedAprove = false;
         _showPopupErrorInput(acc.email, context);
       }
+    } else {
+      alreadyPressedAprove = false;
     }
   }
 
@@ -328,32 +335,41 @@ class _LoginDialogState extends State<LoginDialog> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 30, vertical: 10),
-                            backgroundColor:
-                                themeProvider.currentTheme.shadowColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          onPressed: () async {
-                            handlePopupOpen();
-                            await _saveDataAndClosePopup();
-                          },
-                          child: Text(
-                            'Log in',
-                            textScaleFactor: 1,
-                            style: TextStyle(
-                              color: const Color(0xFFF5FBFF),
-                              fontSize: screenSize.height * 0.03,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w500,
-                              height: 1.24,
-                            ),
-                          ),
-                        ),
+                        alreadyPressedAprove
+                            ? Center(
+                                child: CircularProgressIndicator(
+                                  color: themeProvider.currentTheme.shadowColor,
+                                ),
+                              )
+                            : ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 30, vertical: 10),
+                                  backgroundColor:
+                                      themeProvider.currentTheme.shadowColor,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                onPressed: () {
+                                  if (!alreadyPressedAprove) {
+                                    alreadyPressedAprove = true;
+                                    handlePopupOpen();
+                                    _saveDataAndClosePopup();
+                                  }
+                                },
+                                child: Text(
+                                  'Log in',
+                                  textScaleFactor: 1,
+                                  style: TextStyle(
+                                    color: const Color(0xFFF5FBFF),
+                                    fontSize: screenSize.height * 0.03,
+                                    fontFamily: 'Manrope',
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.24,
+                                  ),
+                                ),
+                              ),
                         const SizedBox(
                           height: 8,
                         ),
@@ -626,17 +642,6 @@ class _LoginDialogState extends State<LoginDialog> {
         );
       },
     );
-  }
-
-  String? _nameValidate(String? value) {
-    final _nameExp = RegExp(r'^[a-zA-Z ]+$');
-    if (value!.isEmpty) {
-      return 'Name is reqired';
-    } else if (!_nameExp.hasMatch(value)) {
-      return 'Please input correct Name (char, number and _)';
-    } else {
-      return null;
-    }
   }
 
   String? _emailValidate(String? value) {
