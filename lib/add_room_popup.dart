@@ -75,7 +75,7 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
       final acc = await readAccountFromStorage();
       // ignore: use_build_context_synchronously
       final answer = await sendRoom(
-          context, _nameRoomController.text, _selectedItems, acc);
+          context, _nameRoomController.text.trimRight(), _selectedItems, acc);
       if (answer == '') {
         // ignore: use_build_context_synchronously
         Navigator.pop(context);
@@ -429,13 +429,13 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
   }
 
   String? _roomNameValidate(String? value) {
-    final _nameExp = RegExp(
-        r'^[0-9a-zA-Z\u0430-\u044F\u0410-\u042F\u0456\u0406\u0457\u0407\u0491\u0490\u0454\u0404\u04E7\u04E6 ()_.]+$');
+    final nameExp = RegExp(
+        r'^(?=[^ ])(?=[\S\s]*[^\s][\S\s]*[^\s])[\w\u0430-\u044F\u0410-\u042F\u0456\u0406\u0457\u0407\u0491\u0490\u0454\u0404\u04E7\u04E6 ()_]{3,}$');
     if (value!.isEmpty) {
       _nameRoomFocus.requestFocus();
       return 'Name is reqired';
-    } else if (!_nameExp.hasMatch(value)) {
-      return 'Please input correct Name\n(char, number and _)';
+    } else if (!nameExp.hasMatch(value)) {
+      return 'Please input correct Name\n(char, number and ()_)';
     } else {
       return null;
     }

@@ -40,6 +40,12 @@ class AccountSettingProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> clearRoomFavorite(BuildContext context) async {
+    _accountSettingCurentState.favoriteroomList.clear();
+    await writeSetting(_accountSettingCurentState, context);
+    notifyListeners();
+  }
+
   Future<void> refreshScreen() async {
     print('refreshMainScreen');
     notifyListeners();

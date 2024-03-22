@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:coolchat/servises/account_setting_provider.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'package:coolchat/server/server.dart';
@@ -313,6 +314,8 @@ showPopupLogOut(Account acc, TokenBloc tokenBloc, BuildContext context) async {
                                 id: 0),
                             context);
                         MessagePrivatePushContainer.removeObjects();
+                        final clearFavorite = AccountSettingProvider();
+                        clearFavorite.clearRoomFavorite(context);
                         Navigator.popUntil(context, ModalRoute.withName('/'));
                       },
                     ),

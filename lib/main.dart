@@ -7,6 +7,7 @@ import 'package:connectivity/connectivity.dart';
 import 'package:coolchat/model/token.dart';
 import 'package:coolchat/screen/private_chat_list.dart';
 import 'package:coolchat/servises/account_setting_provider.dart';
+import 'package:coolchat/servises/reply_provider.dart';
 import 'package:coolchat/servises/token_container.dart';
 import 'package:coolchat/servises/token_provider.dart';
 import 'package:flutter/foundation.dart';
@@ -44,6 +45,8 @@ void main() {
             create: (context) => AccountProvider()),
         ChangeNotifierProvider<AccountSettingProvider>(
             create: (context) => AccountSettingProvider()),
+        ChangeNotifierProvider<ReplyProvider>(
+            create: (context) => ReplyProvider()),
       ],
       child: RepositoryProvider(
           create: (context) => TokenRepository(), child: const StartScreen()),

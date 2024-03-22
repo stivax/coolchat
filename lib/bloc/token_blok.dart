@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:coolchat/account.dart';
 import 'package:coolchat/message_provider.dart';
 import 'package:coolchat/messages.dart';
+import 'package:coolchat/model/messages_list.dart';
 import 'package:coolchat/model/token.dart';
 import 'package:coolchat/server/server.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
@@ -62,6 +63,8 @@ class TokenBloc extends Bloc<TokenEvent, TokenState> {
                       jsonList, event.context, event.roomName!, account.id)
                   .reversed
                   .toList();
+              final ListMessages listMessages = ListMessages();
+              listMessages.listMessages = messages;
             }
           } catch (error) {}
           return messages;

@@ -544,9 +544,12 @@ class _TextAndSendState extends State<TextAndSend> {
   }
 
   void _sendMessage(String message) {
-    widget.messageProvider!.sendMessage(json.encode({
-      'messages': message,
-    }));
+    final messageForSend = message.trimRight().trimLeft();
+    if (messageForSend.isNotEmpty) {
+      widget.messageProvider!.sendMessage(json.encode({
+        'messages': messageForSend,
+      }));
+    }
   }
 
   void _onTapOutside(BuildContext context) {

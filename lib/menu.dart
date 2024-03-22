@@ -119,11 +119,11 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
         _account = account;
       });
     } else {
-      setState(() {
-        _account =
-            Account(email: '', userName: '', password: '', avatar: '', id: 0);
-      });
-      await writeAccountInStorage(_account, context);
+      //setState(() {
+      //  _account =
+      //      Account(email: '', userName: '', password: '', avatar: '', id: 0);
+      //});
+      //await writeAccountInStorage(_account, context);
       showPopupLogOut(acc, tokenBloc, context);
     }
   }
@@ -355,7 +355,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                   PopupMenuItem<String>(
                     value: 'item8',
                     child: Text(
-                      'Version: v1.0.4',
+                      'Version: v1.0.6',
                       textScaler: TextScaler.noScaling,
                       style: TextStyle(
                         color: themeProvider.currentTheme.primaryColor

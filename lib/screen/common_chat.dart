@@ -4,11 +4,17 @@ import 'dart:convert';
 
 import 'package:beholder_flutter/beholder_flutter.dart';
 import 'package:connectivity/connectivity.dart';
+import 'package:coolchat/model/messages_list.dart';
 import 'package:coolchat/servises/account_provider.dart';
+import 'package:coolchat/servises/reply_provider.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marquee/marquee.dart';
 import 'package:provider/provider.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import 'package:coolchat/bloc/token_blok.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
@@ -70,6 +76,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   MessageProvider? providerInScreen;
   StreamSubscription? _messageSubscription;
   late StreamSubscription<ConnectivityResult> _connectivitySubscription;
+  final ListMessages listMessages = ListMessages();
 
   @override
   void initState() {
@@ -83,6 +90,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    listMessages.clearObjects();
     providerInScreen?.dispose();
     _messageSubscription?.cancel();
     _connectivitySubscription.cancel();
@@ -132,6 +140,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         messageData.previousMemberID, context, widget.topicName, acc.id);
     messageData.previousMemberID = message.ownerId.toInt();
     messageData.messages.add(message);
+    listMessages.addObject(message);
     blockMessageStateKey.currentState!._messages.add(message);
     blockMessageStateKey.currentState!.widget.updateState();
   }
@@ -575,11 +584,33 @@ class BlockMessages extends StatefulWidget {
 
 class _BlockMessagesState extends State<BlockMessages> {
   final List<Messages> _messages = [];
+  List<Messages> _cachedMessages = [];
   bool showWrite = false;
   final controller = ScrollController();
   bool showArrow = true;
   final scrollChatController = ScrollChatControll();
+  final ItemScrollController itemScrollController = ItemScrollController();
+  final ScrollOffsetController scrollOffsetController =
+      ScrollOffsetController();
+  final ItemPositionsListener itemPositionsListener =
+      ItemPositionsListener.create();
+  final ScrollOffsetListener scrollOffsetListener =
+      ScrollOffsetListener.create();
   late double screenWidth;
+  late ReplyProvider isReplying;
+  int? lastIndex;
+  double? lastOffset;
+
+  @override
+  void initState() {
+    super.initState();
+    isReplying = Provider.of<ReplyProvider>(context, listen: false);
+    isReplying.addListener(_onReplying);
+  }
+
+  void _onReplying() async {
+    setState(() {});
+  }
 
   whenWriting(String name) async {
     setState(() {
@@ -601,6 +632,8 @@ class _BlockMessagesState extends State<BlockMessages> {
   @override
   void dispose() {
     controller.dispose();
+    isReplying.afterReplyToMessage();
+    isReplying.removeListener(_onReplying);
     super.dispose();
   }
 
@@ -654,7 +687,6 @@ class _BlockMessagesState extends State<BlockMessages> {
                                         ),
                                       ),
                                     )),
-                  showWrite ? const WriteAnimated() : Container(),
                 ],
               ),
             ));
@@ -662,82 +694,184 @@ class _BlockMessagesState extends State<BlockMessages> {
     );
   }
 
-  List<Messages> _cachedMessages = [];
-
   Widget messageView(ThemeProvider themeProvider) {
     bool countNewMessages = (_messages.length - _cachedMessages.length) == 1;
     if (widget.hasMessage || _messages.isNotEmpty) {
       _cachedMessages = _messages.reversed.toList();
       return Observer(builder: (context, watch) {
         return Stack(
-          alignment: Alignment.bottomRight,
           children: [
-            ListView.builder(
-              padding: const EdgeInsets.only(left: 10, right: 10),
-              reverse: true,
-              controller: controller,
-              itemCount: _cachedMessages.length,
-              itemBuilder: (context, index) {
-                if (controller.offset > 500 &&
-                    !watch(scrollChatController.showArrow)) {
-                  scrollChatController.clearNewMessagess();
-                  scrollChatController.showingArrow();
-                } else if (controller.offset < 500 &&
-                    watch(scrollChatController.showArrow)) {
-                  scrollChatController.showingArrow();
-                  scrollChatController.clearNewMessagess();
-                }
-                if (countNewMessages && controller.offset > 500) {
-                  countNewMessages = !countNewMessages;
-                  scrollChatController.addNewMessage();
-                  controller.jumpTo(controller.offset + 82);
-                }
-                return _cachedMessages[index];
-              },
-            ),
-            AnimatedOpacity(
-              opacity: watch(scrollChatController.showArrow) ? 1 : 0,
-              duration: const Duration(milliseconds: 500),
+            Container(
+              padding: EdgeInsets.only(bottom: isReplying.isReplying ? 74 : 0),
               child: Stack(
                 alignment: Alignment.bottomRight,
                 children: [
-                  FloatingActionButton(
-                    onPressed: () {
-                      scrollChatController.showingArrow();
-                      scrollChatController.clearNewMessagess();
-                      controller.animateTo(0.0,
-                          duration: const Duration(milliseconds: 500),
-                          curve: Curves.linear);
+                  ScrollablePositionedList.builder(
+                    padding: const EdgeInsets.only(left: 10, right: 10),
+                    reverse: true,
+                    itemScrollController: isReplying.itemScrollController,
+                    itemPositionsListener: itemPositionsListener,
+                    scrollOffsetController: scrollOffsetController,
+                    scrollOffsetListener: scrollOffsetListener,
+                    itemCount: _cachedMessages.length,
+                    itemBuilder: (context, index) {
+                      final position =
+                          itemPositionsListener.itemPositions.value;
+                      if (position.isNotEmpty) {
+                        print('position $lastIndex alg $lastOffset');
+                        if (position.first.index > 10 &&
+                            !watch(scrollChatController.showArrow)) {
+                          scrollChatController.clearNewMessagess();
+                          scrollChatController.showingArrow();
+                        } else if (position.first.index < 10 &&
+                            watch(scrollChatController.showArrow)) {
+                          scrollChatController.showingArrow();
+                          scrollChatController.clearNewMessagess();
+                        }
+                        if (countNewMessages && position.first.index > 10) {
+                          countNewMessages = !countNewMessages;
+                          scrollChatController.addNewMessage();
+                          scrollOffsetController.animateScroll(
+                              offset: 82,
+                              duration: const Duration(microseconds: 1));
+                        }
+                      }
+                      return _cachedMessages[index];
                     },
-                    backgroundColor: themeProvider.currentTheme.cardColor,
-                    mini: true,
-                    child: Icon(
-                      Icons.arrow_downward,
-                      color: themeProvider.currentTheme.primaryColor,
+                  ),
+                  AnimatedOpacity(
+                    opacity: watch(scrollChatController.showArrow) ? 1 : 0,
+                    duration: const Duration(milliseconds: 500),
+                    child: Stack(
+                      alignment: Alignment.bottomRight,
+                      children: [
+                        FloatingActionButton(
+                          onPressed: () async {
+                            isReplying.itemScrollController.scrollTo(
+                                index: 0,
+                                duration: const Duration(milliseconds: 10));
+                            await Future.delayed(
+                                const Duration(milliseconds: 50));
+                            scrollChatController.showingArrow();
+                            scrollChatController.clearNewMessagess();
+                          },
+                          backgroundColor: themeProvider.currentTheme.cardColor,
+                          mini: true,
+                          child: Icon(
+                            Icons.arrow_downward,
+                            color: themeProvider.currentTheme.primaryColor,
+                          ),
+                        ),
+                        watch(scrollChatController.countNewMessages) != 0
+                            ? Padding(
+                                padding: const EdgeInsets.all(2.0),
+                                child: Container(
+                                  height: 14,
+                                  width: 14,
+                                  alignment: Alignment.center,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Text(
+                                    watch(
+                                      scrollChatController.countNewMessages,
+                                    ).toString(),
+                                    textScaler: TextScaler.noScaling,
+                                    style: const TextStyle(
+                                        fontSize: 10, color: Colors.white),
+                                  ),
+                                ),
+                              )
+                            : Container(),
+                      ],
                     ),
                   ),
-                  watch(scrollChatController.countNewMessages) != 0
-                      ? Padding(
-                          padding: const EdgeInsets.all(2.0),
-                          child: Container(
-                            height: 14,
-                            width: 14,
-                            alignment: Alignment.center,
-                            decoration: const BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Text(
-                              watch(
-                                scrollChatController.countNewMessages,
-                              ).toString(),
-                              style: const TextStyle(
-                                  fontSize: 10, color: Colors.white),
-                            ),
-                          ),
-                        )
-                      : Container(),
+                  showWrite ? const WriteAnimated() : Container(),
                 ],
+              ),
+            ),
+            Positioned(
+              bottom: 0,
+              right: 0,
+              left: 0,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 100),
+                height: isReplying.isReplying ? 74 : 0,
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(10),
+                    bottomRight: Radius.circular(10),
+                  ),
+                  color: themeProvider.currentTheme.cardColor,
+                ),
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: Image.asset(
+                        'assets/images/reply.png',
+                        color: themeProvider.currentTheme.shadowColor,
+                        width: 32,
+                        height: 32,
+                      ),
+                    ),
+                    Expanded(
+                      child: MediaQuery(
+                          data: MediaQuery.of(context)
+                              .copyWith(textScaler: TextScaler.noScaling),
+                          child: Padding(
+                            padding: EdgeInsets.only(top: 6, bottom: 6),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Reply to ${isReplying.nameRecevierMessage}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color:
+                                        themeProvider.currentTheme.shadowColor,
+                                    fontSize: 14,
+                                    fontFamily: 'Manrope',
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  isReplying.textMessageToReply,
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 2,
+                                  style: TextStyle(
+                                    color: themeProvider
+                                        .currentTheme.primaryColor
+                                        .withOpacity(0.9),
+                                    fontSize: 14,
+                                    fontFamily: 'Manrope',
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                )
+                              ],
+                            ),
+                          )),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(6.0),
+                      child: isReplying.isReplying
+                          ? IconButton(
+                              icon: Icon(
+                                Icons.close,
+                                color: themeProvider.currentTheme.shadowColor,
+                              ),
+                              onPressed: () {
+                                isReplying.afterReplyToMessage();
+                                HapticFeedback.lightImpact();
+                              },
+                            )
+                          : Container(),
+                    )
+                  ],
+                ),
               ),
             )
           ],
@@ -895,15 +1029,17 @@ class TextAndSend extends StatefulWidget {
   _TextAndSendState createState() => _TextAndSendState();
 }
 
-class _TextAndSendState extends State<TextAndSend> {
+class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
   final TextEditingController messageController = TextEditingController();
   var token = {};
   final _textFieldFocusNode = FocusNode();
   bool isWriting = false;
+  late ReplyProvider isReplying;
 
   @override
   void initState() {
     super.initState();
+    isReplying = Provider.of<ReplyProvider>(context, listen: false);
   }
 
   @override
@@ -918,9 +1054,20 @@ class _TextAndSendState extends State<TextAndSend> {
   }
 
   void _sendMessage(String message) {
-    widget.messageProvider?.sendMessage(json.encode({
-      'message': message,
-    }));
+    final messageForSend = message.trimRight().trimLeft();
+    if (messageForSend.isNotEmpty) {
+      widget.messageProvider?.sendMessage(json.encode(isReplying.isReplying
+          ? {
+              'reply': {
+                'original_message_id': isReplying.idMessageToReplying,
+                'message': messageForSend,
+              }
+            }
+          : {
+              'message': messageForSend,
+            }));
+      isReplying.afterReplyToMessage();
+    }
   }
 
   void _sendStatus() {
@@ -1040,7 +1187,9 @@ class _TextAndSendState extends State<TextAndSend> {
                       _sendMessage(message);
                       messageController.clear();
                       await Future.delayed(const Duration(milliseconds: 500));
-                      blockMessageStateKey.currentState!.controller.jumpTo(0.0);
+                      blockMessageStateKey
+                          .currentState!.isReplying.itemScrollController
+                          .jumpTo(index: 0);
                       blockMessageStateKey.currentState!.scrollChatController
                           .showingArrow();
                       blockMessageStateKey.currentState!.scrollChatController
