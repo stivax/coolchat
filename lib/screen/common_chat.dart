@@ -6,6 +6,7 @@ import 'package:beholder_flutter/beholder_flutter.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:coolchat/model/messages_list.dart';
 import 'package:coolchat/servises/account_provider.dart';
+import 'package:coolchat/servises/file_controller.dart';
 import 'package:coolchat/servises/reply_provider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -138,7 +139,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     dynamic jsonMessage = jsonDecode(responseBody);
     Messages message = Messages.fromJsonMessage(jsonMessage,
         messageData.previousMemberID, context, widget.topicName, acc.id);
-    messageData.previousMemberID = message.ownerId.toInt();
+    messageData.previousMemberID = message.ownerId!.toInt();
     messageData.messages.add(message);
     listMessages.addObject(message);
     blockMessageStateKey.currentState!._messages.add(message);
@@ -838,19 +839,31 @@ class _BlockMessagesState extends State<BlockMessages> {
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                Text(
-                                  isReplying.textMessageToReply,
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 2,
-                                  style: TextStyle(
-                                    color: themeProvider
-                                        .currentTheme.primaryColor
-                                        .withOpacity(0.9),
-                                    fontSize: 14,
-                                    fontFamily: 'Manrope',
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                )
+                                Messages.isImageLink(
+                                        isReplying.textMessageToReply)
+                                    ? Padding(
+                                        padding: const EdgeInsets.all(1.0),
+                                        child: Image.network(
+                                          Messages.extractFirstUrl(
+                                              isReplying.textMessageToReply)!,
+                                          //width: screenWidth * 0.3,
+                                          height: 32,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      )
+                                    : Text(
+                                        isReplying.textMessageToReply,
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 2,
+                                        style: TextStyle(
+                                          color: themeProvider
+                                              .currentTheme.primaryColor
+                                              .withOpacity(0.9),
+                                          fontSize: 14,
+                                          fontFamily: 'Manrope',
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      )
                               ],
                             ),
                           )),
@@ -1144,6 +1157,16 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
                           fontWeight: FontWeight.w400,
                         ),
                         border: InputBorder.none,
+                        suffixIcon: GestureDetector(
+                          onTap: () async {
+                            messageController.text =
+                                await FileController.pickAndUploadFile();
+                          },
+                          child: Icon(
+                            Icons.attach_file,
+                            color: themeProvider.currentTheme.primaryColor,
+                          ),
+                        ),
                       ),
                       maxLines: null,
                       onTap: () async {
@@ -1164,6 +1187,8 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
                                 context.read<TokenBloc>();
                             tokenBloc.add(TokenLoadEvent(
                                 roomName: widget.topicName, type: 'ws'));
+                          } else {
+                            _textFieldFocusNode.unfocus();
                           }
                         } else {
                           FocusScope.of(context)

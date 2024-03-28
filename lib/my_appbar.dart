@@ -1,5 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:coolchat/about.dart';
+import 'package:coolchat/servises/locale_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -43,6 +44,23 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
           actions: [
             Row(
               children: [
+                DropdownButton<Locale>(
+                  value: Provider.of<LocaleProvider>(context, listen: false)
+                      .currentLocale,
+                  onChanged: (Locale? newLocale) {
+                    if (newLocale != null) {
+                      Provider.of<LocaleProvider>(context, listen: false)
+                          .setLocale(newLocale);
+                    }
+                  },
+                  items: L10n.all.map((locale) {
+                    String flag = L10n.getFlag(locale.languageCode);
+                    return DropdownMenuItem(
+                      value: locale,
+                      child: Text(flag),
+                    );
+                  }).toList(),
+                ),
                 GestureDetector(
                   onTap: () {
                     themeProvider.toggleTheme();

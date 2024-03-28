@@ -4,28 +4,31 @@ import 'dart:core';
 import 'dart:io';
 
 import 'package:connectivity/connectivity.dart';
-import 'package:coolchat/model/token.dart';
-import 'package:coolchat/screen/private_chat_list.dart';
-import 'package:coolchat/servises/account_setting_provider.dart';
-import 'package:coolchat/servises/reply_provider.dart';
-import 'package:coolchat/servises/token_container.dart';
-import 'package:coolchat/servises/token_provider.dart';
+import 'package:coolchat/app_localizations.dart';
+import 'package:coolchat/servises/locale_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'package:coolchat/animation_start.dart';
 import 'package:coolchat/message_provider.dart';
 import 'package:coolchat/model/message_privat_push.dart';
+import 'package:coolchat/model/token.dart';
+import 'package:coolchat/screen/private_chat_list.dart';
 import 'package:coolchat/server/server.dart';
 import 'package:coolchat/servises/account_provider.dart';
+import 'package:coolchat/servises/account_setting_provider.dart';
 import 'package:coolchat/servises/message_private_push_container.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
+import 'package:coolchat/servises/reply_provider.dart';
+import 'package:coolchat/servises/token_container.dart';
+import 'package:coolchat/servises/token_provider.dart';
 import 'package:coolchat/servises/token_repository.dart';
 
 import 'account.dart';
@@ -47,6 +50,7 @@ void main() {
             create: (context) => AccountSettingProvider()),
         ChangeNotifierProvider<ReplyProvider>(
             create: (context) => ReplyProvider()),
+        ChangeNotifierProvider(create: (context) => LocaleProvider()),
       ],
       child: RepositoryProvider(
           create: (context) => TokenRepository(), child: const StartScreen()),
@@ -100,6 +104,7 @@ class MyApp extends StatelessWidget {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
         GlobalKey<ScaffoldMessengerState>();
+    final provider = Provider.of<LocaleProvider>(context);
 
     return MaterialApp(
       title: 'Cool Chat',
@@ -110,6 +115,17 @@ class MyApp extends StatelessWidget {
       },
       scaffoldMessengerKey: scaffoldMessengerKey,
       theme: themeProvider.currentTheme,
+
+      ///
+      ///
+      locale: provider.currentLocale,
+      localizationsDelegates: const [
+        AppLocalizationsDelegate(),
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: L10n.all,
     );
   }
 }
@@ -148,7 +164,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    requestPermissions();
+    //requestPermissions();
     _accountProvider = Provider.of<AccountProvider>(context, listen: false);
     _accountProvider.addListener(_onAccountChange);
     _accountSettingProvider =
@@ -431,13 +447,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     });
   }
 
-  Future<void> requestPermissions() async {
-    final storagePermission = await Permission.storage.request();
-
-    if (storagePermission.isGranted) {
-    } else {}
-  }
-
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
@@ -576,7 +585,7 @@ class HeaderWidget extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(left: 20, right: 20),
             child: Text(
-              'Welcome every\ntourist to Coolchat',
+              AppLocalizations.of(context).translate('welcome'),
               textScaler: TextScaler.noScaling,
               style: TextStyle(
                 color: const Color(0xFFF5FBFF),
@@ -591,7 +600,7 @@ class HeaderWidget extends StatelessWidget {
             padding:
                 const EdgeInsets.only(left: 20, bottom: 20, top: 10, right: 20),
             child: Text(
-              'Chat about a wide variety of tourist equipment.\nCommunicate, get good advice and choose!',
+              AppLocalizations.of(context).translate('welcome2'),
               textScaler: TextScaler.noScaling,
               style: TextStyle(
                 color: const Color(0xFFF5FBFF),

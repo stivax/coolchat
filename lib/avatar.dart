@@ -1,4 +1,5 @@
 import 'package:coolchat/screen/private_chat.dart';
+import 'package:coolchat/servises/account_provider.dart';
 import 'package:coolchat/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -26,49 +27,35 @@ class AvatarMember extends StatelessWidget {
       builder: (context, themeProvider, child) {
         return GestureDetector(
           onTapDown: (details) {
-            _showPopupMenu(
-                contextAvatarMember, themeProvider, details.globalPosition);
+            final _accountProvider =
+                Provider.of<AccountProvider>(context, listen: false);
+            if (_accountProvider.isLoginProvider) {
+              _showPopupMenu(
+                  contextAvatarMember, themeProvider, details.globalPosition);
+            }
           },
-          child: Stack(
-            fit: StackFit.expand,
-            clipBehavior: Clip.hardEdge,
-            children: [
-              Positioned(
-                top: big ? 5 : 2,
-                right: big ? 5 : 2,
-                left: big ? 5 : 2,
-                bottom: 0,
-                child: Container(
-                  decoration: ShapeDecoration(
-                    color: themeProvider.currentTheme.primaryColorDark,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                          width: 0.50,
-                          color: themeProvider.currentTheme.shadowColor),
-                      borderRadius: BorderRadius.circular(big ? 10 : 6),
-                    ),
-                    shadows: const [
-                      BoxShadow(
-                        color: Color(0x4C024A7A),
-                        blurRadius: 8,
-                        offset: Offset(2, 2),
-                        spreadRadius: 0,
-                      )
-                    ],
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 1,
-                right: 1,
-                left: 1,
-                bottom: 0,
-                child: Image(
+          child: Padding(
+            padding: EdgeInsets.only(right: big ? 4 : 0, left: big ? 4 : 0),
+            child: Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
                   image: avatar,
-                  fit: BoxFit.fitHeight,
+                  fit: BoxFit.cover,
                 ),
+                color: themeProvider.currentTheme.primaryColorDark,
+                border: Border.all(
+                    width: 0.50, color: themeProvider.currentTheme.shadowColor),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x4C024A7A),
+                    blurRadius: 8,
+                    offset: Offset(2, 2),
+                    spreadRadius: 0,
+                  )
+                ],
+                borderRadius: BorderRadius.circular(big ? 10 : 6),
               ),
-            ],
+            ),
           ),
         );
       },

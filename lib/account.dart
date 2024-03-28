@@ -152,6 +152,22 @@ Future<String> sendUser(Account account, BuildContext context) async {
   }
 }
 
+Future<String?> validationUser(String userName) async {
+  const server = Server.server;
+  const suffix = Server.suffix;
+  final url = Uri.https(server, '/$suffix/users/audit/$userName');
+  print(url);
+
+  final response = await http.get(url);
+  print(response.body);
+
+  if (response.statusCode == 200) {
+    return 'User with nickname $userName\nalready exist';
+  } else {
+    return null;
+  }
+}
+
 Future<Account> readAccountFromServer(
     BuildContext context, String emailUser, String password) async {
   const server = Server.server;

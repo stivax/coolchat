@@ -23,6 +23,7 @@ class RegisterDialog extends StatefulWidget {
 
 class _RegisterDialogState extends State<RegisterDialog> {
   bool _hidePass = true;
+  String? answerValidator;
 
   final _formKey = GlobalKey<FormState>();
 
@@ -93,6 +94,9 @@ class _RegisterDialogState extends State<RegisterDialog> {
   }
 
   Future<void> _saveDataAndClosePopup() async {
+    if (_nicknameController.text.isNotEmpty) {
+      answerValidator = await validationUser(_nicknameController.text);
+    }
     if (_formKey.currentState!.validate() && _selectedItems != '') {
       Account acc = Account(
           email: _emailController.text,
@@ -921,7 +925,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
     } else if (!nameExp.hasMatch(value)) {
       return 'Please input correct Name';
     } else {
-      return null;
+      return answerValidator;
     }
   }
 

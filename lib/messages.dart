@@ -2,10 +2,8 @@ import 'dart:convert';
 
 import 'package:coolchat/model/messages_list.dart';
 import 'package:coolchat/servises/reply_provider.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -23,7 +21,7 @@ class Messages extends StatelessWidget {
   final DateTime createdAt;
   final String avatar;
   final String userName;
-  final int ownerId;
+  final int? ownerId;
   final bool isPreviousSameMember;
   final int vote;
   final BuildContext contextMessage;
@@ -56,7 +54,7 @@ class Messages extends StatelessWidget {
       createdAt: DateTime.parse(jsonMessage['created_at']).add(timeZone),
       avatar: jsonMessage['avatar'],
       userName: jsonMessage['user_name'],
-      ownerId: jsonMessage['receiver_id'],
+      ownerId: jsonMessage['receiver_id'] ?? 0,
       isPreviousSameMember: isSameMember,
       vote: jsonMessage['vote'],
       idReturn: jsonMessage['id_return'],
@@ -86,7 +84,7 @@ class Messages extends StatelessWidget {
         createdAt: DateTime.parse(jsonMessage['created_at']).add(timeZone),
         avatar: jsonMessage['avatar'],
         userName: jsonMessage['user_name'],
-        ownerId: jsonMessage['receiver_id'],
+        ownerId: jsonMessage['receiver_id'] ?? 0,
         isPreviousSameMember: isSameMember,
         vote: jsonMessage['vote'],
         idReturn: jsonMessage['id_return'],
@@ -148,6 +146,23 @@ class Messages extends StatelessWidget {
     return null;
   }
 
+  static bool isImageLink(String text) {
+    final RegExp imageLinkRegExp = RegExp(
+        r'(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|jpeg|gif|png|webp)',
+        caseSensitive: false);
+
+    return imageLinkRegExp.hasMatch(text);
+  }
+
+  static String? extractFirstUrl(String text) {
+    final RegExp urlRegExp =
+        RegExp(r'https?:\/\/[^\s<>"]+', caseSensitive: false);
+
+    final match = urlRegExp.firstMatch(text);
+
+    return match?.group(0);
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -158,7 +173,7 @@ class Messages extends StatelessWidget {
               message: message,
               id: id,
               createdAt: formatTime(createdAt.toString()),
-              ownerId: ownerId,
+              ownerId: ownerId!,
               avatar: avatar,
               userName: userName,
               vote: vote,
@@ -171,7 +186,7 @@ class Messages extends StatelessWidget {
               message: message,
               id: id,
               createdAt: formatTime(createdAt.toString()),
-              ownerId: ownerId,
+              ownerId: ownerId!,
               avatar: avatar,
               userName: userName,
               vote: vote,
@@ -186,7 +201,7 @@ class Messages extends StatelessWidget {
               message: message,
               id: id,
               createdAt: formatTime(createdAt.toString()),
-              ownerId: ownerId,
+              ownerId: ownerId!,
               avatar: avatar,
               userName: userName,
               vote: vote,
@@ -200,7 +215,7 @@ class Messages extends StatelessWidget {
               message: message,
               id: id,
               createdAt: formatTime(createdAt.toString()),
-              ownerId: ownerId,
+              ownerId: ownerId!,
               avatar: avatar,
               userName: userName,
               vote: vote,
@@ -333,101 +348,113 @@ class TheirMessege extends StatelessWidget {
                             isReplying.addMessageToReply(userName, message, id);
                             HapticFeedback.lightImpact();
                           },
-                          child: Stack(children: [
-                            Container(
-                              alignment: Alignment.topLeft,
-                              padding: const EdgeInsets.all(10.0),
-                              decoration: ShapeDecoration(
-                                color: themeProvider.currentTheme.hintColor,
-                                shape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.only(
-                                    topRight: Radius.circular(20),
-                                    bottomLeft: Radius.circular(20),
-                                    bottomRight: Radius.circular(20),
-                                  ),
+                          child: Container(
+                            alignment: Alignment.topLeft,
+                            padding: const EdgeInsets.all(10.0),
+                            decoration: ShapeDecoration(
+                              color: themeProvider.currentTheme.hintColor,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.only(
+                                  topRight: Radius.circular(20),
+                                  bottomLeft: Radius.circular(20),
+                                  bottomRight: Radius.circular(20),
                                 ),
-                                shadows: [
-                                  BoxShadow(
-                                    color: themeProvider.currentTheme.cardColor,
-                                    blurRadius: 8,
-                                    offset: const Offset(2, 2),
-                                    spreadRadius: 0,
-                                  )
-                                ],
                               ),
-                              child: SelectableLinkify(
-                                onOpen: (url) async {
-                                  await launchUrlString(url.url,
-                                      mode: LaunchMode.externalApplication);
-                                },
-                                text: message,
-                                style: TextStyle(
-                                  color:
-                                      themeProvider.currentTheme.primaryColor,
-                                  fontSize: 14,
-                                  fontFamily: 'Manrope',
-                                  fontWeight: FontWeight.w400,
-                                  height: 1.30,
-                                ),
-                                options: const LinkifyOptions(
-                                    removeWww: true, looseUrl: true),
-                                contextMenuBuilder:
-                                    (context, editableTextState) {
-                                  final List<ContextMenuButtonItem>
-                                      buttonItems =
-                                      editableTextState.contextMenuButtonItems;
-                                  buttonItems.removeWhere(
-                                      (ContextMenuButtonItem buttonItem) {
-                                    return buttonItem.type ==
-                                        ContextMenuButtonType.cut;
-                                  });
-                                  return AdaptiveTextSelectionToolbar
-                                      .buttonItems(
-                                    anchors:
-                                        editableTextState.contextMenuAnchors,
-                                    buttonItems: buttonItems,
-                                  );
-                                },
-                              ),
+                              shadows: [
+                                BoxShadow(
+                                  color: themeProvider.currentTheme.cardColor,
+                                  blurRadius: 8,
+                                  offset: const Offset(2, 2),
+                                  spreadRadius: 0,
+                                )
+                              ],
                             ),
-                            vote != 0
-                                ? Positioned(
-                                    bottom: 10,
-                                    right: 10,
-                                    child: Container(
-                                      height: 16,
-                                      width: 32,
-                                      alignment: Alignment.centerRight,
-                                      child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        children: [
-                                          Text(
-                                            vote.toString(),
-                                            textScaler: TextScaler.noScaling,
-                                            style: TextStyle(
-                                              color: themeProvider
-                                                  .currentTheme.primaryColor,
-                                              fontSize: 12,
-                                              fontFamily: 'Manrope',
-                                              fontWeight: FontWeight.w400,
-                                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Messages.isImageLink(message)
+                                    ? Center(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Image.network(
+                                            Messages.extractFirstUrl(message)!,
+                                            //width: screenWidth * 0.3,
+                                            //height: screenWidth * 0.3,
+                                            fit: BoxFit.cover,
                                           ),
-                                          Image.asset(
-                                            'assets/images/like.png',
-                                            width: 16,
-                                            height: 16,
-                                            color: themeProvider
-                                                .currentTheme.shadowColor,
-                                          )
-                                        ],
+                                        ),
+                                      )
+                                    : SelectableLinkify(
+                                        onOpen: (url) async {
+                                          await launchUrlString(url.url,
+                                              mode: LaunchMode
+                                                  .externalApplication);
+                                        },
+                                        text: message,
+                                        style: TextStyle(
+                                          color: themeProvider
+                                              .currentTheme.primaryColor,
+                                          fontSize: 14,
+                                          fontFamily: 'Manrope',
+                                          fontWeight: FontWeight.w400,
+                                          height: 1.30,
+                                        ),
+                                        options: const LinkifyOptions(
+                                            removeWww: true, looseUrl: true),
+                                        contextMenuBuilder:
+                                            (context, editableTextState) {
+                                          final List<ContextMenuButtonItem>
+                                              buttonItems = editableTextState
+                                                  .contextMenuButtonItems;
+                                          buttonItems.removeWhere(
+                                              (ContextMenuButtonItem
+                                                  buttonItem) {
+                                            return buttonItem.type ==
+                                                ContextMenuButtonType.cut;
+                                          });
+                                          return AdaptiveTextSelectionToolbar
+                                              .buttonItems(
+                                            anchors: editableTextState
+                                                .contextMenuAnchors,
+                                            buttonItems: buttonItems,
+                                          );
+                                        },
                                       ),
-                                    ),
-                                  )
-                                : const SizedBox(),
-                          ]),
+                                vote != 0
+                                    ? Container(
+                                        height: 16,
+                                        alignment: Alignment.bottomRight,
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          children: [
+                                            Text(
+                                              vote.toString(),
+                                              textScaler: TextScaler.noScaling,
+                                              style: TextStyle(
+                                                color: themeProvider
+                                                    .currentTheme.primaryColor,
+                                                fontSize: 12,
+                                                fontFamily: 'Manrope',
+                                                fontWeight: FontWeight.w400,
+                                              ),
+                                            ),
+                                            Image.asset(
+                                              'assets/images/like.png',
+                                              width: 16,
+                                              height: 16,
+                                              color: themeProvider
+                                                  .currentTheme.shadowColor,
+                                            )
+                                          ],
+                                        ),
+                                      )
+                                    : const SizedBox(),
+                              ],
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -550,101 +577,113 @@ class MyMessege extends StatelessWidget {
                             isReplying.addMessageToReply(userName, message, id);
                             HapticFeedback.lightImpact();
                           },
-                          child: Stack(children: [
-                            Container(
-                              alignment: Alignment.topLeft,
-                              padding: const EdgeInsets.all(10.0),
-                              decoration: ShapeDecoration(
-                                color: themeProvider.currentTheme.hoverColor,
-                                shape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: Radius.circular(20),
-                                    bottomLeft: Radius.circular(20),
-                                    bottomRight: Radius.circular(20),
-                                  ),
+                          child: Container(
+                            alignment: Alignment.topLeft,
+                            padding: const EdgeInsets.all(10.0),
+                            decoration: ShapeDecoration(
+                              color: themeProvider.currentTheme.hoverColor,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(20),
+                                  bottomLeft: Radius.circular(20),
+                                  bottomRight: Radius.circular(20),
                                 ),
-                                shadows: [
-                                  BoxShadow(
-                                    color: themeProvider.currentTheme.cardColor,
-                                    blurRadius: 8,
-                                    offset: const Offset(2, 2),
-                                    spreadRadius: 0,
-                                  )
-                                ],
                               ),
-                              child: SelectableLinkify(
-                                onOpen: (url) async {
-                                  await launchUrlString(url.url,
-                                      mode: LaunchMode.platformDefault);
-                                },
-                                text: message,
-                                style: TextStyle(
-                                  color:
-                                      themeProvider.currentTheme.primaryColor,
-                                  fontSize: 14,
-                                  fontFamily: 'Manrope',
-                                  fontWeight: FontWeight.w400,
-                                  height: 1.30,
-                                ),
-                                options: const LinkifyOptions(
-                                    removeWww: true, looseUrl: true),
-                                contextMenuBuilder:
-                                    (context, editableTextState) {
-                                  final List<ContextMenuButtonItem>
-                                      buttonItems =
-                                      editableTextState.contextMenuButtonItems;
-                                  buttonItems.removeWhere(
-                                      (ContextMenuButtonItem buttonItem) {
-                                    return buttonItem.type ==
-                                        ContextMenuButtonType.cut;
-                                  });
-                                  return AdaptiveTextSelectionToolbar
-                                      .buttonItems(
-                                    anchors:
-                                        editableTextState.contextMenuAnchors,
-                                    buttonItems: buttonItems,
-                                  );
-                                },
-                              ),
+                              shadows: [
+                                BoxShadow(
+                                  color: themeProvider.currentTheme.cardColor,
+                                  blurRadius: 8,
+                                  offset: const Offset(2, 2),
+                                  spreadRadius: 0,
+                                )
+                              ],
                             ),
-                            vote != 0
-                                ? Positioned(
-                                    bottom: 10,
-                                    right: 10,
-                                    child: Container(
-                                      height: 16,
-                                      width: 32,
-                                      alignment: Alignment.centerRight,
-                                      child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        children: [
-                                          Text(
-                                            vote.toString(),
-                                            textScaler: TextScaler.noScaling,
-                                            style: TextStyle(
-                                              color: themeProvider
-                                                  .currentTheme.primaryColor,
-                                              fontSize: 12,
-                                              fontFamily: 'Manrope',
-                                              fontWeight: FontWeight.w400,
-                                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Messages.isImageLink(message)
+                                    ? Center(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Image.network(
+                                            Messages.extractFirstUrl(message)!,
+                                            //width: screenWidth * 0.3,
+                                            //height: screenWidth * 0.3,
+                                            fit: BoxFit.cover,
                                           ),
-                                          Image.asset(
-                                            'assets/images/like.png',
-                                            width: 16,
-                                            height: 16,
-                                            color: themeProvider
-                                                .currentTheme.shadowColor,
-                                          )
-                                        ],
+                                        ),
+                                      )
+                                    : SelectableLinkify(
+                                        onOpen: (url) async {
+                                          await launchUrlString(url.url,
+                                              mode: LaunchMode
+                                                  .externalApplication);
+                                        },
+                                        text: message,
+                                        style: TextStyle(
+                                          color: themeProvider
+                                              .currentTheme.primaryColor,
+                                          fontSize: 14,
+                                          fontFamily: 'Manrope',
+                                          fontWeight: FontWeight.w400,
+                                          height: 1.30,
+                                        ),
+                                        options: const LinkifyOptions(
+                                            removeWww: true, looseUrl: true),
+                                        contextMenuBuilder:
+                                            (context, editableTextState) {
+                                          final List<ContextMenuButtonItem>
+                                              buttonItems = editableTextState
+                                                  .contextMenuButtonItems;
+                                          buttonItems.removeWhere(
+                                              (ContextMenuButtonItem
+                                                  buttonItem) {
+                                            return buttonItem.type ==
+                                                ContextMenuButtonType.cut;
+                                          });
+                                          return AdaptiveTextSelectionToolbar
+                                              .buttonItems(
+                                            anchors: editableTextState
+                                                .contextMenuAnchors,
+                                            buttonItems: buttonItems,
+                                          );
+                                        },
                                       ),
-                                    ),
-                                  )
-                                : const SizedBox(),
-                          ]),
+                                vote != 0
+                                    ? Container(
+                                        height: 16,
+                                        alignment: Alignment.bottomRight,
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          children: [
+                                            Text(
+                                              vote.toString(),
+                                              textScaler: TextScaler.noScaling,
+                                              style: TextStyle(
+                                                color: themeProvider
+                                                    .currentTheme.primaryColor,
+                                                fontSize: 12,
+                                                fontFamily: 'Manrope',
+                                                fontWeight: FontWeight.w400,
+                                              ),
+                                            ),
+                                            Image.asset(
+                                              'assets/images/like.png',
+                                              width: 16,
+                                              height: 16,
+                                              color: themeProvider
+                                                  .currentTheme.shadowColor,
+                                            )
+                                          ],
+                                        ),
+                                      )
+                                    : const SizedBox(),
+                              ],
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -798,163 +837,167 @@ class TheirMessegeReply extends StatelessWidget {
                             isReplying.addMessageToReply(userName, message, id);
                             HapticFeedback.lightImpact();
                           },
-                          child: Stack(children: [
-                            Container(
-                              alignment: Alignment.topLeft,
-                              padding: const EdgeInsets.all(10.0),
-                              decoration: ShapeDecoration(
-                                color: themeProvider.currentTheme.hintColor,
-                                shape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.only(
-                                    topRight: Radius.circular(20),
-                                    bottomLeft: Radius.circular(20),
-                                    bottomRight: Radius.circular(20),
+                          child: Container(
+                            alignment: Alignment.topLeft,
+                            padding: const EdgeInsets.all(10.0),
+                            decoration: ShapeDecoration(
+                              color: themeProvider.currentTheme.hintColor,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.only(
+                                  topRight: Radius.circular(20),
+                                  bottomLeft: Radius.circular(20),
+                                  bottomRight: Radius.circular(20),
+                                ),
+                              ),
+                              shadows: [
+                                BoxShadow(
+                                  color: themeProvider.currentTheme.cardColor,
+                                  blurRadius: 8,
+                                  offset: const Offset(2, 2),
+                                  spreadRadius: 0,
+                                )
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    final position = Messages.findPositionById(
+                                        listMessages.listMessages, idReturn);
+                                    if (position != null) {
+                                      final isReplying =
+                                          Provider.of<ReplyProvider>(context,
+                                              listen: false);
+                                      isReplying.scrollToMessage(position);
+                                    }
+                                  },
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        replyingMessage.userName,
+                                        textScaler: TextScaler.noScaling,
+                                        style: TextStyle(
+                                          color: themeProvider
+                                              .currentTheme.shadowColor
+                                              .withOpacity(0.9),
+                                          fontSize: 14,
+                                          fontFamily: 'Manrope',
+                                          fontWeight: FontWeight.w400,
+                                          height: 1.30,
+                                        ),
+                                      ),
+                                      Messages.isImageLink(
+                                              replyingMessage.message)
+                                          ? Padding(
+                                              padding:
+                                                  const EdgeInsets.all(1.0),
+                                              child: Image.network(
+                                                Messages.extractFirstUrl(
+                                                    replyingMessage.message)!,
+                                                //width: screenWidth * 0.3,
+                                                height: 32,
+                                                fit: BoxFit.cover,
+                                              ),
+                                            )
+                                          : Text(
+                                              replyingMessage.message,
+                                              maxLines: 3,
+                                              overflow: TextOverflow.ellipsis,
+                                              textScaler: TextScaler.noScaling,
+                                              style: TextStyle(
+                                                color: themeProvider
+                                                    .currentTheme.primaryColor
+                                                    .withOpacity(0.6),
+                                                fontSize: 14,
+                                                fontFamily: 'Manrope',
+                                                fontWeight: FontWeight.w400,
+                                                height: 1.30,
+                                              ),
+                                            ),
+                                    ],
                                   ),
                                 ),
-                                shadows: [
-                                  BoxShadow(
-                                    color: themeProvider.currentTheme.cardColor,
-                                    blurRadius: 8,
-                                    offset: const Offset(2, 2),
-                                    spreadRadius: 0,
-                                  )
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                      final position =
-                                          Messages.findPositionById(
-                                              listMessages.listMessages,
-                                              idReturn);
-                                      if (position != null) {
-                                        final isReplying =
-                                            Provider.of<ReplyProvider>(context,
-                                                listen: false);
-                                        isReplying.scrollToMessage(position);
-                                      }
-                                    },
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          replyingMessage.userName,
-                                          textScaler: TextScaler.noScaling,
-                                          style: TextStyle(
-                                            color: themeProvider
-                                                .currentTheme.shadowColor
-                                                .withOpacity(0.9),
-                                            fontSize: 14,
-                                            fontFamily: 'Manrope',
-                                            fontWeight: FontWeight.w400,
-                                            height: 1.30,
-                                          ),
-                                        ),
-                                        Text(
-                                          replyingMessage.message,
-                                          maxLines: 3,
-                                          overflow: TextOverflow.ellipsis,
-                                          textScaler: TextScaler.noScaling,
-                                          style: TextStyle(
-                                            color: themeProvider
-                                                .currentTheme.primaryColor
-                                                .withOpacity(0.6),
-                                            fontSize: 14,
-                                            fontFamily: 'Manrope',
-                                            fontWeight: FontWeight.w400,
-                                            height: 1.30,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.only(top: 4, bottom: 4),
+                                  child: Container(
+                                    height: 2,
+                                    color:
+                                        themeProvider.currentTheme.shadowColor,
                                   ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                        top: 4, bottom: 4),
-                                    child: Container(
-                                      height: 2,
-                                      color: themeProvider
-                                          .currentTheme.shadowColor,
-                                    ),
+                                ),
+                                SelectableLinkify(
+                                  onOpen: (url) async {
+                                    await launchUrlString(url.url,
+                                        mode: LaunchMode.externalApplication);
+                                  },
+                                  text: message,
+                                  style: TextStyle(
+                                    color:
+                                        themeProvider.currentTheme.primaryColor,
+                                    fontSize: 14,
+                                    fontFamily: 'Manrope',
+                                    fontWeight: FontWeight.w400,
+                                    height: 1.30,
                                   ),
-                                  SelectableLinkify(
-                                    onOpen: (url) async {
-                                      await launchUrlString(url.url,
-                                          mode: LaunchMode.externalApplication);
-                                    },
-                                    text: message,
-                                    style: TextStyle(
-                                      color: themeProvider
-                                          .currentTheme.primaryColor,
-                                      fontSize: 14,
-                                      fontFamily: 'Manrope',
-                                      fontWeight: FontWeight.w400,
-                                      height: 1.30,
-                                    ),
-                                    options: const LinkifyOptions(
-                                        removeWww: true, looseUrl: true),
-                                    contextMenuBuilder:
-                                        (context, editableTextState) {
-                                      final List<ContextMenuButtonItem>
-                                          buttonItems = editableTextState
-                                              .contextMenuButtonItems;
-                                      buttonItems.removeWhere(
-                                          (ContextMenuButtonItem buttonItem) {
-                                        return buttonItem.type ==
-                                            ContextMenuButtonType.cut;
-                                      });
-                                      return AdaptiveTextSelectionToolbar
-                                          .buttonItems(
-                                        anchors: editableTextState
-                                            .contextMenuAnchors,
-                                        buttonItems: buttonItems,
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                            vote != 0
-                                ? Positioned(
-                                    bottom: 10,
-                                    right: 10,
-                                    child: Container(
-                                      height: 16,
-                                      width: 32,
-                                      alignment: Alignment.centerRight,
-                                      child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        children: [
-                                          Text(
-                                            vote.toString(),
-                                            textScaler: TextScaler.noScaling,
-                                            style: TextStyle(
-                                              color: themeProvider
-                                                  .currentTheme.primaryColor,
-                                              fontSize: 12,
-                                              fontFamily: 'Manrope',
-                                              fontWeight: FontWeight.w400,
+                                  options: const LinkifyOptions(
+                                      removeWww: true, looseUrl: true),
+                                  contextMenuBuilder:
+                                      (context, editableTextState) {
+                                    final List<ContextMenuButtonItem>
+                                        buttonItems = editableTextState
+                                            .contextMenuButtonItems;
+                                    buttonItems.removeWhere(
+                                        (ContextMenuButtonItem buttonItem) {
+                                      return buttonItem.type ==
+                                          ContextMenuButtonType.cut;
+                                    });
+                                    return AdaptiveTextSelectionToolbar
+                                        .buttonItems(
+                                      anchors:
+                                          editableTextState.contextMenuAnchors,
+                                      buttonItems: buttonItems,
+                                    );
+                                  },
+                                ),
+                                vote != 0
+                                    ? Container(
+                                        height: 16,
+                                        alignment: Alignment.bottomRight,
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          children: [
+                                            Text(
+                                              vote.toString(),
+                                              textScaler: TextScaler.noScaling,
+                                              style: TextStyle(
+                                                color: themeProvider
+                                                    .currentTheme.primaryColor,
+                                                fontSize: 12,
+                                                fontFamily: 'Manrope',
+                                                fontWeight: FontWeight.w400,
+                                              ),
                                             ),
-                                          ),
-                                          Image.asset(
-                                            'assets/images/like.png',
-                                            width: 16,
-                                            height: 16,
-                                            color: themeProvider
-                                                .currentTheme.shadowColor,
-                                          )
-                                        ],
-                                      ),
-                                    ),
-                                  )
-                                : const SizedBox(),
-                          ]),
+                                            Image.asset(
+                                              'assets/images/like.png',
+                                              width: 16,
+                                              height: 16,
+                                              color: themeProvider
+                                                  .currentTheme.shadowColor,
+                                            )
+                                          ],
+                                        ),
+                                      )
+                                    : const SizedBox(),
+                              ],
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -1082,163 +1125,167 @@ class MyMessegeReply extends StatelessWidget {
                             isReplying.addMessageToReply(userName, message, id);
                             HapticFeedback.lightImpact();
                           },
-                          child: Stack(children: [
-                            Container(
-                              alignment: Alignment.topLeft,
-                              padding: const EdgeInsets.all(10.0),
-                              decoration: ShapeDecoration(
-                                color: themeProvider.currentTheme.hoverColor,
-                                shape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: Radius.circular(20),
-                                    bottomLeft: Radius.circular(20),
-                                    bottomRight: Radius.circular(20),
+                          child: Container(
+                            alignment: Alignment.topLeft,
+                            padding: const EdgeInsets.all(10.0),
+                            decoration: ShapeDecoration(
+                              color: themeProvider.currentTheme.hoverColor,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(20),
+                                  bottomLeft: Radius.circular(20),
+                                  bottomRight: Radius.circular(20),
+                                ),
+                              ),
+                              shadows: [
+                                BoxShadow(
+                                  color: themeProvider.currentTheme.cardColor,
+                                  blurRadius: 8,
+                                  offset: const Offset(2, 2),
+                                  spreadRadius: 0,
+                                )
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    final position = Messages.findPositionById(
+                                        listMessages.listMessages, idReturn);
+                                    if (position != null) {
+                                      final isReplying =
+                                          Provider.of<ReplyProvider>(context,
+                                              listen: false);
+                                      isReplying.scrollToMessage(position);
+                                    }
+                                  },
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        replyingMessage.userName,
+                                        textScaler: TextScaler.noScaling,
+                                        style: TextStyle(
+                                          color: themeProvider
+                                              .currentTheme.shadowColor
+                                              .withOpacity(0.9),
+                                          fontSize: 14,
+                                          fontFamily: 'Manrope',
+                                          fontWeight: FontWeight.w400,
+                                          height: 1.30,
+                                        ),
+                                      ),
+                                      Messages.isImageLink(
+                                              replyingMessage.message)
+                                          ? Padding(
+                                              padding:
+                                                  const EdgeInsets.all(1.0),
+                                              child: Image.network(
+                                                Messages.extractFirstUrl(
+                                                    replyingMessage.message)!,
+                                                //width: screenWidth * 0.3,
+                                                height: 40,
+                                                fit: BoxFit.cover,
+                                              ),
+                                            )
+                                          : Text(
+                                              replyingMessage.message,
+                                              maxLines: 3,
+                                              overflow: TextOverflow.ellipsis,
+                                              textScaler: TextScaler.noScaling,
+                                              style: TextStyle(
+                                                color: themeProvider
+                                                    .currentTheme.primaryColor
+                                                    .withOpacity(0.6),
+                                                fontSize: 14,
+                                                fontFamily: 'Manrope',
+                                                fontWeight: FontWeight.w400,
+                                                height: 1.30,
+                                              ),
+                                            ),
+                                    ],
                                   ),
                                 ),
-                                shadows: [
-                                  BoxShadow(
-                                    color: themeProvider.currentTheme.cardColor,
-                                    blurRadius: 8,
-                                    offset: const Offset(2, 2),
-                                    spreadRadius: 0,
-                                  )
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                      final position =
-                                          Messages.findPositionById(
-                                              listMessages.listMessages,
-                                              idReturn);
-                                      if (position != null) {
-                                        final isReplying =
-                                            Provider.of<ReplyProvider>(context,
-                                                listen: false);
-                                        isReplying.scrollToMessage(position);
-                                      }
-                                    },
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          replyingMessage.userName,
-                                          textScaler: TextScaler.noScaling,
-                                          style: TextStyle(
-                                            color: themeProvider
-                                                .currentTheme.shadowColor
-                                                .withOpacity(0.9),
-                                            fontSize: 14,
-                                            fontFamily: 'Manrope',
-                                            fontWeight: FontWeight.w400,
-                                            height: 1.30,
-                                          ),
-                                        ),
-                                        Text(
-                                          replyingMessage.message,
-                                          maxLines: 3,
-                                          overflow: TextOverflow.ellipsis,
-                                          textScaler: TextScaler.noScaling,
-                                          style: TextStyle(
-                                            color: themeProvider
-                                                .currentTheme.primaryColor
-                                                .withOpacity(0.6),
-                                            fontSize: 14,
-                                            fontFamily: 'Manrope',
-                                            fontWeight: FontWeight.w400,
-                                            height: 1.30,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.only(top: 4, bottom: 4),
+                                  child: Container(
+                                    height: 2,
+                                    color:
+                                        themeProvider.currentTheme.shadowColor,
                                   ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                        top: 4, bottom: 4),
-                                    child: Container(
-                                      height: 2,
-                                      color: themeProvider
-                                          .currentTheme.shadowColor,
-                                    ),
+                                ),
+                                SelectableLinkify(
+                                  onOpen: (url) async {
+                                    await launchUrlString(url.url,
+                                        mode: LaunchMode.externalApplication);
+                                  },
+                                  text: message,
+                                  style: TextStyle(
+                                    color:
+                                        themeProvider.currentTheme.primaryColor,
+                                    fontSize: 14,
+                                    fontFamily: 'Manrope',
+                                    fontWeight: FontWeight.w400,
+                                    height: 1.30,
                                   ),
-                                  SelectableLinkify(
-                                    onOpen: (url) async {
-                                      await launchUrlString(url.url,
-                                          mode: LaunchMode.externalApplication);
-                                    },
-                                    text: message,
-                                    style: TextStyle(
-                                      color: themeProvider
-                                          .currentTheme.primaryColor,
-                                      fontSize: 14,
-                                      fontFamily: 'Manrope',
-                                      fontWeight: FontWeight.w400,
-                                      height: 1.30,
-                                    ),
-                                    options: const LinkifyOptions(
-                                        removeWww: true, looseUrl: true),
-                                    contextMenuBuilder:
-                                        (context, editableTextState) {
-                                      final List<ContextMenuButtonItem>
-                                          buttonItems = editableTextState
-                                              .contextMenuButtonItems;
-                                      buttonItems.removeWhere(
-                                          (ContextMenuButtonItem buttonItem) {
-                                        return buttonItem.type ==
-                                            ContextMenuButtonType.cut;
-                                      });
-                                      return AdaptiveTextSelectionToolbar
-                                          .buttonItems(
-                                        anchors: editableTextState
-                                            .contextMenuAnchors,
-                                        buttonItems: buttonItems,
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                            vote != 0
-                                ? Positioned(
-                                    bottom: 10,
-                                    right: 10,
-                                    child: Container(
-                                      height: 16,
-                                      width: 32,
-                                      alignment: Alignment.centerRight,
-                                      child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        children: [
-                                          Text(
-                                            vote.toString(),
-                                            textScaler: TextScaler.noScaling,
-                                            style: TextStyle(
-                                              color: themeProvider
-                                                  .currentTheme.primaryColor,
-                                              fontSize: 12,
-                                              fontFamily: 'Manrope',
-                                              fontWeight: FontWeight.w400,
+                                  options: const LinkifyOptions(
+                                      removeWww: true, looseUrl: true),
+                                  contextMenuBuilder:
+                                      (context, editableTextState) {
+                                    final List<ContextMenuButtonItem>
+                                        buttonItems = editableTextState
+                                            .contextMenuButtonItems;
+                                    buttonItems.removeWhere(
+                                        (ContextMenuButtonItem buttonItem) {
+                                      return buttonItem.type ==
+                                          ContextMenuButtonType.cut;
+                                    });
+                                    return AdaptiveTextSelectionToolbar
+                                        .buttonItems(
+                                      anchors:
+                                          editableTextState.contextMenuAnchors,
+                                      buttonItems: buttonItems,
+                                    );
+                                  },
+                                ),
+                                vote != 0
+                                    ? Container(
+                                        height: 16,
+                                        alignment: Alignment.bottomRight,
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          children: [
+                                            Text(
+                                              vote.toString(),
+                                              textScaler: TextScaler.noScaling,
+                                              style: TextStyle(
+                                                color: themeProvider
+                                                    .currentTheme.primaryColor,
+                                                fontSize: 12,
+                                                fontFamily: 'Manrope',
+                                                fontWeight: FontWeight.w400,
+                                              ),
                                             ),
-                                          ),
-                                          Image.asset(
-                                            'assets/images/like.png',
-                                            width: 16,
-                                            height: 16,
-                                            color: themeProvider
-                                                .currentTheme.shadowColor,
-                                          )
-                                        ],
-                                      ),
-                                    ),
-                                  )
-                                : const SizedBox(),
-                          ]),
+                                            Image.asset(
+                                              'assets/images/like.png',
+                                              width: 16,
+                                              height: 16,
+                                              color: themeProvider
+                                                  .currentTheme.shadowColor,
+                                            )
+                                          ],
+                                        ),
+                                      )
+                                    : const SizedBox(),
+                              ],
+                            ),
+                          ),
                         ),
                       ],
                     ),
