@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:beholder_flutter/beholder_flutter.dart';
 import 'package:connectivity/connectivity.dart';
@@ -8,6 +9,7 @@ import 'package:coolchat/model/messages_list.dart';
 import 'package:coolchat/servises/account_provider.dart';
 import 'package:coolchat/servises/file_controller.dart';
 import 'package:coolchat/servises/reply_provider.dart';
+import 'package:coolchat/servises/send_file_provider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,6 +18,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marquee/marquee.dart';
 import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+import 'package:photo_view/photo_view.dart';
 
 import 'package:coolchat/bloc/token_blok.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
@@ -261,12 +264,16 @@ class CommonChatScreen extends StatefulWidget {
 class _CommonChatScreenState extends State<CommonChatScreen>
     with WidgetsBindingObserver {
   late List<Messages> messageData;
+  late SendFileProvider showFileSend;
   BuildContext? _buildContext;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     messageData = widget.messageData;
+    showFileSend = Provider.of<SendFileProvider>(context, listen: false);
+    showFileSend.addListener(_onShowFileSend);
     final TokenBloc tokenBloc = context.read<TokenBloc>();
     if (widget.account.email.isNotEmpty) {
       tokenBloc.add(TokenLoadEvent(roomName: widget.topicName, type: 'ws'));
@@ -278,6 +285,7 @@ class _CommonChatScreenState extends State<CommonChatScreen>
 
   @override
   void dispose() {
+    showFileSend.removeListener(_onShowFileSend);
     if (widget.messageProvider != null) {
       widget.messageProvider!.dispose();
       WidgetsBinding.instance.removeObserver(this);
@@ -298,6 +306,10 @@ class _CommonChatScreenState extends State<CommonChatScreen>
             roomName: widget.topicName, context: context));
       }
     }
+  }
+
+  void _onShowFileSend() {
+    setState(() {});
   }
 
   @override
@@ -339,7 +351,9 @@ class _CommonChatScreenState extends State<CommonChatScreen>
                               setState(() {});
                             })),
                     SizedBox(
-                      height: (screenHeight - 250) * 1,
+                      height: showFileSend.readyToSend
+                          ? (screenHeight - 300) * 1
+                          : (screenHeight - 250) * 1,
                       child: BlockMessages(
                         key: blockMessageStateKey,
                         checkContext: context,
@@ -352,6 +366,15 @@ class _CommonChatScreenState extends State<CommonChatScreen>
                         roomName: widget.topicName,
                       ),
                     ),
+                    showFileSend.readyToSend
+                        ? SizedBox(
+                            height: 50,
+                            child: FileSend(
+                              roomName: widget.topicName,
+                              messageProvider: widget.messageProvider,
+                            ),
+                          )
+                        : Container(),
                     TextAndSend(
                       state: widget.state,
                       topicName: widget.topicName,
@@ -839,31 +862,73 @@ class _BlockMessagesState extends State<BlockMessages> {
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                Messages.isImageLink(
-                                        isReplying.textMessageToReply)
-                                    ? Padding(
-                                        padding: const EdgeInsets.all(1.0),
-                                        child: Image.network(
-                                          Messages.extractFirstUrl(
-                                              isReplying.textMessageToReply)!,
-                                          //width: screenWidth * 0.3,
-                                          height: 32,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      )
-                                    : Text(
-                                        isReplying.textMessageToReply,
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 2,
-                                        style: TextStyle(
-                                          color: themeProvider
-                                              .currentTheme.primaryColor
-                                              .withOpacity(0.9),
-                                          fontSize: 14,
-                                          fontFamily: 'Manrope',
-                                          fontWeight: FontWeight.w400,
-                                        ),
-                                      )
+                                isReplying.fileUrl == null
+                                    ? Messages.isImageLink(
+                                            isReplying.textMessageToReply)
+                                        ? Padding(
+                                            padding: const EdgeInsets.all(1.0),
+                                            child: Image.network(
+                                              Messages.extractFirstUrl(
+                                                  isReplying
+                                                      .textMessageToReply)!,
+                                              //width: screenWidth * 0.3,
+                                              height: 32,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          )
+                                        : Text(
+                                            isReplying.textMessageToReply,
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 2,
+                                            style: TextStyle(
+                                              color: themeProvider
+                                                  .currentTheme.primaryColor
+                                                  .withOpacity(0.9),
+                                              fontSize: 14,
+                                              fontFamily: 'Manrope',
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          )
+                                    : Messages.isImageLink(isReplying.fileUrl!)
+                                        ? Padding(
+                                            padding: const EdgeInsets.all(1.0),
+                                            child: Image.network(
+                                              Messages.extractFirstUrl(
+                                                  isReplying.fileUrl!)!,
+                                              height: 32,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          )
+                                        : Padding(
+                                            padding: const EdgeInsets.all(1.0),
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.file_copy,
+                                                  color: themeProvider
+                                                      .currentTheme
+                                                      .primaryColor,
+                                                  size: 24,
+                                                ),
+                                                Text(
+                                                    Messages.extractFileName(
+                                                        isReplying.fileUrl!),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    maxLines: 1,
+                                                    textScaler:
+                                                        TextScaler.noScaling,
+                                                    style: TextStyle(
+                                                      color: themeProvider
+                                                          .currentTheme
+                                                          .primaryColor,
+                                                      fontSize: 14,
+                                                      fontFamily: 'Manrope',
+                                                      fontWeight:
+                                                          FontWeight.w400,
+                                                    )),
+                                              ],
+                                            ))
                               ],
                             ),
                           )),
@@ -1024,6 +1089,214 @@ class ClearBlockMessages extends StatelessWidget {
   }
 }
 
+class FileSend extends StatefulWidget {
+  final String roomName;
+  final MessageProvider? messageProvider;
+
+  const FileSend({
+    super.key,
+    required this.roomName,
+    required this.messageProvider,
+  });
+
+  @override
+  State<FileSend> createState() => _FileSendState();
+}
+
+class _FileSendState extends State<FileSend> {
+  double progress = 0.0;
+  late bool sending;
+  late SendFileProvider sendFile;
+
+  @override
+  void initState() {
+    super.initState();
+    sendFile = Provider.of<SendFileProvider>(context, listen: false);
+    sending = false;
+  }
+
+  void _sendMessage() async {
+    FileController uploader = FileController();
+    setState(() {
+      sending = true;
+    });
+    final messageForSend = await uploader
+        .uploadFileDio(sendFile.file!.path!, sendFile.file!.size,
+            onProgress: (int sent, int total) {
+      setState(() {
+        progress = sent / total;
+      });
+    });
+
+    print(messageForSend);
+    if (messageForSend.isNotEmpty) {
+      widget.messageProvider
+          ?.sendMessage(json.encode({"fileUrl": messageForSend}));
+    }
+    setState(() {
+      sending = false;
+    });
+    sendFile.clearFileFromSend();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<ThemeProvider>(builder: (context, themeProvider, child) {
+      return Container(
+          padding: const EdgeInsets.only(right: 0, left: 0),
+          decoration: ShapeDecoration(
+            color: themeProvider.currentTheme.primaryColorDark,
+            shape: RoundedRectangleBorder(
+              side: BorderSide(
+                  width: 0.50, color: themeProvider.currentTheme.shadowColor),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            shadows: [
+              BoxShadow(
+                color: themeProvider.currentTheme.cardColor,
+                blurRadius: 8,
+                offset: const Offset(2, 2),
+                spreadRadius: 0,
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              Container(
+                width: (MediaQuery.of(context).size.width - 32) * progress,
+                decoration: ShapeDecoration(
+                  color:
+                      themeProvider.currentTheme.shadowColor.withOpacity(0.2),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              MediaQuery(
+                  data: MediaQuery.of(context)
+                      .copyWith(textScaler: TextScaler.noScaling),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const SizedBox(
+                        width: 8,
+                      ),
+                      FileController.isImageFileName(sendFile.file!.name)
+                          ? InkWell(
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  barrierColor: Colors.transparent,
+                                  builder: (context) => Dialog(
+                                    backgroundColor: Colors.transparent,
+                                    insetPadding: EdgeInsets.zero,
+                                    child: PhotoView(
+                                      imageProvider:
+                                          FileImage(File(sendFile.file!.path!)),
+                                      backgroundDecoration: const BoxDecoration(
+                                        color: Colors.transparent,
+                                      ),
+                                      //minScale:
+                                      //    PhotoViewComputedScale.contained * 0.8,
+                                      //maxScale:
+                                      //    PhotoViewComputedScale.covered * 2,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: FileController.isImageFileName(
+                                      sendFile.file!.name)
+                                  ? Image.file(File(sendFile.file!.path!),
+                                      width: 32, height: 32)
+                                  : Icon(
+                                      Icons.file_copy,
+                                      color: themeProvider
+                                          .currentTheme.primaryColor,
+                                      size: 32,
+                                    ),
+                            )
+                          : Icon(
+                              Icons.file_copy,
+                              color: themeProvider.currentTheme.primaryColor,
+                              size: 32,
+                            ),
+                      const SizedBox(
+                        width: 8,
+                      ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(sendFile.file!.name,
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                style: TextStyle(
+                                  color:
+                                      themeProvider.currentTheme.primaryColor,
+                                  fontSize: 14,
+                                  fontFamily: 'Manrope',
+                                  fontWeight: FontWeight.w400,
+                                )),
+                            Text(
+                                '${(sendFile.file!.size / 1000000).toStringAsFixed(3)} MB',
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                style: TextStyle(
+                                  color:
+                                      themeProvider.currentTheme.primaryColor,
+                                  fontSize: 14,
+                                  fontFamily: 'Manrope',
+                                  fontWeight: FontWeight.w400,
+                                )),
+                          ],
+                        ),
+                      ),
+                      sending
+                          ? Container(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(
+                                color: themeProvider.currentTheme.shadowColor,
+                              ),
+                            )
+                          : SizedBox(
+                              height: 32,
+                              width: 32,
+                              child: IconButton(
+                                onPressed: () {
+                                  _sendMessage();
+                                },
+                                padding: EdgeInsets.zero,
+                                splashRadius: 1,
+                                icon: Icon(
+                                  Icons.send,
+                                  color: themeProvider.currentTheme.shadowColor,
+                                ),
+                              ),
+                            ),
+                      SizedBox(
+                        height: 32,
+                        width: 32,
+                        child: IconButton(
+                          onPressed: () {
+                            sendFile.clearFileFromSend();
+                          },
+                          padding: EdgeInsets.zero,
+                          icon: Icon(
+                            Icons.close,
+                            color: themeProvider.currentTheme.shadowColor,
+                          ),
+                        ),
+                      )
+                    ],
+                  )),
+            ],
+          ));
+    });
+  }
+}
+
 class TextAndSend extends StatefulWidget {
   final String topicName;
   final String server;
@@ -1048,11 +1321,13 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
   final _textFieldFocusNode = FocusNode();
   bool isWriting = false;
   late ReplyProvider isReplying;
+  late AccountProvider _accountProvider;
 
   @override
   void initState() {
     super.initState();
     isReplying = Provider.of<ReplyProvider>(context, listen: false);
+    _accountProvider = Provider.of<AccountProvider>(context, listen: false);
   }
 
   @override
@@ -1159,8 +1434,10 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
                         border: InputBorder.none,
                         suffixIcon: GestureDetector(
                           onTap: () async {
-                            messageController.text =
-                                await FileController.pickAndUploadFile();
+                            if (_accountProvider.isLoginProvider) {
+                              FileController.pickAndUploadFile(
+                                  context, themeProvider);
+                            }
                           },
                           child: Icon(
                             Icons.attach_file,
@@ -1179,9 +1456,6 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
                               return LoginDialog();
                             },
                           );
-                          AccountProvider _accountProvider =
-                              Provider.of<AccountProvider>(context,
-                                  listen: false);
                           if (_accountProvider.isLoginProvider) {
                             final TokenBloc tokenBloc =
                                 context.read<TokenBloc>();

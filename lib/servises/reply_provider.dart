@@ -5,6 +5,7 @@ class ReplyProvider with ChangeNotifier {
   ItemScrollController itemScrollController = ItemScrollController();
   String nameRecevierMessage;
   String textMessageToReply;
+  String? fileUrl;
   int idMessageToReplying;
   bool isReplying;
   ReplyProvider({
@@ -15,9 +16,10 @@ class ReplyProvider with ChangeNotifier {
   });
 
   void addMessageToReply(
-      String nameRecevier, String textMessage, int idMessage) {
+      String nameRecevier, String textMessage, int idMessage, String? file) {
     nameRecevierMessage = nameRecevier;
     textMessageToReply = textMessage;
+    fileUrl = file;
     idMessageToReplying = idMessage;
     isReplying = true;
     notifyListeners();

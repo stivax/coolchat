@@ -99,25 +99,25 @@ Future<void> writeAccountInStorage(
 }
 
 Future<Account> readAccountFromStorage() async {
-  //final acc = await SharedPreferences.getInstance();
-  //final userString = acc.getString("account");
   final storage = FlutterSecureStorage();
-  String? email = await storage.read(key: 'email');
+  try {
+    String? email = await storage.read(key: 'email');
 
-  if (email != null) {
-    String? userName = await storage.read(key: 'userName');
-    String? password = await storage.read(key: 'password');
-    String? avatar = await storage.read(key: 'avatar');
-    String? id = await storage.read(key: 'id');
-    //Map<String, dynamic> jsonData = json.decode(userString);
-    //Account account = Account.fromJson(jsonData);
-    return Account(
-        email: email,
-        userName: userName!,
-        password: password!,
-        avatar: avatar!,
-        id: int.parse(id!));
-  } else {
+    if (email != null) {
+      String? userName = await storage.read(key: 'userName');
+      String? password = await storage.read(key: 'password');
+      String? avatar = await storage.read(key: 'avatar');
+      String? id = await storage.read(key: 'id');
+      return Account(
+          email: email,
+          userName: userName!,
+          password: password!,
+          avatar: avatar!,
+          id: int.parse(id!));
+    } else {
+      return Account(email: '', userName: '', password: '', avatar: '', id: 0);
+    }
+  } on Exception catch (_) {
     return Account(email: '', userName: '', password: '', avatar: '', id: 0);
   }
 }

@@ -44,23 +44,6 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
           actions: [
             Row(
               children: [
-                DropdownButton<Locale>(
-                  value: Provider.of<LocaleProvider>(context, listen: false)
-                      .currentLocale,
-                  onChanged: (Locale? newLocale) {
-                    if (newLocale != null) {
-                      Provider.of<LocaleProvider>(context, listen: false)
-                          .setLocale(newLocale);
-                    }
-                  },
-                  items: L10n.all.map((locale) {
-                    String flag = L10n.getFlag(locale.languageCode);
-                    return DropdownMenuItem(
-                      value: locale,
-                      child: Text(flag),
-                    );
-                  }).toList(),
-                ),
                 GestureDetector(
                   onTap: () {
                     themeProvider.toggleTheme();
@@ -78,17 +61,22 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
                 const SizedBox(
                   width: 16,
                 ),
-                GestureDetector(
-                  onTap: () {},
-                  child: SizedBox(
-                    width: 48,
-                    height: 26,
-                    child: Image(
-                      image: themeProvider.isLightMode
-                          ? const AssetImage('assets/images/lang_en_light.png')
-                          : const AssetImage('assets/images/lang_en_dark.png'),
-                    ),
-                  ),
+                DropdownButton<Locale>(
+                  value: Provider.of<LocaleProvider>(context, listen: false)
+                      .currentLocale,
+                  onChanged: (Locale? newLocale) {
+                    if (newLocale != null) {
+                      Provider.of<LocaleProvider>(context, listen: false)
+                          .setLocale(newLocale);
+                    }
+                  },
+                  items: L10n.all.map((locale) {
+                    String flag = L10n.getFlag(locale.languageCode);
+                    return DropdownMenuItem(
+                      value: locale,
+                      child: Text(flag),
+                    );
+                  }).toList(),
                 ),
                 const SizedBox(
                   width: 16,

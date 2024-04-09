@@ -8,7 +8,7 @@ class ThemeProvider with ChangeNotifier {
   ThemeData _currentTheme = darkTheme;
   bool _isLightMode = false;
   bool _isThemeChange = true;
-  bool _adaptiveTheme = true;
+  bool _adaptiveTheme = false;
   Timer? _themeTimer;
 
   ThemeProvider() {
@@ -23,7 +23,7 @@ class ThemeProvider with ChangeNotifier {
 
   Future<void> _loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
-    _adaptiveTheme = prefs.getBool('adaptiveTheme') ?? true;
+    _adaptiveTheme = prefs.getBool('adaptiveTheme') ?? false;
     _updateTheme();
   }
 

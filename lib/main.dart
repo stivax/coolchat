@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:connectivity/connectivity.dart';
 import 'package:coolchat/app_localizations.dart';
 import 'package:coolchat/servises/locale_provider.dart';
+import 'package:coolchat/servises/send_file_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -50,7 +51,10 @@ void main() {
             create: (context) => AccountSettingProvider()),
         ChangeNotifierProvider<ReplyProvider>(
             create: (context) => ReplyProvider()),
-        ChangeNotifierProvider(create: (context) => LocaleProvider()),
+        ChangeNotifierProvider<LocaleProvider>(
+            create: (context) => LocaleProvider()),
+        ChangeNotifierProvider<SendFileProvider>(
+            create: (context) => SendFileProvider()),
       ],
       child: RepositoryProvider(
           create: (context) => TokenRepository(), child: const StartScreen()),
@@ -355,6 +359,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         isListeningNotofication = false;
       },
     );
+    Timer.periodic(const Duration(seconds: 5), (timer) {
+      print('ping');
+      messageProvider!.sendMessage('ping');
+    });
     //}
   }
 
@@ -464,6 +472,18 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         builder: (context, themeProvider, child) {
           return Scaffold(
             appBar: MyAppBar(),
+            floatingActionButton: FloatingActionButton(
+              onPressed: () {
+                addRoomDialog(context);
+              },
+              backgroundColor:
+                  themeProvider.currentTheme.shadowColor.withOpacity(0.7),
+              child: const Icon(
+                Icons.add,
+                color: Color(0xFFF5FBFF),
+              ),
+            ),
+            floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
             body: Column(
               children: [
                 AnimatedContainer(
@@ -571,7 +591,7 @@ class HeaderWidget extends StatelessWidget {
     var screenWidth = MediaQuery.of(context).size.width;
     return Container(
       width: 393,
-      height: 428,
+      height: 228,
       decoration: const BoxDecoration(
         image: DecorationImage(
           image: AssetImage('assets/images/main.jpg'),
