@@ -81,6 +81,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   StreamSubscription? _messageSubscription;
   late StreamSubscription<ConnectivityResult> _connectivitySubscription;
   final ListMessages listMessages = ListMessages();
+  late BuildContext contextScreen;
 
   @override
   void initState() {
@@ -90,6 +91,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (widget.account.email != '') {
       acc = widget.account;
     }
+    contextScreen = context;
   }
 
   @override
@@ -190,6 +192,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               account: widget.account,
               messageData: state.messagesList,
               hasMessage: hasMessages,
+              contextScreen: contextScreen,
             );
           } else if (state is TokenLoadedState) {
             acc = state.account;
@@ -211,6 +214,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               account: acc,
               messageData: const [],
               hasMessage: hasMessages,
+              contextScreen: contextScreen,
             );
           } else if (state is TokenErrorState) {
             return CommonChatScreen(
@@ -220,6 +224,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               account: widget.account,
               messageData: const [],
               hasMessage: hasMessages,
+              contextScreen: contextScreen,
             );
           } else if (state is TokenLoadingState) {
             return CommonChatScreen(
@@ -229,6 +234,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               account: widget.account,
               messageData: const [],
               hasMessage: hasMessages,
+              contextScreen: contextScreen,
             );
           } else {
             return const Center(child: LinearProgressIndicator());
@@ -247,6 +253,7 @@ class CommonChatScreen extends StatefulWidget {
   final String state;
   final List<Messages> messageData;
   final bool hasMessage;
+  final BuildContext contextScreen;
   const CommonChatScreen(
       {super.key,
       required this.topicName,
@@ -255,7 +262,8 @@ class CommonChatScreen extends StatefulWidget {
       required this.account,
       required this.state,
       required this.messageData,
-      required this.hasMessage});
+      required this.hasMessage,
+      required this.contextScreen});
 
   @override
   State<CommonChatScreen> createState() => _CommonChatScreenState();
@@ -375,13 +383,18 @@ class _CommonChatScreenState extends State<CommonChatScreen>
                             ),
                           )
                         : Container(),
-                    TextAndSend(
-                      state: widget.state,
-                      topicName: widget.topicName,
-                      server: widget.server,
-                      messageProvider: widget.messageProvider,
-                      account: widget.account,
-                    ),
+                    showFileSend.addComent
+                        ? AddComentToFile(
+                            state: widget.state,
+                            contextScreen: widget.contextScreen)
+                        : TextAndSend(
+                            state: widget.state,
+                            topicName: widget.topicName,
+                            server: widget.server,
+                            messageProvider: widget.messageProvider,
+                            account: widget.account,
+                            contextScreen: widget.contextScreen,
+                          ),
                   ]),
             ),
           ),
@@ -1107,11 +1120,14 @@ class _FileSendState extends State<FileSend> {
   double progress = 0.0;
   late bool sending;
   late SendFileProvider sendFile;
+  late int size;
+  late ReplyProvider isReplying;
 
   @override
   void initState() {
     super.initState();
     sendFile = Provider.of<SendFileProvider>(context, listen: false);
+    isReplying = Provider.of<ReplyProvider>(context, listen: false);
     sending = false;
   }
 
@@ -1120,27 +1136,38 @@ class _FileSendState extends State<FileSend> {
     setState(() {
       sending = true;
     });
-    final messageForSend = await uploader
-        .uploadFileDio(sendFile.file!.path!, sendFile.file!.size,
-            onProgress: (int sent, int total) {
+    final size = await sendFile.file!.length();
+    //final fileToSend = await FileController.compressImageFile(sendFile.file!);
+    //final size = await fileToSend!.length();
+    final messageForSend = await uploader.uploadFileDio(
+        sendFile.file!.path, size, onProgress: (int sent, int total) {
       setState(() {
         progress = sent / total;
       });
     });
+    final coment = sendFile.coment;
+    final reply = isReplying.idMessageToReplying;
 
     print(messageForSend);
     if (messageForSend.isNotEmpty) {
-      widget.messageProvider
-          ?.sendMessage(json.encode({"fileUrl": messageForSend}));
+      widget.messageProvider?.sendMessage(json.encode({
+        "send": {
+          "original_message_id": reply,
+          "message": coment,
+          "fileUrl": messageForSend
+        }
+      }));
     }
     setState(() {
       sending = false;
     });
+    isReplying.afterReplyToMessage();
     sendFile.clearFileFromSend();
   }
 
   @override
   Widget build(BuildContext context) {
+    print('file in ${sendFile.file!.path}');
     return Consumer<ThemeProvider>(builder: (context, themeProvider, child) {
       return Container(
           padding: const EdgeInsets.only(right: 0, left: 0),
@@ -1181,7 +1208,8 @@ class _FileSendState extends State<FileSend> {
                       const SizedBox(
                         width: 8,
                       ),
-                      FileController.isImageFileName(sendFile.file!.name)
+                      FileController.isImageFileName(
+                              sendFile.file!.path.split('/').last)
                           ? InkWell(
                               onTap: () {
                                 showDialog(
@@ -1191,8 +1219,7 @@ class _FileSendState extends State<FileSend> {
                                     backgroundColor: Colors.transparent,
                                     insetPadding: EdgeInsets.zero,
                                     child: PhotoView(
-                                      imageProvider:
-                                          FileImage(File(sendFile.file!.path!)),
+                                      imageProvider: FileImage(sendFile.file!),
                                       backgroundDecoration: const BoxDecoration(
                                         color: Colors.transparent,
                                       ),
@@ -1205,8 +1232,8 @@ class _FileSendState extends State<FileSend> {
                                 );
                               },
                               child: FileController.isImageFileName(
-                                      sendFile.file!.name)
-                                  ? Image.file(File(sendFile.file!.path!),
+                                      sendFile.file!.path.split('/').last)
+                                  ? Image.file(sendFile.file!,
                                       width: 32, height: 32)
                                   : Icon(
                                       Icons.file_copy,
@@ -1228,7 +1255,7 @@ class _FileSendState extends State<FileSend> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(sendFile.file!.name,
+                            Text(sendFile.file!.path.split('/').last,
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 1,
                                 style: TextStyle(
@@ -1238,17 +1265,45 @@ class _FileSendState extends State<FileSend> {
                                   fontFamily: 'Manrope',
                                   fontWeight: FontWeight.w400,
                                 )),
-                            Text(
-                                '${(sendFile.file!.size / 1000000).toStringAsFixed(3)} MB',
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                                style: TextStyle(
-                                  color:
-                                      themeProvider.currentTheme.primaryColor,
-                                  fontSize: 14,
-                                  fontFamily: 'Manrope',
-                                  fontWeight: FontWeight.w400,
-                                )),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                    '${(sendFile.file!.statSync().size / 1000000).toStringAsFixed(3)} MB',
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                    style: TextStyle(
+                                      color: themeProvider
+                                          .currentTheme.primaryColor,
+                                      fontSize: 14,
+                                      fontFamily: 'Manrope',
+                                      fontWeight: FontWeight.w400,
+                                    )),
+                                const SizedBox(
+                                  width: 8,
+                                ),
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      sendFile.startAddComent();
+                                    },
+                                    child: Text(
+                                        sendFile.coment == null
+                                            ? 'Add coment...'
+                                            : sendFile.coment!,
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                        style: TextStyle(
+                                          color: themeProvider
+                                              .currentTheme.shadowColor,
+                                          fontSize: 14,
+                                          fontFamily: 'Manrope',
+                                          fontWeight: FontWeight.w400,
+                                        )),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ],
                         ),
                       ),
@@ -1281,6 +1336,7 @@ class _FileSendState extends State<FileSend> {
                         child: IconButton(
                           onPressed: () {
                             sendFile.clearFileFromSend();
+                            sendFile.endAddComent();
                           },
                           padding: EdgeInsets.zero,
                           icon: Icon(
@@ -1288,7 +1344,10 @@ class _FileSendState extends State<FileSend> {
                             color: themeProvider.currentTheme.shadowColor,
                           ),
                         ),
-                      )
+                      ),
+                      const SizedBox(
+                        width: 8,
+                      ),
                     ],
                   )),
             ],
@@ -1303,13 +1362,15 @@ class TextAndSend extends StatefulWidget {
   final MessageProvider? messageProvider;
   final Account account;
   final String state;
+  final BuildContext contextScreen;
   const TextAndSend(
       {super.key,
       required this.topicName,
       required this.server,
       required this.messageProvider,
       required this.account,
-      required this.state});
+      required this.state,
+      required this.contextScreen});
 
   @override
   _TextAndSendState createState() => _TextAndSendState();
@@ -1344,16 +1405,13 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
   void _sendMessage(String message) {
     final messageForSend = message.trimRight().trimLeft();
     if (messageForSend.isNotEmpty) {
-      widget.messageProvider?.sendMessage(json.encode(isReplying.isReplying
-          ? {
-              'reply': {
-                'original_message_id': isReplying.idMessageToReplying,
-                'message': messageForSend,
-              }
-            }
-          : {
-              'message': messageForSend,
-            }));
+      widget.messageProvider?.sendMessage(json.encode({
+        "send": {
+          "original_message_id": isReplying.idMessageToReplying,
+          "message": messageForSend,
+          "fileUrl": null
+        }
+      }));
       isReplying.afterReplyToMessage();
     }
   }
@@ -1433,10 +1491,10 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
                         ),
                         border: InputBorder.none,
                         suffixIcon: GestureDetector(
-                          onTap: () async {
+                          onTapDown: (details) async {
                             if (_accountProvider.isLoginProvider) {
-                              FileController.pickAndUploadFile(
-                                  context, themeProvider);
+                              FileController.showPopupMenu(widget.contextScreen,
+                                  themeProvider, details.globalPosition);
                             }
                           },
                           child: Icon(
@@ -1514,6 +1572,167 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
                     ),
                     child: const Text(
                       'Send',
+                      textScaler: TextScaler.noScaling,
+                      style: TextStyle(
+                        color: Color(0xFFF5FBFF),
+                        fontSize: 16,
+                        fontFamily: 'Manrope',
+                        fontWeight: FontWeight.w500,
+                        height: 1.24,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class AddComentToFile extends StatefulWidget {
+  final String state;
+  final BuildContext contextScreen;
+  const AddComentToFile(
+      {super.key, required this.state, required this.contextScreen});
+
+  @override
+  _AddComentToFileState createState() => _AddComentToFileState();
+}
+
+class _AddComentToFileState extends State<AddComentToFile>
+    with WidgetsBindingObserver {
+  final TextEditingController addComentController = TextEditingController();
+  final _textFieldFocusNode = FocusNode();
+  late ReplyProvider isReplying;
+  late SendFileProvider sendFile;
+
+  @override
+  void initState() {
+    super.initState();
+    isReplying = Provider.of<ReplyProvider>(context, listen: false);
+    sendFile = Provider.of<SendFileProvider>(context, listen: false);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.max,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                flex: 4,
+                child: Container(
+                  padding: const EdgeInsets.only(right: 8, left: 8),
+                  decoration: ShapeDecoration(
+                    color:
+                        themeProvider.currentTheme.shadowColor.withOpacity(0.3),
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                          width: 0.50,
+                          color: themeProvider.currentTheme.shadowColor),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    shadows: [
+                      BoxShadow(
+                        color: themeProvider.currentTheme.cardColor,
+                        blurRadius: 8,
+                        offset: const Offset(2, 2),
+                        spreadRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: MediaQuery(
+                    data: MediaQuery.of(context)
+                        .copyWith(textScaler: TextScaler.noScaling),
+                    child: TextFormField(
+                      showCursor: true,
+                      cursorColor: themeProvider.currentTheme.shadowColor,
+                      controller: addComentController,
+                      textCapitalization: TextCapitalization.sentences,
+                      focusNode: _textFieldFocusNode,
+                      style: TextStyle(
+                        color: themeProvider.currentTheme.primaryColor,
+                        fontSize: 16,
+                        fontFamily: 'Manrope',
+                        fontWeight: FontWeight.w400,
+                      ),
+                      decoration: InputDecoration(
+                        contentPadding:
+                            const EdgeInsets.symmetric(vertical: 14),
+                        hintText: 'Add coment to file',
+                        hintStyle: TextStyle(
+                          color: themeProvider.currentTheme.primaryColor
+                              .withOpacity(0.5),
+                          fontSize: 16,
+                          fontFamily: 'Manrope',
+                          fontWeight: FontWeight.w400,
+                        ),
+                        border: InputBorder.none,
+                        suffixIcon: GestureDetector(
+                          onTapDown: (_) async {
+                            sendFile.endAddComent();
+                          },
+                          child: Icon(
+                            Icons.close,
+                            color: themeProvider.currentTheme.primaryColor,
+                          ),
+                        ),
+                      ),
+                      maxLines: null,
+                      onTap: () => FocusScope.of(context)
+                          .requestFocus(_textFieldFocusNode),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                flex: 1,
+                child: GestureDetector(
+                  onTap: () async {
+                    final coment = addComentController.text;
+                    if (coment.isNotEmpty) {
+                      sendFile.addComentToSend(coment);
+                    }
+                    sendFile.endAddComent();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.only(top: 16, bottom: 16),
+                    alignment: Alignment.center,
+                    decoration: ShapeDecoration(
+                      color: themeProvider.currentTheme.shadowColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      shadows: [
+                        BoxShadow(
+                          color: themeProvider.currentTheme.cardColor,
+                          blurRadius: 8,
+                          offset: const Offset(2, 2),
+                          spreadRadius: 0,
+                        ),
+                      ],
+                    ),
+                    child: const Text(
+                      'Add',
                       textScaler: TextScaler.noScaling,
                       style: TextStyle(
                         color: Color(0xFFF5FBFF),

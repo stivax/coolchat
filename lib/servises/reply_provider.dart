@@ -6,12 +6,11 @@ class ReplyProvider with ChangeNotifier {
   String nameRecevierMessage;
   String textMessageToReply;
   String? fileUrl;
-  int idMessageToReplying;
+  int? idMessageToReplying;
   bool isReplying;
   ReplyProvider({
     this.nameRecevierMessage = '',
     this.textMessageToReply = '',
-    this.idMessageToReplying = 0,
     this.isReplying = false,
   });
 

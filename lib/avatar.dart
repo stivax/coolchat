@@ -63,15 +63,19 @@ class AvatarMember extends StatelessWidget {
   }
 
   void _showPopupMenu(BuildContext contextAvatarMember,
-      ThemeProvider themeProvider, Offset tapPosition) {
+      ThemeProvider themeProvider, Offset tapPosition) async {
+    FocusScope.of(contextAvatarMember).unfocus();
+    await Future.delayed(const Duration(milliseconds: 100));
+    var newTapPosition = Offset(tapPosition.dx,
+        tapPosition.dy + MediaQuery.of(contextAvatarMember).viewInsets.bottom);
     showMenu(
       context: contextAvatarMember,
       color: themeProvider.currentTheme.hintColor,
       position: RelativeRect.fromLTRB(
-        tapPosition.dx,
-        tapPosition.dy,
-        tapPosition.dx + 1,
-        tapPosition.dy + 1,
+        newTapPosition.dx,
+        newTapPosition.dy,
+        newTapPosition.dx + 1,
+        newTapPosition.dy + 1,
       ),
       shape: RoundedRectangleBorder(
         side:
@@ -111,24 +115,6 @@ class AvatarMember extends StatelessWidget {
             ),
           ),
         ),
-        /*PopupMenuItem(
-          height: 36,
-          onTap: () {
-            // Add code for handling "Info" here
-            //Navigator.pop(context);
-          },
-          child: Container(
-            child: Text(
-              'User info',
-              style: TextStyle(
-                color: themeProvider.currentTheme.primaryColor,
-                fontSize: 16.0,
-                fontFamily: 'Manrope',
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-        ),*/
       ],
       elevation: 8.0,
       shadowColor: themeProvider.currentTheme.cardColor,

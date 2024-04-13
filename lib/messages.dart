@@ -411,7 +411,9 @@ class TheirMessegeReply extends StatelessWidget {
                                                     ? Padding(
                                                         padding:
                                                             const EdgeInsets
-                                                                .all(8.0),
+                                                                .only(
+                                                                top: 8,
+                                                                bottom: 8),
                                                         child:
                                                             CachedNetworkImage(
                                                           imageUrl:
@@ -436,7 +438,9 @@ class TheirMessegeReply extends StatelessWidget {
                                                     : Padding(
                                                         padding:
                                                             const EdgeInsets
-                                                                .all(8.0),
+                                                                .only(
+                                                                top: 8,
+                                                                bottom: 8),
                                                         child: Row(
                                                           children: [
                                                             Icon(
@@ -863,7 +867,9 @@ class MyMessegeReply extends StatelessWidget {
                                                     ? Padding(
                                                         padding:
                                                             const EdgeInsets
-                                                                .all(8.0),
+                                                                .only(
+                                                                top: 8,
+                                                                bottom: 8),
                                                         child:
                                                             CachedNetworkImage(
                                                           imageUrl:
@@ -888,7 +894,9 @@ class MyMessegeReply extends StatelessWidget {
                                                     : Padding(
                                                         padding:
                                                             const EdgeInsets
-                                                                .all(8.0),
+                                                                .only(
+                                                                top: 8,
+                                                                bottom: 8),
                                                         child: Row(
                                                           children: [
                                                             Icon(
