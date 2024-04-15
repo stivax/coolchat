@@ -64,10 +64,10 @@ class AvatarMember extends StatelessWidget {
 
   void _showPopupMenu(BuildContext contextAvatarMember,
       ThemeProvider themeProvider, Offset tapPosition) async {
-    FocusScope.of(contextAvatarMember).unfocus();
-    await Future.delayed(const Duration(milliseconds: 100));
     var newTapPosition = Offset(tapPosition.dx,
         tapPosition.dy + MediaQuery.of(contextAvatarMember).viewInsets.bottom);
+    FocusScope.of(contextAvatarMember).unfocus();
+    await Future.delayed(const Duration(milliseconds: 100));
     showMenu(
       context: contextAvatarMember,
       color: themeProvider.currentTheme.hintColor,

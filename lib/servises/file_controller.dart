@@ -30,24 +30,16 @@ class FileController {
 
   static Future<bool> requestPermissions(int androidVersion) async {
     // Request storage permission
-    var storageStatus = await Permission.storage.status;
-    if (!storageStatus.isGranted) {
-      final storageResult = await Permission.storage.request();
-      if (!storageResult.isGranted) {
-        return false; // Permission denied
-      }
-    }
+    var storageStatus = await Permission.storage.request();
+    //if (!storageStatus.isGranted) {
+    //  return false; // Permission denied
+    //}
 
-    // Request camera permission (if Android 14 or higher)
-    if (androidVersion >= 14) {
-      var cameraStatus = await Permission.camera.status;
-      if (!cameraStatus.isGranted) {
-        final cameraResult = await Permission.camera.request();
-        if (!cameraResult.isGranted) {
-          return false; // Permission denied
-        }
-      }
-    }
+    // Request camera permission (always request, regardless of Android version)
+    var cameraStatus = await Permission.camera.request();
+    //if (!cameraStatus.isGranted) {
+    //  return false; // Permission denied
+    //}
 
     return true; // Permissions granted
   }
@@ -132,6 +124,7 @@ class FileController {
               toolbarTitle: 'Image editor',
               toolbarColor: themeProvider.currentTheme.primaryColorDark,
               toolbarWidgetColor: themeProvider.currentTheme.primaryColor,
+              backgroundColor: themeProvider.currentTheme.primaryColorDark,
               initAspectRatio: CropAspectRatioPreset.original,
               lockAspectRatio: false),
           IOSUiSettings(
@@ -306,10 +299,10 @@ class FileController {
 
   static void showPopupMenu(BuildContext contextMenu,
       ThemeProvider themeProvider, Offset tapPosition) async {
-    FocusScope.of(contextMenu).unfocus();
-    await Future.delayed(const Duration(milliseconds: 100));
     var newTapPosition = Offset(tapPosition.dx,
         tapPosition.dy + MediaQuery.of(contextMenu).viewInsets.bottom);
+    FocusScope.of(contextMenu).unfocus();
+    await Future.delayed(const Duration(milliseconds: 100));
     showMenu(
       context: contextMenu,
       color: themeProvider.currentTheme.hintColor,

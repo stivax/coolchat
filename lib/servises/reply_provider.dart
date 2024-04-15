@@ -27,7 +27,8 @@ class ReplyProvider with ChangeNotifier {
   void afterReplyToMessage() {
     nameRecevierMessage = '';
     textMessageToReply = '';
-    idMessageToReplying = 0;
+    fileUrl = null;
+    idMessageToReplying = null;
     isReplying = false;
     notifyListeners();
   }

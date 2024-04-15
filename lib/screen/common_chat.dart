@@ -1152,7 +1152,7 @@ class _FileSendState extends State<FileSend> {
     if (messageForSend.isNotEmpty) {
       widget.messageProvider?.sendMessage(json.encode({
         "send": {
-          "original_message_id": reply,
+          "original_message_id": isReplying.isReplying ? reply : null,
           "message": coment,
           "fileUrl": messageForSend
         }
@@ -1407,7 +1407,8 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
     if (messageForSend.isNotEmpty) {
       widget.messageProvider?.sendMessage(json.encode({
         "send": {
-          "original_message_id": isReplying.idMessageToReplying,
+          "original_message_id":
+              isReplying.isReplying ? isReplying.idMessageToReplying : null,
           "message": messageForSend,
           "fileUrl": null
         }
