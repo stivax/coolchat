@@ -7,6 +7,7 @@ import 'package:beholder_flutter/beholder_flutter.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:coolchat/model/messages_list.dart';
 import 'package:coolchat/servises/account_provider.dart';
+import 'package:coolchat/servises/change_message_provider.dart';
 import 'package:coolchat/servises/file_controller.dart';
 import 'package:coolchat/servises/reply_provider.dart';
 import 'package:coolchat/servises/send_file_provider.dart';
@@ -273,6 +274,7 @@ class _CommonChatScreenState extends State<CommonChatScreen>
     with WidgetsBindingObserver {
   late List<Messages> messageData;
   late SendFileProvider showFileSend;
+  late ChangeMessageProvider changer;
   BuildContext? _buildContext;
 
   @override
@@ -282,6 +284,8 @@ class _CommonChatScreenState extends State<CommonChatScreen>
     messageData = widget.messageData;
     showFileSend = Provider.of<SendFileProvider>(context, listen: false);
     showFileSend.addListener(_onShowFileSend);
+    changer = Provider.of<ChangeMessageProvider>(context, listen: false);
+    changer.addListener(_onChangeMessage);
     final TokenBloc tokenBloc = context.read<TokenBloc>();
     if (widget.account.email.isNotEmpty) {
       tokenBloc.add(TokenLoadEvent(roomName: widget.topicName, type: 'ws'));
@@ -294,6 +298,7 @@ class _CommonChatScreenState extends State<CommonChatScreen>
   @override
   void dispose() {
     showFileSend.removeListener(_onShowFileSend);
+    changer.removeListener(_onChangeMessage);
     if (widget.messageProvider != null) {
       widget.messageProvider!.dispose();
       WidgetsBinding.instance.removeObserver(this);
@@ -317,6 +322,10 @@ class _CommonChatScreenState extends State<CommonChatScreen>
   }
 
   void _onShowFileSend() {
+    setState(() {});
+  }
+
+  void _onChangeMessage() {
     setState(() {});
   }
 
@@ -387,14 +396,18 @@ class _CommonChatScreenState extends State<CommonChatScreen>
                         ? AddComentToFile(
                             state: widget.state,
                             contextScreen: widget.contextScreen)
-                        : TextAndSend(
-                            state: widget.state,
-                            topicName: widget.topicName,
-                            server: widget.server,
-                            messageProvider: widget.messageProvider,
-                            account: widget.account,
-                            contextScreen: widget.contextScreen,
-                          ),
+                        : changer.readyToChangeMessage
+                            ? ChangeMessage(
+                                state: widget.state,
+                                contextScreen: widget.contextScreen)
+                            : TextAndSend(
+                                state: widget.state,
+                                topicName: widget.topicName,
+                                server: widget.server,
+                                messageProvider: widget.messageProvider,
+                                account: widget.account,
+                                contextScreen: widget.contextScreen,
+                              ),
                   ]),
             ),
           ),
@@ -669,7 +682,7 @@ class _BlockMessagesState extends State<BlockMessages> {
   @override
   void dispose() {
     controller.dispose();
-    isReplying.afterReplyToMessage();
+    //isReplying.afterReplyToMessage();
     isReplying.removeListener(_onReplying);
     super.dispose();
   }
@@ -1625,6 +1638,8 @@ class _AddComentToFileState extends State<AddComentToFile>
 
   @override
   void dispose() {
+    //isReplying.dispose();
+    //sendFile.dispose();
     super.dispose();
   }
 
@@ -1734,6 +1749,167 @@ class _AddComentToFileState extends State<AddComentToFile>
                     ),
                     child: const Text(
                       'Add',
+                      textScaler: TextScaler.noScaling,
+                      style: TextStyle(
+                        color: Color(0xFFF5FBFF),
+                        fontSize: 16,
+                        fontFamily: 'Manrope',
+                        fontWeight: FontWeight.w500,
+                        height: 1.24,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class ChangeMessage extends StatefulWidget {
+  final String state;
+  final BuildContext contextScreen;
+  const ChangeMessage(
+      {super.key, required this.state, required this.contextScreen});
+
+  @override
+  _ChangeMessageState createState() => _ChangeMessageState();
+}
+
+class _ChangeMessageState extends State<ChangeMessage>
+    with WidgetsBindingObserver {
+  final TextEditingController changeMessageController = TextEditingController();
+  final _textFieldFocusNode = FocusNode();
+  late ChangeMessageProvider changer;
+
+  @override
+  void initState() {
+    super.initState();
+    changer = Provider.of<ChangeMessageProvider>(context, listen: false);
+    changeMessageController.text = changer.oldMessage!;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    changer.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.max,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                flex: 4,
+                child: Container(
+                  padding: const EdgeInsets.only(right: 8, left: 8),
+                  decoration: ShapeDecoration(
+                    color:
+                        themeProvider.currentTheme.shadowColor.withOpacity(0.1),
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                          width: 0.50,
+                          color: themeProvider.currentTheme.shadowColor),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    shadows: [
+                      BoxShadow(
+                        color: themeProvider.currentTheme.cardColor,
+                        blurRadius: 8,
+                        offset: const Offset(2, 2),
+                        spreadRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: MediaQuery(
+                    data: MediaQuery.of(context)
+                        .copyWith(textScaler: TextScaler.noScaling),
+                    child: TextFormField(
+                      showCursor: true,
+                      cursorColor: themeProvider.currentTheme.shadowColor,
+                      controller: changeMessageController,
+                      textCapitalization: TextCapitalization.sentences,
+                      focusNode: _textFieldFocusNode,
+                      style: TextStyle(
+                        color: themeProvider.currentTheme.primaryColor,
+                        fontSize: 16,
+                        fontFamily: 'Manrope',
+                        fontWeight: FontWeight.w400,
+                      ),
+                      decoration: InputDecoration(
+                        contentPadding:
+                            const EdgeInsets.symmetric(vertical: 14),
+                        hintText: 'Add message',
+                        hintStyle: TextStyle(
+                          color: themeProvider.currentTheme.primaryColor
+                              .withOpacity(0.5),
+                          fontSize: 16,
+                          fontFamily: 'Manrope',
+                          fontWeight: FontWeight.w400,
+                        ),
+                        border: InputBorder.none,
+                        suffixIcon: GestureDetector(
+                          onTapDown: (_) async {
+                            changer.finishWithNoChangeMessage();
+                          },
+                          child: Icon(
+                            Icons.close,
+                            color: themeProvider.currentTheme.primaryColor,
+                          ),
+                        ),
+                      ),
+                      maxLines: null,
+                      onTap: () => FocusScope.of(context)
+                          .requestFocus(_textFieldFocusNode),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                flex: 1,
+                child: GestureDetector(
+                  onTap: () async {
+                    final newMessage = changeMessageController.text;
+                    if (newMessage.isNotEmpty) {
+                      changer.finishChangeMessage(newMessage);
+                    }
+                    HapticFeedback.lightImpact();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.only(top: 16, bottom: 16),
+                    alignment: Alignment.center,
+                    decoration: ShapeDecoration(
+                      color: themeProvider.currentTheme.shadowColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      shadows: [
+                        BoxShadow(
+                          color: themeProvider.currentTheme.cardColor,
+                          blurRadius: 8,
+                          offset: const Offset(2, 2),
+                          spreadRadius: 0,
+                        ),
+                      ],
+                    ),
+                    child: const Text(
+                      'Change',
                       textScaler: TextScaler.noScaling,
                       style: TextStyle(
                         color: Color(0xFFF5FBFF),

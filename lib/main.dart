@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:connectivity/connectivity.dart';
 import 'package:coolchat/app_localizations.dart';
+import 'package:coolchat/servises/change_message_provider.dart';
 import 'package:coolchat/servises/locale_provider.dart';
 import 'package:coolchat/servises/send_file_provider.dart';
 import 'package:flutter/foundation.dart';
@@ -38,6 +39,7 @@ import 'menu.dart';
 import 'my_appbar.dart';
 import 'rooms.dart';
 import 'theme_provider.dart';
+import 'widget/tap_view.dart';
 
 void main() {
   runApp(
@@ -55,6 +57,8 @@ void main() {
             create: (context) => LocaleProvider()),
         ChangeNotifierProvider<SendFileProvider>(
             create: (context) => SendFileProvider()),
+        ChangeNotifierProvider<ChangeMessageProvider>(
+            create: (context) => ChangeMessageProvider()),
       ],
       child: RepositoryProvider(
           create: (context) => TokenRepository(), child: const StartScreen()),

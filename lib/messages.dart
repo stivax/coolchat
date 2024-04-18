@@ -1,10 +1,14 @@
 import 'dart:convert';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:coolchat/message_provider.dart';
 import 'package:coolchat/model/messages_list.dart';
+import 'package:coolchat/servises/change_message_provider.dart';
 import 'package:coolchat/servises/reply_provider.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -31,6 +35,7 @@ class Messages extends StatelessWidget {
   final String roomName;
   final int accountId;
   final int? idReturn;
+  final bool edited;
   Messages(
       {super.key,
       required this.message,
@@ -45,7 +50,8 @@ class Messages extends StatelessWidget {
       required this.contextMessage,
       required this.roomName,
       required this.accountId,
-      required this.idReturn});
+      required this.idReturn,
+      required this.edited});
 
   static Messages fromJsonMessage(dynamic jsonMessage, int previousMemberID,
       BuildContext contextMessage, String roomName, int accountId) {
@@ -66,6 +72,7 @@ class Messages extends StatelessWidget {
       contextMessage: contextMessage,
       roomName: roomName,
       accountId: accountId,
+      edited: jsonMessage['edited'],
     );
   }
 
@@ -97,6 +104,7 @@ class Messages extends StatelessWidget {
         contextMessage: contextMessage,
         roomName: roomName,
         accountId: accountId,
+        edited: jsonMessage['edited'],
       ));
     }).toList();
     return messages;
@@ -140,7 +148,8 @@ class Messages extends StatelessWidget {
           contextMessage: messagesList.first.contextMessage,
           roomName: '',
           accountId: 0,
-          idReturn: 0);
+          idReturn: 0,
+          edited: false);
     } else {
       return null;
     }
@@ -182,6 +191,107 @@ class Messages extends StatelessWidget {
     return '';
   }
 
+  static void showMenuMessageFunction(
+      BuildContext contextMessage,
+      ThemeProvider themeProvider,
+      Offset tapPosition,
+      int idMessage,
+      String textMessage,
+      MessageProvider? provider) async {
+    var newTapPosition = Offset(tapPosition.dx,
+        tapPosition.dy + MediaQuery.of(contextMessage).viewInsets.bottom);
+    FocusScope.of(contextMessage).unfocus();
+    await Future.delayed(const Duration(milliseconds: 100));
+    showMenu(
+      context: contextMessage,
+      color: themeProvider.currentTheme.hintColor,
+      position: RelativeRect.fromLTRB(
+        newTapPosition.dx,
+        newTapPosition.dy,
+        newTapPosition.dx + 1,
+        newTapPosition.dy + 1,
+      ),
+      shape: RoundedRectangleBorder(
+        side:
+            BorderSide(width: 1, color: themeProvider.currentTheme.shadowColor),
+        borderRadius: const BorderRadius.only(
+          topRight: Radius.circular(14),
+          bottomLeft: Radius.circular(14),
+          bottomRight: Radius.circular(14),
+        ),
+      ),
+      items: [
+        PopupMenuItem(
+          height: 36,
+          onTap: () {
+            print('delete message id $idMessage');
+            provider?.sendMessage(json.encode({
+              "delete_message": {"id": idMessage}
+            }));
+            HapticFeedback.lightImpact();
+          },
+          child: MediaQuery(
+            data: MediaQuery.of(contextMessage)
+                .copyWith(textScaler: TextScaler.noScaling),
+            child: Text(
+              'Delete message',
+              style: TextStyle(
+                color: themeProvider.currentTheme.primaryColor,
+                fontSize: 16.0,
+                fontFamily: 'Manrope',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+        ),
+        PopupMenuItem(
+          height: 36,
+          onTap: () {
+            final changer = Provider.of<ChangeMessageProvider>(contextMessage,
+                listen: false);
+            changer.addListener(() {
+              _onChangeMessage(changer, provider);
+            });
+            changer.addListener(() {
+              if (changer.wasChanged) {
+                print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+              }
+            });
+            changer.beginChangeMessage(textMessage, idMessage);
+          },
+          child: MediaQuery(
+            data: MediaQuery.of(contextMessage)
+                .copyWith(textScaler: TextScaler.noScaling),
+            child: Text(
+              'Edit message',
+              style: TextStyle(
+                color: themeProvider.currentTheme.primaryColor,
+                fontSize: 16.0,
+                fontFamily: 'Manrope',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+        ),
+      ],
+      elevation: 8.0,
+      shadowColor: themeProvider.currentTheme.cardColor,
+    );
+  }
+
+  static void _onChangeMessage(
+      ChangeMessageProvider changer, MessageProvider? provider) {
+    if (changer.newMessage != null) {
+      String newMessage = changer.newMessage!;
+      int idMessage = changer.idMessage!;
+      provider?.sendMessage(json.encode({
+        "change_message": {"id": idMessage, "message": newMessage}
+      }));
+      changer.clearChangeMessage();
+    }
+    HapticFeedback.lightImpact();
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -200,7 +310,7 @@ class Messages extends StatelessWidget {
             contextMessage: contextMessage,
             roomName: roomName,
             idReturn: idReturn,
-          )
+            edited: edited)
         : TheirMessegeReply(
             screenWidth: screenWidth,
             message: message,
@@ -215,7 +325,7 @@ class Messages extends StatelessWidget {
             contextMessage: contextMessage,
             roomName: roomName,
             idReturn: idReturn,
-          );
+            edited: edited);
   }
 }
 
@@ -233,6 +343,7 @@ class TheirMessegeReply extends StatelessWidget {
   final BuildContext contextMessage;
   final String roomName;
   final int? idReturn;
+  final bool edited;
 
   const TheirMessegeReply(
       {super.key,
@@ -248,7 +359,8 @@ class TheirMessegeReply extends StatelessWidget {
       required this.isPreviousSameMember,
       required this.contextMessage,
       required this.roomName,
-      required this.idReturn});
+      required this.idReturn,
+      required this.edited});
 
   @override
   Widget build(BuildContext context) {
@@ -369,7 +481,7 @@ class TheirMessegeReply extends StatelessWidget {
                               ],
                             ),
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 replyingMessage != null
                                     ? GestureDetector(
@@ -568,22 +680,28 @@ class TheirMessegeReply extends StatelessWidget {
                                                     .currentTheme.primaryColor,
                                                 size: 24,
                                               ),
-                                              Text(
-                                                  Messages.extractFileName(
-                                                      fileUrl!),
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  maxLines: 1,
-                                                  textScaler:
-                                                      TextScaler.noScaling,
-                                                  style: TextStyle(
-                                                    color: themeProvider
-                                                        .currentTheme
-                                                        .primaryColor,
-                                                    fontSize: 14,
-                                                    fontFamily: 'Manrope',
-                                                    fontWeight: FontWeight.w400,
-                                                  )),
+                                              const SizedBox(
+                                                width: 8,
+                                              ),
+                                              Expanded(
+                                                child: Text(
+                                                    Messages.extractFileName(
+                                                        fileUrl!),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    maxLines: 2,
+                                                    textScaler:
+                                                        TextScaler.noScaling,
+                                                    style: TextStyle(
+                                                      color: themeProvider
+                                                          .currentTheme
+                                                          .primaryColor,
+                                                      fontSize: 14,
+                                                      fontFamily: 'Manrope',
+                                                      fontWeight:
+                                                          FontWeight.w400,
+                                                    )),
+                                              ),
                                             ],
                                           )
                                     : Container(),
@@ -638,38 +756,80 @@ class TheirMessegeReply extends StatelessWidget {
                                         },
                                       )
                                     : Container(),
-                                vote != 0
+                                const SizedBox(
+                                  height: 4,
+                                ),
+                                edited || vote != 0
                                     ? Container(
                                         height: 16,
-                                        alignment: Alignment.bottomRight,
+                                        alignment: Alignment.centerRight,
                                         child: Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
                                           mainAxisAlignment:
                                               MainAxisAlignment.end,
                                           children: [
-                                            Text(
-                                              vote.toString(),
-                                              textScaler: TextScaler.noScaling,
-                                              style: TextStyle(
-                                                color: themeProvider
-                                                    .currentTheme.primaryColor,
-                                                fontSize: 12,
-                                                fontFamily: 'Manrope',
-                                                fontWeight: FontWeight.w400,
-                                              ),
+                                            edited
+                                                ? Text(
+                                                    'Edited',
+                                                    textScaler:
+                                                        TextScaler.noScaling,
+                                                    style: TextStyle(
+                                                      color: themeProvider
+                                                          .currentTheme
+                                                          .primaryColor
+                                                          .withOpacity(0.7),
+                                                      fontSize: 12,
+                                                      fontFamily: 'Manrope',
+                                                      fontWeight:
+                                                          FontWeight.w400,
+                                                    ),
+                                                  )
+                                                : Container(),
+                                            const SizedBox(
+                                              width: 8,
                                             ),
-                                            Image.asset(
-                                              'assets/images/like.png',
-                                              width: 16,
-                                              height: 16,
-                                              color: themeProvider
-                                                  .currentTheme.shadowColor,
-                                            )
+                                            vote != 0
+                                                ? Container(
+                                                    height: 16,
+                                                    alignment:
+                                                        Alignment.bottomRight,
+                                                    child: Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .end,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment.end,
+                                                      children: [
+                                                        Text(
+                                                          vote.toString(),
+                                                          textScaler: TextScaler
+                                                              .noScaling,
+                                                          style: TextStyle(
+                                                            color: themeProvider
+                                                                .currentTheme
+                                                                .primaryColor,
+                                                            fontSize: 12,
+                                                            fontFamily:
+                                                                'Manrope',
+                                                            fontWeight:
+                                                                FontWeight.w400,
+                                                          ),
+                                                        ),
+                                                        Image.asset(
+                                                          'assets/images/like.png',
+                                                          width: 16,
+                                                          height: 16,
+                                                          color: themeProvider
+                                                              .currentTheme
+                                                              .shadowColor,
+                                                        )
+                                                      ],
+                                                    ),
+                                                  )
+                                                : const SizedBox(),
                                           ],
                                         ),
                                       )
-                                    : const SizedBox(),
+                                    : Container(),
                               ],
                             ),
                           ),
@@ -702,6 +862,7 @@ class MyMessegeReply extends StatelessWidget {
   final BuildContext contextMessage;
   final String roomName;
   final int? idReturn;
+  final bool edited;
 
   const MyMessegeReply(
       {super.key,
@@ -717,7 +878,8 @@ class MyMessegeReply extends StatelessWidget {
       required this.isPreviousSameMember,
       required this.contextMessage,
       required this.roomName,
-      required this.idReturn});
+      required this.idReturn,
+      required this.edited});
 
   @override
   Widget build(BuildContext context) {
@@ -795,6 +957,18 @@ class MyMessegeReply extends StatelessWidget {
                             }));
                             HapticFeedback.lightImpact();
                           },
+                          onTapUp: (details) {
+                            HapticFeedback.lightImpact();
+                            final provider = MessageProviderContainer.instance
+                                .getProvider(roomName);
+                            Messages.showMenuMessageFunction(
+                                contextMessage,
+                                themeProvider,
+                                details.globalPosition,
+                                id,
+                                message,
+                                provider);
+                          },
                           onHorizontalDragEnd: (_) {
                             final isReplying = Provider.of<ReplyProvider>(
                                 context,
@@ -825,7 +999,7 @@ class MyMessegeReply extends StatelessWidget {
                               ],
                             ),
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 replyingMessage != null
                                     ? GestureDetector(
@@ -1024,22 +1198,28 @@ class MyMessegeReply extends StatelessWidget {
                                                     .currentTheme.primaryColor,
                                                 size: 24,
                                               ),
-                                              Text(
-                                                  Messages.extractFileName(
-                                                      fileUrl!),
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  maxLines: 1,
-                                                  textScaler:
-                                                      TextScaler.noScaling,
-                                                  style: TextStyle(
-                                                    color: themeProvider
-                                                        .currentTheme
-                                                        .primaryColor,
-                                                    fontSize: 14,
-                                                    fontFamily: 'Manrope',
-                                                    fontWeight: FontWeight.w400,
-                                                  )),
+                                              const SizedBox(
+                                                width: 8,
+                                              ),
+                                              Expanded(
+                                                child: Text(
+                                                    Messages.extractFileName(
+                                                        fileUrl!),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    maxLines: 1,
+                                                    textScaler:
+                                                        TextScaler.noScaling,
+                                                    style: TextStyle(
+                                                      color: themeProvider
+                                                          .currentTheme
+                                                          .primaryColor,
+                                                      fontSize: 14,
+                                                      fontFamily: 'Manrope',
+                                                      fontWeight:
+                                                          FontWeight.w400,
+                                                    )),
+                                              ),
                                             ],
                                           )
                                     : Container(),
@@ -1094,38 +1274,80 @@ class MyMessegeReply extends StatelessWidget {
                                         },
                                       )
                                     : Container(),
-                                vote != 0
+                                const SizedBox(
+                                  height: 4,
+                                ),
+                                edited || vote != 0
                                     ? Container(
                                         height: 16,
-                                        alignment: Alignment.bottomRight,
+                                        alignment: Alignment.centerRight,
                                         child: Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
                                           mainAxisAlignment:
                                               MainAxisAlignment.end,
                                           children: [
-                                            Text(
-                                              vote.toString(),
-                                              textScaler: TextScaler.noScaling,
-                                              style: TextStyle(
-                                                color: themeProvider
-                                                    .currentTheme.primaryColor,
-                                                fontSize: 12,
-                                                fontFamily: 'Manrope',
-                                                fontWeight: FontWeight.w400,
-                                              ),
+                                            edited
+                                                ? Text(
+                                                    'Edited',
+                                                    textScaler:
+                                                        TextScaler.noScaling,
+                                                    style: TextStyle(
+                                                      color: themeProvider
+                                                          .currentTheme
+                                                          .primaryColor
+                                                          .withOpacity(0.7),
+                                                      fontSize: 12,
+                                                      fontFamily: 'Manrope',
+                                                      fontWeight:
+                                                          FontWeight.w400,
+                                                    ),
+                                                  )
+                                                : Container(),
+                                            const SizedBox(
+                                              width: 8,
                                             ),
-                                            Image.asset(
-                                              'assets/images/like.png',
-                                              width: 16,
-                                              height: 16,
-                                              color: themeProvider
-                                                  .currentTheme.shadowColor,
-                                            )
+                                            vote != 0
+                                                ? Container(
+                                                    height: 16,
+                                                    alignment:
+                                                        Alignment.bottomRight,
+                                                    child: Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .end,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment.end,
+                                                      children: [
+                                                        Text(
+                                                          vote.toString(),
+                                                          textScaler: TextScaler
+                                                              .noScaling,
+                                                          style: TextStyle(
+                                                            color: themeProvider
+                                                                .currentTheme
+                                                                .primaryColor,
+                                                            fontSize: 12,
+                                                            fontFamily:
+                                                                'Manrope',
+                                                            fontWeight:
+                                                                FontWeight.w400,
+                                                          ),
+                                                        ),
+                                                        Image.asset(
+                                                          'assets/images/like.png',
+                                                          width: 16,
+                                                          height: 16,
+                                                          color: themeProvider
+                                                              .currentTheme
+                                                              .shadowColor,
+                                                        )
+                                                      ],
+                                                    ),
+                                                  )
+                                                : const SizedBox(),
                                           ],
                                         ),
                                       )
-                                    : const SizedBox(),
+                                    : Container(),
                               ],
                             ),
                           ),
