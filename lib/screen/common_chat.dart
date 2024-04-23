@@ -1,20 +1,18 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:beholder_flutter/beholder_flutter.dart';
 import 'package:connectivity/connectivity.dart';
+import 'package:coolchat/app_localizations.dart';
 import 'package:coolchat/model/messages_list.dart';
 import 'package:coolchat/servises/account_provider.dart';
 import 'package:coolchat/servises/change_message_provider.dart';
 import 'package:coolchat/servises/file_controller.dart';
 import 'package:coolchat/servises/reply_provider.dart';
 import 'package:coolchat/servises/send_file_provider.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marquee/marquee.dart';
 import 'package:provider/provider.dart';
@@ -448,7 +446,8 @@ class _TopicNameState extends State<TopicName> {
   double _calculateTextWidth() {
     final TextPainter textPainter = TextPainter(
       text: TextSpan(
-        text: 'Topic: ${widget.topicName}',
+        text:
+            '${AppLocalizations.of(context).translate('common_chats_topic')}${widget.topicName}',
         style: const TextStyle(
           fontSize: 20,
           fontFamily: 'Manrope',
@@ -477,7 +476,8 @@ class _TopicNameState extends State<TopicName> {
                     BoxConstraints(maxWidth: MediaQuery.of(context).size.width),
                 child: shouldAnimate
                     ? Marquee(
-                        text: 'Topic: ${widget.topicName}',
+                        text:
+                            '${AppLocalizations.of(context).translate('common_chats_topic')}${widget.topicName}',
                         textScaleFactor: 1,
                         style: TextStyle(
                           color: themeProvider.currentTheme.primaryColor,
@@ -489,7 +489,7 @@ class _TopicNameState extends State<TopicName> {
                         blankSpace: MediaQuery.of(context).size.width,
                       )
                     : Text(
-                        'Topic: ${widget.topicName}',
+                        '${AppLocalizations.of(context).translate('common_chats_topic')}${widget.topicName}',
                         textScaleFactor: 1,
                         style: TextStyle(
                           color: themeProvider.currentTheme.primaryColor,
@@ -574,7 +574,8 @@ class _ChatMembersState extends State<ChatMembers> {
                       width: double.infinity,
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        'Chat members',
+                        AppLocalizations.of(context)
+                            .translate('common_chats_chat_members'),
                         textScaleFactor: 0.99,
                         style: TextStyle(
                           color: themeProvider.currentTheme.primaryColor,
@@ -1038,8 +1039,8 @@ class _BlockMessagesState extends State<BlockMessages> {
                         TextSpan(
                           children: [
                             TextSpan(
-                              text:
-                                  'In order to read new messages, be able to\nwrite and create your own rooms - REGISTER\nor LOG IN ',
+                              text: AppLocalizations.of(context)
+                                  .translate('common_in_order'),
                               style: TextStyle(
                                 color: themeProvider.currentTheme.primaryColor,
                                 fontSize: fontSize,
@@ -1048,7 +1049,8 @@ class _BlockMessagesState extends State<BlockMessages> {
                               ),
                             ),
                             TextSpan(
-                              text: '(look for this option in the menu)',
+                              text: AppLocalizations.of(context)
+                                  .translate('common_look'),
                               style: TextStyle(
                                 color: themeProvider.currentTheme.disabledColor,
                                 fontSize: fontSize,
@@ -1098,7 +1100,8 @@ class ClearBlockMessages extends StatelessWidget {
             height: 8,
           ),
           Text(
-            'Oops.. there are no messages here yet \nWrite first!',
+            AppLocalizations.of(context)
+                .translate('common_chats_clear_message'),
             textAlign: TextAlign.center,
             textScaler: TextScaler.noScaling,
             style: TextStyle(
@@ -1150,8 +1153,6 @@ class _FileSendState extends State<FileSend> {
       sending = true;
     });
     final size = await sendFile.file!.length();
-    //final fileToSend = await FileController.compressImageFile(sendFile.file!);
-    //final size = await fileToSend!.length();
     final messageForSend = await uploader.uploadFileDio(
         sendFile.file!.path, size, onProgress: (int sent, int total) {
       setState(() {
@@ -1160,8 +1161,6 @@ class _FileSendState extends State<FileSend> {
     });
     final coment = sendFile.coment;
     final reply = isReplying.idMessageToReplying;
-
-    print(messageForSend);
     if (messageForSend.isNotEmpty) {
       widget.messageProvider?.sendMessage(json.encode({
         "send": {
@@ -1302,7 +1301,9 @@ class _FileSendState extends State<FileSend> {
                                     },
                                     child: Text(
                                         sendFile.coment == null
-                                            ? 'Add coment...'
+                                            ? AppLocalizations.of(context)
+                                                .translate(
+                                                    'common_chats_add_comment')
                                             : sendFile.coment!,
                                         overflow: TextOverflow.ellipsis,
                                         maxLines: 1,
@@ -1492,10 +1493,13 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
                         contentPadding:
                             const EdgeInsets.symmetric(vertical: 14),
                         hintText: widget.state == 'empty'
-                            ? 'Please log in or register...'
+                            ? AppLocalizations.of(context)
+                                .translate('chats_please_log_in_or_register')
                             : widget.state == 'loaded'
-                                ? 'Write message...'
-                                : 'Loading...',
+                                ? AppLocalizations.of(context)
+                                    .translate('chats_write_message')
+                                : AppLocalizations.of(context)
+                                    .translate('chats_loading'),
                         hintStyle: TextStyle(
                           color: themeProvider.currentTheme.primaryColor
                               .withOpacity(0.5),
@@ -1584,17 +1588,22 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
                         ),
                       ],
                     ),
-                    child: const Text(
-                      'Send',
+                    child: const Icon(
+                      Icons.send,
+                      color: Color(0xFFF5FBFF),
+                    ),
+                    /*Text(
+                      AppLocalizations.of(context)
+                          .translate('common_chats_send'),
                       textScaler: TextScaler.noScaling,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Color(0xFFF5FBFF),
                         fontSize: 16,
                         fontFamily: 'Manrope',
                         fontWeight: FontWeight.w500,
                         height: 1.24,
                       ),
-                    ),
+                    ),*/
                   ),
                 ),
               ),
@@ -1693,7 +1702,8 @@ class _AddComentToFileState extends State<AddComentToFile>
                       decoration: InputDecoration(
                         contentPadding:
                             const EdgeInsets.symmetric(vertical: 14),
-                        hintText: 'Add coment to file',
+                        hintText: AppLocalizations.of(context)
+                            .translate('chats_add_coment_to_file'),
                         hintStyle: TextStyle(
                           color: themeProvider.currentTheme.primaryColor
                               .withOpacity(0.5),
@@ -1747,10 +1757,11 @@ class _AddComentToFileState extends State<AddComentToFile>
                         ),
                       ],
                     ),
-                    child: const Text(
-                      'Add',
+                    child: Text(
+                      AppLocalizations.of(context)
+                          .translate('common_chats_add'),
                       textScaler: TextScaler.noScaling,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Color(0xFFF5FBFF),
                         fontSize: 16,
                         fontFamily: 'Manrope',
@@ -1800,7 +1811,7 @@ class _ChangeMessageState extends State<ChangeMessage>
 
   @override
   void dispose() {
-    changer.dispose();
+    //changer.dispose();
     super.dispose();
   }
 
@@ -1854,7 +1865,8 @@ class _ChangeMessageState extends State<ChangeMessage>
                       decoration: InputDecoration(
                         contentPadding:
                             const EdgeInsets.symmetric(vertical: 14),
-                        hintText: 'Add message',
+                        hintText: AppLocalizations.of(context)
+                            .translate('chats_write_message'),
                         hintStyle: TextStyle(
                           color: themeProvider.currentTheme.primaryColor
                               .withOpacity(0.5),
@@ -1908,10 +1920,11 @@ class _ChangeMessageState extends State<ChangeMessage>
                         ),
                       ],
                     ),
-                    child: const Text(
-                      'Change',
+                    child: Text(
+                      AppLocalizations.of(context)
+                          .translate('common_chats_edit'),
                       textScaler: TextScaler.noScaling,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Color(0xFFF5FBFF),
                         fontSize: 16,
                         fontFamily: 'Manrope',

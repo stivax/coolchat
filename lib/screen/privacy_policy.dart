@@ -1,3 +1,4 @@
+import 'package:coolchat/app_localizations.dart';
 import 'package:coolchat/bloc/token_blok.dart';
 import 'package:coolchat/menu.dart';
 import 'package:coolchat/my_appbar.dart';
@@ -45,7 +46,9 @@ class PrivacyPolicy extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Privacy policy',
+                                AppLocalizations.of(context)
+                                    .translate('privacy_policy_privacy_policy'),
+                                textScaler: TextScaler.noScaling,
                                 style: TextStyle(
                                   color:
                                       themeProvider.currentTheme.primaryColor,
@@ -54,24 +57,11 @@ class PrivacyPolicy extends StatelessWidget {
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
-                              const SizedBox(
-                                height: 4,
-                              ),
-                              Text(
-                                'This privacy policy sets out the obligations and rules regarding the collection, use and disclosure of user’s personal information when communicating on Coolchat. ',
-                                style: TextStyle(
-                                  color:
-                                      themeProvider.currentTheme.primaryColor,
-                                  fontSize: 14,
-                                  fontFamily: 'Manrope',
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
                             ],
                           ),
                         ),
                         Expanded(
-                          flex: 4,
+                          flex: 3,
                           child: Padding(
                             padding: const EdgeInsets.all(16.0),
                             child: Image.asset(
@@ -83,7 +73,9 @@ class PrivacyPolicy extends StatelessWidget {
                       ],
                     ),
                     Text(
-                      'We take the privacy of our users information seriously and are committed to protecting their privacy.',
+                      AppLocalizations.of(context)
+                          .translate('privacy_policy_top'),
+                      textScaler: TextScaler.noScaling,
                       style: TextStyle(
                         color: themeProvider.currentTheme.primaryColor,
                         fontSize: 14,
@@ -98,29 +90,36 @@ class PrivacyPolicy extends StatelessWidget {
                         children: [
                           buildListRow(
                               '1.',
-                              'Collection and Use of Information: We may collect personal information such as name and email address only with users permission to provide better communication and provide personalized services. We use this information only for the purpose of improving the quality of our service and providing users with appropriate answers to their questions.',
+                              AppLocalizations.of(context)
+                                  .translate('privacy_policy_1'),
                               themeProvider),
                           buildListRow(
                               '2.',
-                              'Information Security: We take all possible security measures to protect the personal information of our users from unauthorized access, alteration, disclosure or destruction. Our systems are regularly updated and checked for possible threats.',
+                              AppLocalizations.of(context)
+                                  .translate('privacy_policy_2'),
                               themeProvider),
                           buildListRow(
                               '3.',
-                              'Disclosure of information to third parties: We do not share users personal information with third parties without their consent, except as required by law.',
+                              AppLocalizations.of(context)
+                                  .translate('privacy_policy_3'),
                               themeProvider),
                           buildListRow(
                               '4.',
-                              'Use of cookies: Our Chat for communication may use cookies and other technologies to collect information and improve the user experience. Users have the option to disable cookies in their web browser settings, but this may affect the functionality of Coolchat.',
+                              AppLocalizations.of(context)
+                                  .translate('privacy_policy_4'),
                               themeProvider),
                           buildListRow(
                               '5.',
-                              'Changes to the Privacy Policy: We may periodically update this Privacy Policy to reflect changes in legal requirements or information practices. Changes take effect from the moment of their public posting on this page.',
+                              AppLocalizations.of(context)
+                                  .translate('privacy_policy_5'),
                               themeProvider),
                         ],
                       ),
                     ),
                     Text(
-                      'This privacy policy is for your protection and remains binding on all Coolchat users. If you have any questions about our privacy policy, please contact us using the contact information provided on our website.',
+                      AppLocalizations.of(context)
+                          .translate('privacy_policy_bottom'),
+                      textScaler: TextScaler.noScaling,
                       style: TextStyle(
                         color: themeProvider.currentTheme.primaryColor,
                         fontSize: 14,
@@ -146,6 +145,7 @@ class PrivacyPolicy extends StatelessWidget {
         children: [
           Text(
             number,
+            textScaler: TextScaler.noScaling,
             style: TextStyle(
               color: themeProvider.currentTheme.primaryColor,
               fontSize: 14,
@@ -158,6 +158,7 @@ class PrivacyPolicy extends StatelessWidget {
               padding: const EdgeInsets.only(left: 8.0),
               child: Text(
                 text,
+                textScaler: TextScaler.noScaling,
                 style: TextStyle(
                   color: themeProvider.currentTheme.primaryColor,
                   fontSize: 14,

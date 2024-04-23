@@ -1,3 +1,4 @@
+import 'package:coolchat/app_localizations.dart';
 import 'package:coolchat/screen/private_chat.dart';
 import 'package:coolchat/servises/account_provider.dart';
 import 'package:coolchat/theme_provider.dart';
@@ -105,7 +106,8 @@ class AvatarMember extends StatelessWidget {
             data: MediaQuery.of(contextAvatarMember)
                 .copyWith(textScaler: TextScaler.noScaling),
             child: Text(
-              'Send private message',
+              AppLocalizations.of(contextAvatarMember)
+                  .translate('avatar_send_private_message'),
               style: TextStyle(
                 color: themeProvider.currentTheme.primaryColor,
                 fontSize: 16.0,

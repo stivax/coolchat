@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:coolchat/account.dart';
+import 'package:coolchat/app_localizations.dart';
 import 'package:coolchat/bloc/token_blok.dart';
 import 'package:coolchat/menu.dart';
 import 'package:coolchat/my_appbar.dart';
@@ -190,7 +191,8 @@ class _PrivateChatListState extends State<PrivateChatList> {
                                         padding: const EdgeInsets.only(
                                             left: 20, bottom: 5, right: 20),
                                         child: Text(
-                                          'Your personal chats',
+                                          AppLocalizations.of(context).translate(
+                                              'personal_chats_your_personal_chats'),
                                           textScaler: TextScaler.noScaling,
                                           style: TextStyle(
                                             color: themeProvider
@@ -242,7 +244,8 @@ class EmptyPrivatChatList extends StatelessWidget {
                 child: Image.asset('assets/images/clear_personal_chats.png'),
               ),
               Text(
-                'Your personal chats\nwill be here soon',
+                AppLocalizations.of(context)
+                    .translate('personal_chats_will_be_here_soon'),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color:

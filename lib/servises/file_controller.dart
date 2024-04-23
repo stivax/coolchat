@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:coolchat/app_localizations.dart';
 import 'package:device_info/device_info.dart';
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
@@ -326,14 +327,13 @@ class FileController {
         PopupMenuItem(
           height: 36,
           onTap: () async {
-            print('Take photo from camera');
             await takePhoto(contextMenu, themeProvider);
           },
           child: MediaQuery(
             data: MediaQuery.of(contextMenu)
                 .copyWith(textScaler: TextScaler.noScaling),
             child: Text(
-              'Take photo from camera',
+              AppLocalizations.of(contextMenu).translate('photo_from_camera'),
               style: TextStyle(
                 color: themeProvider.currentTheme.primaryColor,
                 fontSize: 16.0,
@@ -346,14 +346,13 @@ class FileController {
         PopupMenuItem(
           height: 36,
           onTap: () async {
-            print('Take photo from camera');
             await pickPhoto(contextMenu, themeProvider);
           },
           child: MediaQuery(
             data: MediaQuery.of(contextMenu)
                 .copyWith(textScaler: TextScaler.noScaling),
             child: Text(
-              'Upload photo',
+              AppLocalizations.of(contextMenu).translate('photo_upload'),
               style: TextStyle(
                 color: themeProvider.currentTheme.primaryColor,
                 fontSize: 16.0,
@@ -366,14 +365,13 @@ class FileController {
         PopupMenuItem(
           height: 36,
           onTap: () async {
-            print('Upload file');
             await pickFile(contextMenu, themeProvider);
           },
           child: MediaQuery(
             data: MediaQuery.of(contextMenu)
                 .copyWith(textScaler: TextScaler.noScaling),
             child: Text(
-              'Upload file',
+              AppLocalizations.of(contextMenu).translate('file_upload'),
               style: TextStyle(
                 color: themeProvider.currentTheme.primaryColor,
                 fontSize: 16.0,

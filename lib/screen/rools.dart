@@ -1,3 +1,4 @@
+import 'package:coolchat/app_localizations.dart';
 import 'package:coolchat/bloc/token_blok.dart';
 import 'package:coolchat/menu.dart';
 import 'package:coolchat/my_appbar.dart';
@@ -38,7 +39,9 @@ class RoolsOfChat extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Rools of the chat',
+                      AppLocalizations.of(context)
+                          .translate('rules_of_the_chat_rules'),
+                      textScaler: TextScaler.noScaling,
                       style: TextStyle(
                         color: themeProvider.currentTheme.primaryColor,
                         fontSize: 24,
@@ -48,62 +51,82 @@ class RoolsOfChat extends StatelessWidget {
                     ),
                     pointRools(
                         'assets/images/rools01.png',
-                        'Be polite and respect other users. ',
-                        'Avoid rudeness, offensive language and threats. Respect the opinions of others, even if you don\'t agree with them.',
+                        AppLocalizations.of(context)
+                            .translate('rules_of_the_chat_1_1'),
+                        AppLocalizations.of(context)
+                            .translate('rules_of_the_chat_1_2'),
                         themeProvider,
                         true),
                     pointRools(
                         'assets/images/rools02.png',
-                        'Avoid spam and flooding. ',
-                        'Do not send many messages at once, do not write unrelated or unnecessary texts.',
+                        AppLocalizations.of(context)
+                            .translate('rules_of_the_chat_2_1'),
+                        AppLocalizations.of(context)
+                            .translate('rules_of_the_chat_2_2'),
                         themeProvider,
                         false),
                     pointRools(
                         'assets/images/rools03.png',
-                        'Do not use caps lock or lots of punctuation. ',
-                        'It can look like yelling or being overly emotional.',
+                        AppLocalizations.of(context)
+                            .translate('rules_of_the_chat_3_1'),
+                        AppLocalizations.of(context)
+                            .translate('rules_of_the_chat_3_2'),
                         themeProvider,
                         true),
                     pointRools(
                         'assets/images/rools04.png',
-                        'Avoid political and religious discussions unless it is the topic of the chat. ',
-                        'Such topics can cause conflicts and misunderstandings.',
+                        AppLocalizations.of(context)
+                            .translate('rules_of_the_chat_4_1'),
+                        AppLocalizations.of(context)
+                            .translate('rules_of_the_chat_4_2'),
                         themeProvider,
                         false),
                     pointRools(
                         'assets/images/rools05.png',
-                        'Be careful about privacy. ',
-                        'Do not share personal information about yourself or other users.',
+                        AppLocalizations.of(context)
+                            .translate('rules_of_the_chat_5_1'),
+                        AppLocalizations.of(context)
+                            .translate('rules_of_the_chat_5_2'),
                         themeProvider,
                         true),
                     pointRools(
                         'assets/images/rools06.png',
-                        'Do not use offensive or obscene language. ',
-                        'Such expressions can offend others and violate the civility of the chat.',
+                        AppLocalizations.of(context)
+                            .translate('rules_of_the_chat_6_1'),
+                        AppLocalizations.of(context)
+                            .translate('rules_of_the_chat_6_2'),
                         themeProvider,
                         false),
                     pointRools(
                         'assets/images/rools07.png',
-                        'Be patient and friendly. ',
-                        'Communicate with others as you want to be communicated with.',
+                        AppLocalizations.of(context)
+                            .translate('rules_of_the_chat_7_1'),
+                        AppLocalizations.of(context)
+                            .translate('rules_of_the_chat_7_2'),
                         themeProvider,
                         true),
                     pointRools(
                         'assets/images/rools08.png',
-                        'Do not post unnatural or false information. ',
-                        'Avoid spreading myths, deception or false information.',
+                        AppLocalizations.of(context)
+                            .translate('rules_of_the_chat_8_1'),
+                        AppLocalizations.of(context)
+                            .translate('rules_of_the_chat_8_2'),
                         themeProvider,
                         false),
                     pointRools(
                         'assets/images/rools09.png',
-                        'Be careful when using emojis and emoticons. ',
-                        'What may look like a joke to you may be perceived as offensive by other users.',
+                        AppLocalizations.of(context)
+                            .translate('rules_of_the_chat_9_1'),
+                        AppLocalizations.of(context)
+                            .translate('rules_of_the_chat_9_2'),
                         themeProvider,
                         true),
                     pointRools(
                         'assets/images/rools10.png',
-                        'If you encounter a conflict situation, please contact a chat administrator or moderator for assistance. ',
-                        'Do not try to solve the situation yourself or respond to rudeness with rudeness.',
+                        AppLocalizations.of(context)
+                            .translate('rules_of_the_chat_10_1'),
+                        AppLocalizations.of(context)
+                            .translate('rules_of_the_chat_10_2'),
                         themeProvider,
                         false),
                   ],
@@ -135,6 +158,7 @@ class RoolsOfChat extends StatelessWidget {
                   color: themeProvider.currentTheme.shadowColor,
                 ),
                 Text.rich(
+                  textScaler: TextScaler.noScaling,
                   TextSpan(
                     children: [
                       TextSpan(

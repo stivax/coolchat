@@ -2,6 +2,8 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:coolchat/app_localizations.dart';
+import 'package:coolchat/popap/welcome_popap.dart';
 import 'package:coolchat/server/server.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -115,7 +117,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
             id: answerInt);
         await writeAccountInStorage(acc, context);
         alreadyPressedAprove = false;
-        await _showPopupWelcome(acc, context);
+        await WelcomePopup(acc, context).show();
         Navigator.pop(context, acc);
       } else {
         alreadyPressedAprove = false;
@@ -124,7 +126,8 @@ class _RegisterDialogState extends State<RegisterDialog> {
     } else if (_formKey.currentState!.validate() && _selectedItems == '') {
       alreadyPressedAprove = false;
       _showPopupErrorInput(
-          'It seems that you have not selected your avatar', context);
+          AppLocalizations.of(context).translate('register_no_avatar'),
+          context);
     } else {
       alreadyPressedAprove = false;
       FocusScope.of(context).requestFocus(_emailFocus);
@@ -165,7 +168,8 @@ class _RegisterDialogState extends State<RegisterDialog> {
                               children: [
                                 Center(
                                   child: Text(
-                                    'Register \nin Coolchat',
+                                    AppLocalizations.of(context)
+                                        .translate('register_in'),
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       color: themeProvider
@@ -182,7 +186,8 @@ class _RegisterDialogState extends State<RegisterDialog> {
                                   padding:
                                       const EdgeInsets.only(top: 15, bottom: 5),
                                   child: Text(
-                                    'Write your e-mail',
+                                    AppLocalizations.of(context)
+                                        .translate('login_write_your_email'),
                                     style: TextStyle(
                                       color: themeProvider
                                           .currentTheme.primaryColor
@@ -219,7 +224,8 @@ class _RegisterDialogState extends State<RegisterDialog> {
                                       fontWeight: FontWeight.w400,
                                     ),
                                     decoration: InputDecoration(
-                                      helperText: 'E-mail format xxxxx@xxx.xx',
+                                      helperText: AppLocalizations.of(context)
+                                          .translate('login_email_format'),
                                       helperStyle: TextStyle(
                                         color: themeProvider
                                             .currentTheme.primaryColor
@@ -231,7 +237,8 @@ class _RegisterDialogState extends State<RegisterDialog> {
                                               .currentTheme.primaryColor
                                               .withOpacity(0.5)),
                                       border: InputBorder.none,
-                                      hintText: 'E-mail *',
+                                      hintText: AppLocalizations.of(context)
+                                          .translate('login_email'),
                                       hintStyle: TextStyle(
                                           color: themeProvider
                                               .currentTheme.primaryColor
@@ -273,7 +280,8 @@ class _RegisterDialogState extends State<RegisterDialog> {
                                   padding:
                                       const EdgeInsets.only(top: 15, bottom: 5),
                                   child: Text(
-                                    'Write your password',
+                                    AppLocalizations.of(context)
+                                        .translate('login_write_your_password'),
                                     style: TextStyle(
                                       color: themeProvider
                                           .currentTheme.primaryColor
@@ -309,7 +317,9 @@ class _RegisterDialogState extends State<RegisterDialog> {
                                       fontWeight: FontWeight.w400,
                                     ),
                                     decoration: InputDecoration(
-                                        helperText: 'Remember your password',
+                                        helperText: AppLocalizations.of(context)
+                                            .translate(
+                                                'login_remember_your_password'),
                                         helperStyle: TextStyle(
                                           color: themeProvider
                                               .currentTheme.primaryColor
@@ -320,7 +330,8 @@ class _RegisterDialogState extends State<RegisterDialog> {
                                                 .currentTheme.primaryColor
                                                 .withOpacity(0.5)),
                                         border: InputBorder.none,
-                                        hintText: 'Password *',
+                                        hintText: AppLocalizations.of(context)
+                                            .translate('login_password'),
                                         hintStyle: TextStyle(
                                             color: themeProvider
                                                 .currentTheme.primaryColor
@@ -371,7 +382,8 @@ class _RegisterDialogState extends State<RegisterDialog> {
                                   padding:
                                       const EdgeInsets.only(top: 15, bottom: 5),
                                   child: Text(
-                                    'Confirm password',
+                                    AppLocalizations.of(context).translate(
+                                        'register_in_confirm_password'),
                                     style: TextStyle(
                                       color: themeProvider
                                           .currentTheme.primaryColor
@@ -407,7 +419,9 @@ class _RegisterDialogState extends State<RegisterDialog> {
                                       fontWeight: FontWeight.w400,
                                     ),
                                     decoration: InputDecoration(
-                                      helperText: 'Confirm to remember',
+                                      helperText: AppLocalizations.of(context)
+                                          .translate(
+                                              'register_in_confirm_to_remember'),
                                       helperStyle: TextStyle(
                                         color: themeProvider
                                             .currentTheme.primaryColor
@@ -418,7 +432,9 @@ class _RegisterDialogState extends State<RegisterDialog> {
                                               .currentTheme.primaryColor
                                               .withOpacity(0.5)),
                                       border: InputBorder.none,
-                                      hintText: 'Confirm password *',
+                                      hintText: AppLocalizations.of(context)
+                                          .translate(
+                                              'register_in_confirm_password'),
                                       hintStyle: TextStyle(
                                           color: themeProvider
                                               .currentTheme.primaryColor
@@ -470,7 +486,8 @@ class _RegisterDialogState extends State<RegisterDialog> {
                                   padding:
                                       const EdgeInsets.only(top: 15, bottom: 5),
                                   child: Text(
-                                    'Write your nickname',
+                                    AppLocalizations.of(context).translate(
+                                        'register_in_write_your_nickname'),
                                     style: TextStyle(
                                       color: themeProvider
                                           .currentTheme.primaryColor
@@ -520,7 +537,8 @@ class _RegisterDialogState extends State<RegisterDialog> {
                                               .currentTheme.primaryColor
                                               .withOpacity(0.5)),
                                       border: InputBorder.none,
-                                      hintText: 'Nickname *',
+                                      hintText: AppLocalizations.of(context)
+                                          .translate('register_in_nickname'),
                                       hintStyle: TextStyle(
                                           color: themeProvider
                                               .currentTheme.primaryColor
@@ -610,7 +628,9 @@ class _RegisterDialogState extends State<RegisterDialog> {
                                             }
                                           },
                                           child: Text(
-                                            'Approve',
+                                            AppLocalizations.of(context)
+                                                .translate(
+                                                    'register_in_approve'),
                                             textScaleFactor: 1,
                                             style: TextStyle(
                                               color: const Color(0xFFF5FBFF),
@@ -633,7 +653,8 @@ class _RegisterDialogState extends State<RegisterDialog> {
                                       );
                                     },
                                     child: Text(
-                                      'Already registered',
+                                      AppLocalizations.of(context).translate(
+                                          'register_in_already_registered'),
                                       textScaleFactor: 1,
                                       style: TextStyle(
                                         color: themeProvider
@@ -791,132 +812,6 @@ class _RegisterDialogState extends State<RegisterDialog> {
     );
   }
 
-  Future<void> _showPopupWelcome(Account account, BuildContext context) async {
-    await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Consumer<ThemeProvider>(
-          builder: (context, themeProvider, child) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20.0),
-              ),
-              backgroundColor: themeProvider.currentTheme.primaryColorDark,
-              scrollable: true,
-              content: MediaQuery(
-                data: MediaQuery.of(context)
-                    .copyWith(textScaler: TextScaler.noScaling),
-                child: SizedBox(
-                  width: 250,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: 80,
-                        height: 100,
-                        child: Avatar(
-                            image: NetworkImage(account.avatar),
-                            isChoise: false),
-                      ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      Text.rich(
-                        TextSpan(
-                          children: [
-                            TextSpan(
-                              text: 'Hello, ',
-                              style: TextStyle(
-                                color: themeProvider.currentTheme.primaryColor,
-                                fontSize: 24,
-                                fontFamily: 'Manrope',
-                                fontWeight: FontWeight.w500,
-                                height: 1.24,
-                              ),
-                            ),
-                            TextSpan(
-                              text: account.userName,
-                              style: TextStyle(
-                                color: themeProvider.currentTheme.shadowColor,
-                                fontSize: 24,
-                                fontFamily: 'Manrope',
-                                fontWeight: FontWeight.w500,
-                                height: 1.24,
-                              ),
-                            ),
-                            TextSpan(
-                              text: '!',
-                              style: TextStyle(
-                                color: themeProvider.currentTheme.primaryColor,
-                                fontSize: 24,
-                                fontFamily: 'Manrope',
-                                fontWeight: FontWeight.w500,
-                                height: 1.24,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      Text(
-                        'Welcome \nto the Coolchat',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: themeProvider.currentTheme.primaryColor,
-                          fontSize: 16,
-                          fontFamily: 'Manrope',
-                          fontWeight: FontWeight.w400,
-                          height: 1.24,
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 16,
-                      ),
-                      Center(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 30, vertical: 10),
-                            backgroundColor:
-                                themeProvider.currentTheme.shadowColor,
-                            shape: RoundedRectangleBorder(
-                              side: BorderSide(
-                                  width: 0.50,
-                                  color:
-                                      themeProvider.currentTheme.shadowColor),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: const Text(
-                            'Chat',
-                            textScaleFactor: 1,
-                            style: TextStyle(
-                              color: Color(0xFFF5FBFF),
-                              fontSize: 24,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w500,
-                              height: 1.24,
-                            ),
-                          ),
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
   String? _nameValidate(String? value) {
     final nameExp = RegExp(
         r'^[a-zA-Z\u0430-\u044F\u0410-\u042F\u0456\u0406\u0457\u0407\u0491\u0490\u0454\u0404\u04E7\u04E6 ()_.]+$');
@@ -957,10 +852,9 @@ class _RegisterDialogState extends State<RegisterDialog> {
 }
 
 class Avatar extends StatelessWidget {
-  ImageProvider image;
-  bool isChoise;
-  Avatar({Key? key, required this.image, required this.isChoise})
-      : super(key: key);
+  final ImageProvider image;
+  final bool isChoise;
+  const Avatar({super.key, required this.image, required this.isChoise});
 
   @override
   Widget build(BuildContext context) {

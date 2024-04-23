@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:coolchat/app_localizations.dart';
 import 'package:coolchat/message_provider.dart';
 import 'package:coolchat/model/messages_list.dart';
 import 'package:coolchat/servises/change_message_provider.dart';
@@ -234,7 +235,7 @@ class Messages extends StatelessWidget {
             data: MediaQuery.of(contextMessage)
                 .copyWith(textScaler: TextScaler.noScaling),
             child: Text(
-              'Delete message',
+              AppLocalizations.of(contextMessage).translate('message_delete'),
               style: TextStyle(
                 color: themeProvider.currentTheme.primaryColor,
                 fontSize: 16.0,
@@ -263,7 +264,7 @@ class Messages extends StatelessWidget {
             data: MediaQuery.of(contextMessage)
                 .copyWith(textScaler: TextScaler.noScaling),
             child: Text(
-              'Edit message',
+              AppLocalizations.of(contextMessage).translate('message_edit'),
               style: TextStyle(
                 color: themeProvider.currentTheme.primaryColor,
                 fontSize: 16.0,

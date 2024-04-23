@@ -1,10 +1,13 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
 
+import 'package:coolchat/app_localizations.dart';
 import 'package:coolchat/main.dart';
+import 'package:coolchat/popap/logout_popap.dart';
 import 'package:coolchat/screen/privacy_policy.dart';
 import 'package:coolchat/screen/private_chat_list.dart';
 import 'package:coolchat/screen/rools.dart';
+import 'package:coolchat/screen/setting.dart';
 import 'package:coolchat/servises/message_private_push_container.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
 import 'package:equatable/equatable.dart';
@@ -119,12 +122,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
         _account = account;
       });
     } else {
-      //setState(() {
-      //  _account =
-      //      Account(email: '', userName: '', password: '', avatar: '', id: 0);
-      //});
-      //await writeAccountInStorage(_account, context);
-      showPopupLogOut(acc, tokenBloc, context);
+      LogoutPopup(acc, context, tokenBloc).show();
     }
   }
 
@@ -149,9 +147,6 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                     } else {
                       //tokenBloc.add(TokenClearEvent());
                     }
-                  } else if (value == 'item6') {
-                    const url = Server.server;
-                    openUrl(url);
                   } else if (value == 'item2') {
                     if (_account.email.isNotEmpty) {
                       MessageProviderContainer.instance
@@ -202,6 +197,13 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                         builder: (context) => const RoolsOfChat(),
                       ),
                     );
+                  } else if (value == 'item6') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SettingScreen(),
+                      ),
+                    );
                   }
                 },
                 icon: Stack(
@@ -229,7 +231,8 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                   PopupMenuItem<String>(
                     value: 'item1',
                     child: Text(
-                      'Chat rooms',
+                      AppLocalizations.of(context)
+                          .translate('burger_menu_chat_rooms'),
                       textScaler: TextScaler.noScaling,
                       style: TextStyle(
                         color: themeProvider.currentTheme.primaryColor,
@@ -245,7 +248,8 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                     child: Row(
                       children: [
                         Text(
-                          'Personal chats',
+                          AppLocalizations.of(context)
+                              .translate('burger_menu_personal_chats'),
                           textScaler: TextScaler.noScaling,
                           style: TextStyle(
                             color: themeProvider.currentTheme.primaryColor,
@@ -273,7 +277,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                   /*PopupMenuItem<String>(
                     value: 'item3',
                     child: Text(
-                      'Settings',
+                      'Go to our website',
                       textScaler: TextScaler.noScaling,
                       style: TextStyle(
                         color: themeProvider.currentTheme.primaryColor,
@@ -287,7 +291,8 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                   PopupMenuItem<String>(
                     value: 'item4',
                     child: Text(
-                      'Rules of the chat',
+                      AppLocalizations.of(context)
+                          .translate('burger_menu_rules_of_the_chat'),
                       textScaler: TextScaler.noScaling,
                       style: TextStyle(
                         color: themeProvider.currentTheme.primaryColor,
@@ -301,7 +306,8 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                   PopupMenuItem<String>(
                     value: 'item5',
                     child: Text(
-                      'Privacy Policy',
+                      AppLocalizations.of(context)
+                          .translate('burger_menu_privacy_policy'),
                       textScaler: TextScaler.noScaling,
                       style: TextStyle(
                         color: themeProvider.currentTheme.primaryColor,
@@ -312,10 +318,11 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                       ),
                     ),
                   ),
-                  /*PopupMenuItem<String>(
+                  PopupMenuItem<String>(
                     value: 'item6',
                     child: Text(
-                      'Go to our website',
+                      AppLocalizations.of(context)
+                          .translate('burger_menu_setting'),
                       textScaler: TextScaler.noScaling,
                       style: TextStyle(
                         color: themeProvider.currentTheme.primaryColor,
@@ -325,12 +332,12 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                         height: 1.16,
                       ),
                     ),
-                  ),*/
+                  ),
                   PopupMenuItem<String>(
                     value: 'item7',
                     child: _account.userName != ''
                         ? Text(
-                            'Log out: ${_account.userName}',
+                            '${AppLocalizations.of(context).translate('burger_menu_log_out')} ${_account.userName}',
                             textScaler: TextScaler.noScaling,
                             style: TextStyle(
                               color: themeProvider.currentTheme.primaryColor,
@@ -341,7 +348,8 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                             ),
                           )
                         : Text(
-                            'Log in',
+                            AppLocalizations.of(context)
+                                .translate('burger_menu_log_in'),
                             textScaler: TextScaler.noScaling,
                             style: TextStyle(
                               color: themeProvider.currentTheme.primaryColor,
@@ -355,7 +363,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                   PopupMenuItem<String>(
                     value: 'item8',
                     child: Text(
-                      'Version: v1.0.14',
+                      '${AppLocalizations.of(context).translate('burger_menu_version')} v1.0.15',
                       textScaler: TextScaler.noScaling,
                       style: TextStyle(
                         color: themeProvider.currentTheme.primaryColor

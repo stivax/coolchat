@@ -1,6 +1,8 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:coolchat/app_localizations.dart';
 import 'package:coolchat/password_recovery.dart';
+import 'package:coolchat/popap/welcome_popap.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -52,7 +54,7 @@ class _LoginDialogState extends State<LoginDialog> {
           token["access_token"].toString().isNotEmpty) {
         await writeAccountInStorage(acc, context);
         alreadyPressedAprove = false;
-        await showPopupWelcome(acc, context);
+        await WelcomePopup(acc, context).show();
         Navigator.pop(context, acc);
       } else if (acc.userName.isNotEmpty &&
           token["access_token"].toString().isEmpty) {
@@ -95,7 +97,8 @@ class _LoginDialogState extends State<LoginDialog> {
                       children: [
                         Center(
                           child: Text(
-                            'Login \nin Coolchat',
+                            AppLocalizations.of(context)
+                                .translate('login_login_in'),
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: themeProvider.currentTheme.primaryColor,
@@ -110,7 +113,8 @@ class _LoginDialogState extends State<LoginDialog> {
                         Padding(
                           padding: const EdgeInsets.only(top: 15, bottom: 5),
                           child: Text(
-                            'Write your e-mail',
+                            AppLocalizations.of(context)
+                                .translate('login_write_your_email'),
                             style: TextStyle(
                               color: themeProvider.currentTheme.primaryColor
                                   .withOpacity(0.9),
@@ -145,7 +149,8 @@ class _LoginDialogState extends State<LoginDialog> {
                               fontWeight: FontWeight.w400,
                             ),
                             decoration: InputDecoration(
-                              helperText: 'E-mail format xxxxx@xxx.xx',
+                              helperText: AppLocalizations.of(context)
+                                  .translate('login_email_format'),
                               helperStyle: TextStyle(
                                 color: themeProvider.currentTheme.primaryColor
                                     .withOpacity(0.5),
@@ -155,7 +160,8 @@ class _LoginDialogState extends State<LoginDialog> {
                                   color: themeProvider.currentTheme.primaryColor
                                       .withOpacity(0.5)),
                               border: InputBorder.none,
-                              hintText: 'E-mail *',
+                              hintText: AppLocalizations.of(context)
+                                  .translate('login_email'),
                               hintStyle: TextStyle(
                                   color: themeProvider.currentTheme.primaryColor
                                       .withOpacity(0.6)),
@@ -194,7 +200,8 @@ class _LoginDialogState extends State<LoginDialog> {
                         Padding(
                           padding: const EdgeInsets.only(top: 15, bottom: 5),
                           child: Text(
-                            'Write your password',
+                            AppLocalizations.of(context)
+                                .translate('login_write_your_password'),
                             style: TextStyle(
                               color: themeProvider.currentTheme.primaryColor
                                   .withOpacity(0.9),
@@ -226,7 +233,8 @@ class _LoginDialogState extends State<LoginDialog> {
                               fontWeight: FontWeight.w400,
                             ),
                             decoration: InputDecoration(
-                                helperText: 'Remember your password',
+                                helperText: AppLocalizations.of(context)
+                                    .translate('login_remember_your_password'),
                                 helperStyle: TextStyle(
                                   color: themeProvider.currentTheme.primaryColor
                                       .withOpacity(0.5),
@@ -236,7 +244,8 @@ class _LoginDialogState extends State<LoginDialog> {
                                         .currentTheme.primaryColor
                                         .withOpacity(0.5)),
                                 border: InputBorder.none,
-                                hintText: 'Password *',
+                                hintText: AppLocalizations.of(context)
+                                    .translate('login_password'),
                                 hintStyle: TextStyle(
                                     color: themeProvider
                                         .currentTheme.primaryColor
@@ -294,7 +303,8 @@ class _LoginDialogState extends State<LoginDialog> {
                                 );
                               },
                               child: Text(
-                                'Forgot password',
+                                AppLocalizations.of(context)
+                                    .translate('login_forgot_password'),
                                 textScaler: TextScaler.noScaling,
                                 textAlign: TextAlign.right,
                                 style: TextStyle(
@@ -359,7 +369,8 @@ class _LoginDialogState extends State<LoginDialog> {
                                   }
                                 },
                                 child: Text(
-                                  'Log in',
+                                  AppLocalizations.of(context)
+                                      .translate('login_log_in'),
                                   textScaleFactor: 1,
                                   style: TextStyle(
                                     color: const Color(0xFFF5FBFF),
@@ -376,7 +387,7 @@ class _LoginDialogState extends State<LoginDialog> {
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 30, vertical: 10),
+                                horizontal: 5, vertical: 10),
                             backgroundColor:
                                 themeProvider.currentTheme.primaryColorDark,
                             shape: RoundedRectangleBorder(
@@ -397,8 +408,10 @@ class _LoginDialogState extends State<LoginDialog> {
                             Navigator.pop(context, acc);
                           },
                           child: Text(
-                            'Register',
-                            textScaleFactor: 1,
+                            AppLocalizations.of(context)
+                                .translate('login_register'),
+                            textScaler: TextScaler.noScaling,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: themeProvider.currentTheme.primaryColor,
                               fontSize: screenSize.height * 0.03,
@@ -416,132 +429,6 @@ class _LoginDialogState extends State<LoginDialog> {
             ],
           ),
           //actions: [],
-        );
-      },
-    );
-  }
-
-  showPopupWelcome(Account account, BuildContext context) async {
-    await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Consumer<ThemeProvider>(
-          builder: (context, themeProvider, child) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20.0),
-              ),
-              backgroundColor: themeProvider.currentTheme.primaryColorDark,
-              scrollable: true,
-              content: MediaQuery(
-                data: MediaQuery.of(context)
-                    .copyWith(textScaler: TextScaler.noScaling),
-                child: SizedBox(
-                  width: 250,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: 80,
-                        height: 100,
-                        child: Avatar(
-                            image: NetworkImage(account.avatar),
-                            isChoise: false),
-                      ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      Text.rich(
-                        TextSpan(
-                          children: [
-                            TextSpan(
-                              text: 'Hello, ',
-                              style: TextStyle(
-                                color: themeProvider.currentTheme.primaryColor,
-                                fontSize: 24,
-                                fontFamily: 'Manrope',
-                                fontWeight: FontWeight.w500,
-                                height: 1.24,
-                              ),
-                            ),
-                            TextSpan(
-                              text: account.userName,
-                              style: TextStyle(
-                                color: themeProvider.currentTheme.shadowColor,
-                                fontSize: 24,
-                                fontFamily: 'Manrope',
-                                fontWeight: FontWeight.w500,
-                                height: 1.24,
-                              ),
-                            ),
-                            TextSpan(
-                              text: '!',
-                              style: TextStyle(
-                                color: themeProvider.currentTheme.primaryColor,
-                                fontSize: 24,
-                                fontFamily: 'Manrope',
-                                fontWeight: FontWeight.w500,
-                                height: 1.24,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      Text(
-                        'Welcome \nto the Coolchat',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: themeProvider.currentTheme.primaryColor,
-                          fontSize: 16,
-                          fontFamily: 'Manrope',
-                          fontWeight: FontWeight.w400,
-                          height: 1.24,
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 16,
-                      ),
-                      Center(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 30, vertical: 10),
-                            backgroundColor:
-                                themeProvider.currentTheme.shadowColor,
-                            shape: RoundedRectangleBorder(
-                              side: BorderSide(
-                                  width: 0.50,
-                                  color:
-                                      themeProvider.currentTheme.shadowColor),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: const Text(
-                            'Chat',
-                            textScaleFactor: 1,
-                            style: TextStyle(
-                              color: Color(0xFFF5FBFF),
-                              fontSize: 24,
-                              fontFamily: 'Manrope',
-                              fontWeight: FontWeight.w500,
-                              height: 1.24,
-                            ),
-                          ),
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
         );
       },
     );

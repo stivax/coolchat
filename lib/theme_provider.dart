@@ -39,11 +39,16 @@ class ThemeProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> toggleTheme() async {
-    _isLightMode = !_isLightMode;
+  Future<void> toggleTheme({bool? forceLightMode}) async {
+    if (forceLightMode != null) {
+      _isLightMode = forceLightMode;
+    } else {
+      _isLightMode = !_isLightMode;
+    }
+
     _currentTheme = _isLightMode ? lightTheme : darkTheme;
-    _isThemeChange = false;
     notifyListeners();
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isLightMode', _isLightMode);
   }

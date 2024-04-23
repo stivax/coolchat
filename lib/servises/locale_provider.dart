@@ -34,6 +34,7 @@ class L10n {
   static final all = [
     const Locale('en'),
     const Locale('uk'),
+    const Locale('pl'),
   ];
 
   static String getFlag(String languageCode) {
@@ -42,6 +43,8 @@ class L10n {
         return '🇬🇧';
       case 'uk':
         return '🇺🇦';
+      case 'pl':
+        return '🇵🇱';
       default:
         return '🏳';
     }

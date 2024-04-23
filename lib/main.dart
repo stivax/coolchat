@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:connectivity/connectivity.dart';
 import 'package:coolchat/app_localizations.dart';
+import 'package:coolchat/screen/setting.dart';
 import 'package:coolchat/servises/change_message_provider.dart';
 import 'package:coolchat/servises/locale_provider.dart';
 import 'package:coolchat/servises/send_file_provider.dart';
@@ -118,8 +119,9 @@ class MyApp extends StatelessWidget {
       title: 'Cool Chat',
       initialRoute: '/',
       routes: {
-        '/': (context) => MyHomePage(),
+        '/': (context) => const MyHomePage(),
         '/p': (context) => PrivateChatList(),
+        '/s': (context) => const SettingScreen(),
       },
       scaffoldMessengerKey: scaffoldMessengerKey,
       theme: themeProvider.currentTheme,
@@ -534,16 +536,19 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text(
-                                          'Choose rooms for\ncommunication',
-                                          textScaler: TextScaler.noScaling,
-                                          style: TextStyle(
-                                            color: themeProvider
-                                                .currentTheme.primaryColor,
-                                            fontSize: 24,
-                                            fontFamily: 'Manrope',
-                                            fontWeight: FontWeight.w500,
-                                            height: 1.24,
+                                        Expanded(
+                                          child: Text(
+                                            AppLocalizations.of(context)
+                                                .translate('main_choose'),
+                                            textScaler: TextScaler.noScaling,
+                                            style: TextStyle(
+                                              color: themeProvider
+                                                  .currentTheme.primaryColor,
+                                              fontSize: 20,
+                                              fontFamily: 'Manrope',
+                                              fontWeight: FontWeight.w500,
+                                              height: 1.24,
+                                            ),
                                           ),
                                         ),
                                         Container(),
@@ -609,7 +614,7 @@ class HeaderWidget extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(left: 20, right: 20),
             child: Text(
-              AppLocalizations.of(context).translate('welcome'),
+              AppLocalizations.of(context).translate('main_welcome1'),
               textScaler: TextScaler.noScaling,
               style: TextStyle(
                 color: const Color(0xFFF5FBFF),
@@ -624,7 +629,7 @@ class HeaderWidget extends StatelessWidget {
             padding:
                 const EdgeInsets.only(left: 20, bottom: 20, top: 10, right: 20),
             child: Text(
-              AppLocalizations.of(context).translate('welcome2'),
+              AppLocalizations.of(context).translate('main_welcome2'),
               textScaler: TextScaler.noScaling,
               style: TextStyle(
                 color: const Color(0xFFF5FBFF),
