@@ -2,24 +2,25 @@ import 'dart:convert';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:coolchat/app_localizations.dart';
-import 'package:coolchat/message_provider.dart';
+import 'package:coolchat/screen/image_view_screen.dart';
+import 'package:coolchat/screen/video_player_screen.dart';
+import 'package:coolchat/servises/audio_player.dart';
+import 'package:coolchat/servises/message_provider.dart';
 import 'package:coolchat/model/messages_list.dart';
 import 'package:coolchat/servises/change_message_provider.dart';
+import 'package:coolchat/servises/file_controller.dart';
 import 'package:coolchat/servises/reply_provider.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
-import 'package:photo_view/photo_view.dart';
 
 import 'package:coolchat/avatar.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
 
-import 'theme_provider.dart';
+import '../theme_provider.dart';
 
 // ignore: must_be_immutable
 class Messages extends StatelessWidget {
@@ -37,7 +38,7 @@ class Messages extends StatelessWidget {
   final int accountId;
   final int? idReturn;
   final bool edited;
-  Messages(
+  const Messages(
       {super.key,
       required this.message,
       required this.id,
@@ -169,7 +170,7 @@ class Messages extends StatelessWidget {
 
   static bool isImageLink(String text) {
     final RegExp imageLinkRegExp = RegExp(
-        r'(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|jpeg|gif|png|webp)',
+        r'(?:(?:https?|ftp):\/\/)?[^ \t\n\r]+?\.(jpg|jpeg|gif|png|webp)(\?.*)?$',
         caseSensitive: false);
 
     return imageLinkRegExp.hasMatch(text);
@@ -485,226 +486,17 @@ class TheirMessegeReply extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 replyingMessage != null
-                                    ? GestureDetector(
-                                        onTap: () {
-                                          final position =
-                                              Messages.findPositionById(
-                                                  listMessages.listMessages,
-                                                  idReturn!);
-                                          if (position != null) {
-                                            final isReplying =
-                                                Provider.of<ReplyProvider>(
-                                                    context,
-                                                    listen: false);
-                                            isReplying
-                                                .scrollToMessage(position);
-                                          }
-                                        },
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              replyingMessage.userName,
-                                              textScaler: TextScaler.noScaling,
-                                              style: TextStyle(
-                                                color: themeProvider
-                                                    .currentTheme.shadowColor
-                                                    .withOpacity(0.9),
-                                                fontSize: 14,
-                                                fontFamily: 'Manrope',
-                                                fontWeight: FontWeight.w400,
-                                                height: 1.30,
-                                              ),
-                                            ),
-                                            replyingMessage.fileUrl != null
-                                                ? Messages.isImageLink(
-                                                        replyingMessage
-                                                            .fileUrl!)
-                                                    ? Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .only(
-                                                                top: 8,
-                                                                bottom: 8),
-                                                        child:
-                                                            CachedNetworkImage(
-                                                          imageUrl:
-                                                              replyingMessage
-                                                                  .fileUrl!,
-                                                          placeholder: (context,
-                                                                  url) =>
-                                                              Center(
-                                                                  child:
-                                                                      CircularProgressIndicator(
-                                                            color: themeProvider
-                                                                .currentTheme
-                                                                .shadowColor,
-                                                          )),
-                                                          errorWidget: (context,
-                                                                  url, error) =>
-                                                              const Icon(
-                                                                  Icons.error),
-                                                          height: 40,
-                                                        ),
-                                                      )
-                                                    : Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .only(
-                                                                top: 8,
-                                                                bottom: 8),
-                                                        child: Row(
-                                                          children: [
-                                                            Icon(
-                                                              Icons.file_copy,
-                                                              color: themeProvider
-                                                                  .currentTheme
-                                                                  .primaryColor,
-                                                              size: 24,
-                                                            ),
-                                                            Text(
-                                                                Messages.extractFileName(
-                                                                    replyingMessage
-                                                                        .fileUrl!),
-                                                                overflow:
-                                                                    TextOverflow
-                                                                        .ellipsis,
-                                                                maxLines: 1,
-                                                                textScaler:
-                                                                    TextScaler
-                                                                        .noScaling,
-                                                                style:
-                                                                    TextStyle(
-                                                                  color: themeProvider
-                                                                      .currentTheme
-                                                                      .primaryColor,
-                                                                  fontSize: 14,
-                                                                  fontFamily:
-                                                                      'Manrope',
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w400,
-                                                                )),
-                                                          ],
-                                                        ),
-                                                      )
-                                                : Container(),
-                                            replyingMessage.message.isNotEmpty
-                                                ? Messages.isImageLink(
-                                                        replyingMessage.message)
-                                                    ? Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(1.0),
-                                                        child:
-                                                            CachedNetworkImage(
-                                                          imageUrl: Messages
-                                                              .extractFirstUrl(
-                                                                  replyingMessage
-                                                                      .message)!,
-                                                          height: 40,
-                                                          placeholder: (context,
-                                                                  url) =>
-                                                              Center(
-                                                                  child:
-                                                                      CircularProgressIndicator(
-                                                            color: themeProvider
-                                                                .currentTheme
-                                                                .shadowColor,
-                                                          )),
-                                                          errorWidget: (context,
-                                                                  url, error) =>
-                                                              const Icon(
-                                                                  Icons.error),
-                                                          fit: BoxFit.cover,
-                                                        ),
-                                                      )
-                                                    : Text(
-                                                        replyingMessage.message,
-                                                        maxLines: 3,
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                        textScaler: TextScaler
-                                                            .noScaling,
-                                                        style: TextStyle(
-                                                          color: themeProvider
-                                                              .currentTheme
-                                                              .primaryColor
-                                                              .withOpacity(0.6),
-                                                          fontSize: 14,
-                                                          fontFamily: 'Manrope',
-                                                          fontWeight:
-                                                              FontWeight.w400,
-                                                          height: 1.30,
-                                                        ),
-                                                      )
-                                                : Container(),
-                                          ],
-                                        ),
-                                      )
-                                    : Container(),
-                                replyingMessage != null
-                                    ? Padding(
-                                        padding: const EdgeInsets.only(
-                                            top: 4, bottom: 4),
-                                        child: Container(
-                                          height: 2,
-                                          color: themeProvider
-                                              .currentTheme.shadowColor,
-                                        ),
+                                    ? MessagePartReply(
+                                        listMessages: listMessages,
+                                        idReturn: idReturn,
+                                        replyingMessage: replyingMessage,
+                                        themeProvider: themeProvider,
                                       )
                                     : Container(),
                                 fileUrl != null
-                                    ? Messages.isImageLink(fileUrl!)
-                                        ? Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: CachedNetworkImage(
-                                              imageUrl: fileUrl!,
-                                              placeholder: (context, url) =>
-                                                  Center(
-                                                      child:
-                                                          CircularProgressIndicator(
-                                                color: themeProvider
-                                                    .currentTheme.shadowColor,
-                                              )),
-                                              errorWidget:
-                                                  (context, url, error) =>
-                                                      const Icon(Icons.error),
-                                            ),
-                                          )
-                                        : Row(
-                                            children: [
-                                              Icon(
-                                                Icons.file_copy,
-                                                color: themeProvider
-                                                    .currentTheme.primaryColor,
-                                                size: 24,
-                                              ),
-                                              const SizedBox(
-                                                width: 8,
-                                              ),
-                                              Expanded(
-                                                child: Text(
-                                                    Messages.extractFileName(
-                                                        fileUrl!),
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                    maxLines: 2,
-                                                    textScaler:
-                                                        TextScaler.noScaling,
-                                                    style: TextStyle(
-                                                      color: themeProvider
-                                                          .currentTheme
-                                                          .primaryColor,
-                                                      fontSize: 14,
-                                                      fontFamily: 'Manrope',
-                                                      fontWeight:
-                                                          FontWeight.w400,
-                                                    )),
-                                              ),
-                                            ],
-                                          )
+                                    ? MessagePartFile(
+                                        fileUrl: fileUrl!,
+                                        themeProvider: themeProvider)
                                     : Container(),
                                 Messages.isImageLink(message)
                                     ? Center(
@@ -770,7 +562,9 @@ class TheirMessegeReply extends StatelessWidget {
                                           children: [
                                             edited
                                                 ? Text(
-                                                    'Edited',
+                                                    AppLocalizations.of(context)
+                                                        .translate(
+                                                            'message_edited'),
                                                     textScaler:
                                                         TextScaler.noScaling,
                                                     style: TextStyle(
@@ -1003,226 +797,17 @@ class MyMessegeReply extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 replyingMessage != null
-                                    ? GestureDetector(
-                                        onTap: () {
-                                          final position =
-                                              Messages.findPositionById(
-                                                  listMessages.listMessages,
-                                                  idReturn!);
-                                          if (position != null) {
-                                            final isReplying =
-                                                Provider.of<ReplyProvider>(
-                                                    context,
-                                                    listen: false);
-                                            isReplying
-                                                .scrollToMessage(position);
-                                          }
-                                        },
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              replyingMessage.userName,
-                                              textScaler: TextScaler.noScaling,
-                                              style: TextStyle(
-                                                color: themeProvider
-                                                    .currentTheme.shadowColor
-                                                    .withOpacity(0.9),
-                                                fontSize: 14,
-                                                fontFamily: 'Manrope',
-                                                fontWeight: FontWeight.w400,
-                                                height: 1.30,
-                                              ),
-                                            ),
-                                            replyingMessage.fileUrl != null
-                                                ? Messages.isImageLink(
-                                                        replyingMessage
-                                                            .fileUrl!)
-                                                    ? Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .only(
-                                                                top: 8,
-                                                                bottom: 8),
-                                                        child:
-                                                            CachedNetworkImage(
-                                                          imageUrl:
-                                                              replyingMessage
-                                                                  .fileUrl!,
-                                                          placeholder: (context,
-                                                                  url) =>
-                                                              Center(
-                                                                  child:
-                                                                      CircularProgressIndicator(
-                                                            color: themeProvider
-                                                                .currentTheme
-                                                                .shadowColor,
-                                                          )),
-                                                          errorWidget: (context,
-                                                                  url, error) =>
-                                                              const Icon(
-                                                                  Icons.error),
-                                                          height: 40,
-                                                        ),
-                                                      )
-                                                    : Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .only(
-                                                                top: 8,
-                                                                bottom: 8),
-                                                        child: Row(
-                                                          children: [
-                                                            Icon(
-                                                              Icons.file_copy,
-                                                              color: themeProvider
-                                                                  .currentTheme
-                                                                  .primaryColor,
-                                                              size: 24,
-                                                            ),
-                                                            Text(
-                                                                Messages.extractFileName(
-                                                                    replyingMessage
-                                                                        .fileUrl!),
-                                                                overflow:
-                                                                    TextOverflow
-                                                                        .ellipsis,
-                                                                maxLines: 1,
-                                                                textScaler:
-                                                                    TextScaler
-                                                                        .noScaling,
-                                                                style:
-                                                                    TextStyle(
-                                                                  color: themeProvider
-                                                                      .currentTheme
-                                                                      .primaryColor,
-                                                                  fontSize: 14,
-                                                                  fontFamily:
-                                                                      'Manrope',
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w400,
-                                                                )),
-                                                          ],
-                                                        ),
-                                                      )
-                                                : Container(),
-                                            replyingMessage.message.isNotEmpty
-                                                ? Messages.isImageLink(
-                                                        replyingMessage.message)
-                                                    ? Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(1.0),
-                                                        child:
-                                                            CachedNetworkImage(
-                                                          imageUrl: Messages
-                                                              .extractFirstUrl(
-                                                                  replyingMessage
-                                                                      .message)!,
-                                                          height: 40,
-                                                          placeholder: (context,
-                                                                  url) =>
-                                                              Center(
-                                                                  child:
-                                                                      CircularProgressIndicator(
-                                                            color: themeProvider
-                                                                .currentTheme
-                                                                .shadowColor,
-                                                          )),
-                                                          errorWidget: (context,
-                                                                  url, error) =>
-                                                              const Icon(
-                                                                  Icons.error),
-                                                          fit: BoxFit.cover,
-                                                        ),
-                                                      )
-                                                    : Text(
-                                                        replyingMessage.message,
-                                                        maxLines: 3,
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                        textScaler: TextScaler
-                                                            .noScaling,
-                                                        style: TextStyle(
-                                                          color: themeProvider
-                                                              .currentTheme
-                                                              .primaryColor
-                                                              .withOpacity(0.6),
-                                                          fontSize: 14,
-                                                          fontFamily: 'Manrope',
-                                                          fontWeight:
-                                                              FontWeight.w400,
-                                                          height: 1.30,
-                                                        ),
-                                                      )
-                                                : Container(),
-                                          ],
-                                        ),
-                                      )
-                                    : Container(),
-                                replyingMessage != null
-                                    ? Padding(
-                                        padding: const EdgeInsets.only(
-                                            top: 4, bottom: 4),
-                                        child: Container(
-                                          height: 2,
-                                          color: themeProvider
-                                              .currentTheme.shadowColor,
-                                        ),
+                                    ? MessagePartReply(
+                                        listMessages: listMessages,
+                                        idReturn: idReturn,
+                                        replyingMessage: replyingMessage,
+                                        themeProvider: themeProvider,
                                       )
                                     : Container(),
                                 fileUrl != null
-                                    ? Messages.isImageLink(fileUrl!)
-                                        ? Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: CachedNetworkImage(
-                                              imageUrl: fileUrl!,
-                                              placeholder: (context, url) =>
-                                                  Center(
-                                                      child:
-                                                          CircularProgressIndicator(
-                                                color: themeProvider
-                                                    .currentTheme.shadowColor,
-                                              )),
-                                              errorWidget:
-                                                  (context, url, error) =>
-                                                      const Icon(Icons.error),
-                                            ),
-                                          )
-                                        : Row(
-                                            children: [
-                                              Icon(
-                                                Icons.file_copy,
-                                                color: themeProvider
-                                                    .currentTheme.primaryColor,
-                                                size: 24,
-                                              ),
-                                              const SizedBox(
-                                                width: 8,
-                                              ),
-                                              Expanded(
-                                                child: Text(
-                                                    Messages.extractFileName(
-                                                        fileUrl!),
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                    maxLines: 1,
-                                                    textScaler:
-                                                        TextScaler.noScaling,
-                                                    style: TextStyle(
-                                                      color: themeProvider
-                                                          .currentTheme
-                                                          .primaryColor,
-                                                      fontSize: 14,
-                                                      fontFamily: 'Manrope',
-                                                      fontWeight:
-                                                          FontWeight.w400,
-                                                    )),
-                                              ),
-                                            ],
-                                          )
+                                    ? MessagePartFile(
+                                        fileUrl: fileUrl!,
+                                        themeProvider: themeProvider)
                                     : Container(),
                                 Messages.isImageLink(message)
                                     ? Center(
@@ -1288,7 +873,9 @@ class MyMessegeReply extends StatelessWidget {
                                           children: [
                                             edited
                                                 ? Text(
-                                                    'Edited',
+                                                    AppLocalizations.of(context)
+                                                        .translate(
+                                                            'message_edited'),
                                                     textScaler:
                                                         TextScaler.noScaling,
                                                     style: TextStyle(
@@ -1377,5 +964,384 @@ class MyMessegeReply extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+class MessagePartReply extends StatelessWidget {
+  final ListMessages listMessages;
+  final Messages replyingMessage;
+  final ThemeProvider themeProvider;
+  final int? idReturn;
+
+  const MessagePartReply(
+      {super.key,
+      required this.listMessages,
+      required this.replyingMessage,
+      required this.themeProvider,
+      required this.idReturn});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        final position =
+            Messages.findPositionById(listMessages.listMessages, idReturn!);
+        if (position != null) {
+          final isReplying = Provider.of<ReplyProvider>(context, listen: false);
+          isReplying.scrollToMessage(position);
+        }
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            replyingMessage.userName,
+            textScaler: TextScaler.noScaling,
+            style: TextStyle(
+              color: themeProvider.currentTheme.shadowColor.withOpacity(0.9),
+              fontSize: 14,
+              fontFamily: 'Manrope',
+              fontWeight: FontWeight.w400,
+              height: 1.30,
+            ),
+          ),
+          replyingMessage.fileUrl != null
+              ? Messages.isImageLink(replyingMessage.fileUrl!)
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 8, bottom: 8),
+                      child: CachedNetworkImage(
+                        imageUrl: replyingMessage.fileUrl!,
+                        placeholder: (context, url) => Center(
+                            child: CircularProgressIndicator(
+                          color: themeProvider.currentTheme.shadowColor,
+                        )),
+                        errorWidget: (context, url, error) =>
+                            const Icon(Icons.error),
+                        height: 40,
+                      ),
+                    )
+                  : Opacity(
+                      opacity: 0.7,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 8, bottom: 8),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.file_copy,
+                              color: themeProvider.currentTheme.shadowColor,
+                              size: 24,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                  Messages.extractFileName(
+                                      replyingMessage.fileUrl!),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                  textScaler: TextScaler.noScaling,
+                                  style: TextStyle(
+                                    color:
+                                        themeProvider.currentTheme.primaryColor,
+                                    fontSize: 14,
+                                    fontFamily: 'Manrope',
+                                    fontWeight: FontWeight.w400,
+                                  )),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+              : Container(),
+          replyingMessage.message.isNotEmpty
+              ? Messages.isImageLink(replyingMessage.message)
+                  ? Padding(
+                      padding: const EdgeInsets.all(1.0),
+                      child: CachedNetworkImage(
+                        imageUrl:
+                            Messages.extractFirstUrl(replyingMessage.message)!,
+                        height: 40,
+                        placeholder: (context, url) => Center(
+                            child: CircularProgressIndicator(
+                          color: themeProvider.currentTheme.shadowColor,
+                        )),
+                        errorWidget: (context, url, error) =>
+                            const Icon(Icons.error),
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  : Text(
+                      replyingMessage.message,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      textScaler: TextScaler.noScaling,
+                      style: TextStyle(
+                        color: themeProvider.currentTheme.primaryColor
+                            .withOpacity(0.6),
+                        fontSize: 14,
+                        fontFamily: 'Manrope',
+                        fontWeight: FontWeight.w400,
+                        height: 1.30,
+                      ),
+                    )
+              : Container(),
+          Padding(
+            padding: const EdgeInsets.only(top: 4, bottom: 4),
+            child: Container(
+              height: 2,
+              color: themeProvider.currentTheme.shadowColor,
+            ),
+          )
+        ],
+      ),
+    );
+  }
+}
+
+class MessagePartFile extends StatefulWidget {
+  final String fileUrl;
+  final ThemeProvider themeProvider;
+
+  const MessagePartFile(
+      {super.key, required this.fileUrl, required this.themeProvider});
+
+  @override
+  State<MessagePartFile> createState() => _MessagePartFileState();
+}
+
+class _MessagePartFileState extends State<MessagePartFile> {
+  double progress = 0.00001;
+  bool receving = false;
+  bool fileInCache = false;
+
+  @override
+  void initState() {
+    findFileInCache(widget.fileUrl);
+    super.initState();
+  }
+
+  findFileInCache(String? fileUrl) async {
+    if (fileUrl != null) {
+      final isFinded = await FileController.doesFileExistInCache(fileUrl);
+      setState(() {
+        fileInCache = isFinded;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (Messages.isImageLink(widget.fileUrl)) {
+      return Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ImageViewScreen(
+                  fileSend: false,
+                  imageUrl: widget.fileUrl,
+                ),
+              ),
+            );
+          },
+          child: CachedNetworkImage(
+            imageUrl: widget.fileUrl,
+            placeholder: (context, url) => Center(
+                child: CircularProgressIndicator(
+              color: widget.themeProvider.currentTheme.shadowColor,
+            )),
+            errorWidget: (context, url, error) => const Icon(Icons.error),
+          ),
+        ),
+      );
+    } else {
+      if (!fileInCache) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8.0),
+          child: GestureDetector(
+            onTap: () async {
+              final downloader = FileController();
+              setState(() {
+                receving = true;
+              });
+              await downloader.downloadFile(widget.fileUrl,
+                  onProgress: (int receive, int total) {
+                setState(() {
+                  progress = receive / 1000000;
+                  print(progress);
+                });
+              });
+              setState(() {
+                receving = false;
+                findFileInCache(widget.fileUrl);
+              });
+            },
+            child: receving
+                ? Row(
+                    children: [
+                      SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: Center(
+                          child:
+                              Text('${progress.toString().substring(0, 4)}\nMB',
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 2,
+                                  textScaler: TextScaler.noScaling,
+                                  style: TextStyle(
+                                    color: widget.themeProvider.currentTheme
+                                        .primaryColor,
+                                    fontSize: 8,
+                                    fontFamily: 'Manrope',
+                                    fontWeight: FontWeight.w400,
+                                  )),
+                        ),
+                      ),
+                      const SizedBox(
+                        width: 8,
+                      ),
+                      Expanded(
+                        child: Text(Messages.extractFileName(widget.fileUrl),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            textScaler: TextScaler.noScaling,
+                            style: TextStyle(
+                              color: widget
+                                  .themeProvider.currentTheme.primaryColor,
+                              fontSize: 14,
+                              fontFamily: 'Manrope',
+                              fontWeight: FontWeight.w400,
+                            )),
+                      ),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      Image.asset('assets/images/icon_download.png',
+                          color: widget.themeProvider.currentTheme.shadowColor,
+                          height: 24,
+                          width: 24),
+                      const SizedBox(
+                        width: 8,
+                      ),
+                      Expanded(
+                        child: Text(Messages.extractFileName(widget.fileUrl),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            textScaler: TextScaler.noScaling,
+                            style: TextStyle(
+                              color: widget
+                                  .themeProvider.currentTheme.primaryColor,
+                              fontSize: 14,
+                              fontFamily: 'Manrope',
+                              fontWeight: FontWeight.w400,
+                            )),
+                      ),
+                    ],
+                  ),
+          ),
+        );
+      } else {
+        if (FileController.isAacFileName(widget.fileUrl)) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: Row(
+              children: [
+                AudioPlayerWidget(filePath: widget.fileUrl),
+                const SizedBox(
+                  width: 8,
+                ),
+                Expanded(
+                  child: Text(Messages.extractFileName(widget.fileUrl),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      textScaler: TextScaler.noScaling,
+                      style: TextStyle(
+                        color: widget.themeProvider.currentTheme.primaryColor,
+                        fontSize: 14,
+                        fontFamily: 'Manrope',
+                        fontWeight: FontWeight.w400,
+                      )),
+                ),
+              ],
+            ),
+          );
+        } else if (FileController.isVideoFileName(widget.fileUrl)) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => VideoPlayerPage(
+                      videoPath: widget.fileUrl,
+                      fileSend: false,
+                    ),
+                  ),
+                );
+              },
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.video_camera_back,
+                    color: widget.themeProvider.currentTheme.shadowColor,
+                  ),
+                  const SizedBox(
+                    width: 8,
+                  ),
+                  Expanded(
+                    child: Text(Messages.extractFileName(widget.fileUrl),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        textScaler: TextScaler.noScaling,
+                        style: TextStyle(
+                          color: widget.themeProvider.currentTheme.primaryColor,
+                          fontSize: 14,
+                          fontFamily: 'Manrope',
+                          fontWeight: FontWeight.w400,
+                        )),
+                  ),
+                ],
+              ),
+            ),
+          );
+        } else {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: GestureDetector(
+              onTap: () {
+                FileController.openFileFromCache(widget.fileUrl);
+                HapticFeedback.lightImpact();
+              },
+              child: Row(
+                children: [
+                  Image.asset('assets/images/icon_open.png',
+                      color: widget.themeProvider.currentTheme.shadowColor,
+                      height: 24,
+                      width: 24),
+                  const SizedBox(
+                    width: 8,
+                  ),
+                  Expanded(
+                    child: Text(Messages.extractFileName(widget.fileUrl),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        textScaler: TextScaler.noScaling,
+                        style: TextStyle(
+                          color: widget.themeProvider.currentTheme.primaryColor,
+                          fontSize: 14,
+                          fontFamily: 'Manrope',
+                          fontWeight: FontWeight.w400,
+                        )),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+      }
+    }
   }
 }

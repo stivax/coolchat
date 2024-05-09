@@ -1,4 +1,4 @@
-import 'package:coolchat/message_provider.dart';
+import 'package:coolchat/servises/message_provider.dart';
 
 class MessageProviderContainer {
   // Єдиний екземпляр класу

@@ -1,12 +1,13 @@
 import 'dart:async';
 
+import 'package:coolchat/app_localizations.dart';
 import 'package:coolchat/servises/account_setting_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import 'screen/common_chat.dart';
-import 'message_provider.dart';
+import 'servises/message_provider.dart';
 import 'server/server.dart';
 import 'theme_provider.dart';
 import 'account.dart';
@@ -97,7 +98,8 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
       }
     } else if (_formKey.currentState!.validate() && _selectedItems == '') {
       _showPopupErrorInput(
-          'It seems that you have not selected your room image', context);
+          AppLocalizations.of(context).translate('add_room_image_is_reqired'),
+          context);
     } else {
       FocusScope.of(context).requestFocus(_nameRoomFocus);
     }
@@ -164,7 +166,8 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
                             children: [
                               Center(
                                 child: Text(
-                                  'Add a new \nchat room',
+                                  AppLocalizations.of(context)
+                                      .translate('add_room_add'),
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color:
@@ -180,7 +183,8 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
                                 padding:
                                     const EdgeInsets.only(top: 15, bottom: 5),
                                 child: Text(
-                                  'Name of the chat room',
+                                  AppLocalizations.of(context)
+                                      .translate('add_room_name'),
                                   style: TextStyle(
                                     color: themeProvider
                                         .currentTheme.primaryColor
@@ -215,7 +219,8 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
                                   fontWeight: FontWeight.w400,
                                 ),
                                 decoration: InputDecoration(
-                                  helperText: 'Max 50 characters',
+                                  helperText: AppLocalizations.of(context)
+                                      .translate('add_room_max_length'),
                                   helperStyle: TextStyle(
                                     color: themeProvider
                                         .currentTheme.primaryColor
@@ -228,7 +233,8 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
                                           .currentTheme.primaryColor
                                           .withOpacity(0.5)),
                                   border: InputBorder.none,
-                                  hintText: 'Name room *',
+                                  hintText: AppLocalizations.of(context)
+                                      .translate('add_room_name_2'),
                                   hintStyle: TextStyle(
                                       color: themeProvider
                                           .currentTheme.primaryColor
@@ -319,8 +325,8 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
                 _saveDataAndClosePopup();
               },
               child: Text(
-                'Approve',
-                textScaleFactor: 1,
+                AppLocalizations.of(context).translate('add_room_approve'),
+                textScaler: TextScaler.noScaling,
                 style: TextStyle(
                   color: Color(0xFFF5FBFF),
                   fontSize: screenSize.height * 0.03,
@@ -433,9 +439,9 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
         r'^(?=[^ ])(?=[\S\s]*[^\s][\S\s]*[^\s])[\w\u0430-\u044F\u0410-\u042F\u0456\u0406\u0457\u0407\u0491\u0490\u0454\u0404\u04E7\u04E6 ()_]{3,}$');
     if (value!.isEmpty) {
       _nameRoomFocus.requestFocus();
-      return 'Name is reqired';
+      return AppLocalizations.of(context).translate('add_room_name_is_reqired');
     } else if (!nameExp.hasMatch(value)) {
-      return 'Please input correct Name\n(char, number and ()_)';
+      return AppLocalizations.of(context).translate('add_room_name_correct');
     } else {
       return null;
     }

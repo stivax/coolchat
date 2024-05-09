@@ -35,6 +35,7 @@
     "common_chats_add": "Add",
     "common_in_order": "In order to read new messages, be able to\nwrite and create your own rooms - REGISTER\nor LOG IN ",
     "common_look": "(look for this option in the menu)",
+    "common_reply": "Reply to",
     "chats_please_log_in_or_register": "Please log in or register...",
     "chats_write_message": "Write message...",
     "chats_loading": "Loading...",
@@ -88,7 +89,18 @@
     "avatar_send_private_message": "Send private message",
     "photo_from_camera": "Take photo from camera",
     "photo_upload": "Upload photo",
-    "file_upload": "Upload file"
+    "file_upload": "Upload file",
 
+    "message_edited": "Edited",
+    "add_room_add": "Add a new \nchat room",
+    "add_room_name": "Name of the chat room",
+    "add_room_max_length": "Max 50 characters",
+    "add_room_name_2": "Name room *",
+    "add_room_approve": "Approve",
+    "add_room_name_is_reqired": "Name is reqired",
+    "add_room_name_correct": "Please input correct Name\n(char, number and ()_)",
+    "add_room_image_is_reqired": "It seems that you have not selected your room image",
+    "error_size": "The file must not be larger than 5 mb",
+    "file_downloaded": "The file was downloaded to the folder"
 
   }

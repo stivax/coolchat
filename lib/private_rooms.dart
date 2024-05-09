@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-import 'message_provider.dart';
+import 'servises/message_provider.dart';
 import 'server/server.dart';
 import 'theme_provider.dart';
 import 'account.dart';

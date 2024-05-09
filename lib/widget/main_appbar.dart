@@ -5,8 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_beep/flutter_beep.dart';
 
-import 'menu.dart';
-import 'theme_provider.dart';
+import '../menu.dart';
+import '../theme_provider.dart';
 
 class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
   String? roomName;

@@ -8,7 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
-import 'theme_provider.dart';
+import '../theme_provider.dart';
 
 // ignore: must_be_immutable
 class MessagesPrivat extends StatelessWidget {

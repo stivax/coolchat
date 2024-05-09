@@ -644,13 +644,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
                                         ),
                                   TextButton(
                                     onPressed: () {
-                                      Navigator.pop(context);
-                                      showDialog(
-                                        context: context,
-                                        builder: (BuildContext context) {
-                                          return const LoginDialog();
-                                        },
-                                      );
+                                      Navigator.of(context).pop();
                                     },
                                     child: Text(
                                       AppLocalizations.of(context).translate(

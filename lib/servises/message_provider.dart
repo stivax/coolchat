@@ -48,16 +48,16 @@ class MessageProvider {
 
   void sendMessage(String message) {
     final messageForSend = message.trimRight();
-    print(messageForSend);
+    //print(messageForSend);
     if (messageForSend.isNotEmpty) {
       if (_isConnected) {
-        print('Sending message: $message');
+        //print('Sending message: $message');
         _socket.add(messageForSend);
       } else {
-        print('Not connected. Message not sent.');
+        //print('Not connected. Message not sent.');
       }
     } else {
-      print('Message empty');
+      //print('Message empty');
     }
   }
 

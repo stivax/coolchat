@@ -54,7 +54,7 @@ class Room extends StatelessWidget {
         scale: scale,
       );
     }).toList()
-      ..add(Room(
+        /*..add(Room(
         id: 999,
         name: 'Add room',
         image: const AssetImage('assets/images/add_room_dark.jpg'),
@@ -63,7 +63,8 @@ class Room extends StatelessWidget {
         createdAt: '',
         isFavorite: false,
         scale: scale,
-      ));
+      ))*/
+        ;
   }
 
   static List<String> fromJsonListToListString(List<dynamic> jsonList) {

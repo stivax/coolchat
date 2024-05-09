@@ -9,6 +9,7 @@ import 'package:coolchat/screen/setting.dart';
 import 'package:coolchat/servises/change_message_provider.dart';
 import 'package:coolchat/servises/locale_provider.dart';
 import 'package:coolchat/servises/send_file_provider.dart';
+import 'package:coolchat/servises/video_recorder_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -20,7 +21,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 import 'package:coolchat/animation_start.dart';
-import 'package:coolchat/message_provider.dart';
+import 'package:coolchat/servises/message_provider.dart';
 import 'package:coolchat/model/message_privat_push.dart';
 import 'package:coolchat/model/token.dart';
 import 'package:coolchat/screen/private_chat_list.dart';
@@ -37,7 +38,7 @@ import 'package:coolchat/servises/token_repository.dart';
 import 'account.dart';
 import 'bloc/token_blok.dart';
 import 'menu.dart';
-import 'my_appbar.dart';
+import 'widget/main_appbar.dart';
 import 'rooms.dart';
 import 'theme_provider.dart';
 import 'widget/tap_view.dart';
@@ -60,6 +61,8 @@ void main() {
             create: (context) => SendFileProvider()),
         ChangeNotifierProvider<ChangeMessageProvider>(
             create: (context) => ChangeMessageProvider()),
+        ChangeNotifierProvider<VideoRecorderProvider>(
+            create: (context) => VideoRecorderProvider()),
       ],
       child: RepositoryProvider(
           create: (context) => TokenRepository(), child: const StartScreen()),
@@ -245,7 +248,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   void timerCheckAndRefreshListenWebsocket() {
     _timerCheckAndRefreshListenWebsocket =
         Timer.periodic(const Duration(seconds: 30), (timer) {
-      print('timer ${timer.isActive.toString()}');
       if (_accountProvider.isLoginProvider) {
         print('is Login');
         print('isListeningNotofication $isListeningNotofication');
@@ -366,7 +368,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       },
     );
     Timer.periodic(const Duration(seconds: 5), (timer) {
-      print('ping');
       messageProvider!.sendMessage('ping');
     });
     //}

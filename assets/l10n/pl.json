@@ -35,6 +35,7 @@
   "common_chats_add": "Dodaj",
   "common_in_order": "Aby czytać nowe wiadomości, mieć\nmożliwość pisania i tworzenia własnych\npokoi - ZAREJESTRUJ SIĘ lub ZALOGUJ SIĘ ",
   "common_look": "(szukaj tej opcji w menu)",
+  "common_reply": "Odpowiedzieć",
   "chats_please_log_in_or_register": "Zaloguj się lub zarejestruj...",
   "chats_write_message": "Napisz wiadomość...",
   "chats_loading": "Ładowanie...",
@@ -88,5 +89,17 @@
     "avatar_send_private_message": "Wyślij prywatną wiadomość",
     "photo_from_camera": "Zdjęcie z kamery",
     "photo_upload": "Załaduj zdjęcie",
-    "file_upload": "Załaduj plik"
+    "file_upload": "Załaduj plik",
+
+    "message_edited": "Edytowane",
+    "add_room_add": "Dodaj nowy \npokój do rozmów",
+    "add_room_name": "Nazwa pokoju rozmów",
+    "add_room_max_length": "Maksymalnie 50 znaków",
+    "add_room_name_2": "Nazwa pokoju *",
+    "add_room_approve": "Zatwierdź",
+    "add_room_name_is_reqired": "Nazwa jest wymagana",
+    "add_room_name_correct": "Proszę podać poprawną nazwę\n(znaki, cyfry i ()_)",
+    "add_room_image_is_reqired": "Wygląda na to, że nie wybrałeś zdjęcia do pokoju",
+    "error_size": "Plik nie może być większy niż 5 mb",
+    "file_downloaded": "Plik został pobrany do folderu"
   }

@@ -363,7 +363,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                   PopupMenuItem<String>(
                     value: 'item8',
                     child: Text(
-                      '${AppLocalizations.of(context).translate('burger_menu_version')} v1.0.15',
+                      '${AppLocalizations.of(context).translate('burger_menu_version')} v1.0.19',
                       textScaler: TextScaler.noScaling,
                       style: TextStyle(
                         color: themeProvider.currentTheme.primaryColor

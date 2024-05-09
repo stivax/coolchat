@@ -18,12 +18,12 @@ if (flutterRoot == null) {
 
 def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
 if (flutterVersionCode == null) {
-    flutterVersionCode = '15'
+    flutterVersionCode = '19'
 }
 
 def flutterVersionName = localProperties.getProperty('flutter.versionName')
 if (flutterVersionName == null) {
-    flutterVersionName = '1.0.15'
+    flutterVersionName = '1.0.19'
 }
 
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
@@ -47,11 +47,11 @@ android {
 
     defaultConfig {
         applicationId "com.stivax.coolchat"
-        minSdkVersion flutter.minSdkVersion
+        minSdkVersion 21 //flutter.minSdkVersion
         targetSdkVersion flutter.targetSdkVersion
         multiDexEnabled true
-        versionCode 15
-        versionName "1.0.15"
+        versionCode 19
+        versionName "1.0.19"
     }
 
     signingConfigs {

@@ -14,9 +14,9 @@ import 'package:marquee/marquee.dart';
 import 'package:provider/provider.dart';
 
 import '../menu.dart';
-import '../message_provider.dart';
-import '../messages_privat.dart';
-import '../my_appbar.dart';
+import '../servises/message_provider.dart';
+import '../model/messages_privat.dart';
+import '../widget/main_appbar.dart';
 import '../theme_provider.dart';
 
 class MessagePrivatData {

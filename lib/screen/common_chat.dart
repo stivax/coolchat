@@ -5,19 +5,25 @@ import 'dart:convert';
 import 'package:beholder_flutter/beholder_flutter.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:coolchat/app_localizations.dart';
+import 'package:coolchat/widget/chat_appbar.dart';
 import 'package:coolchat/model/messages_list.dart';
+import 'package:coolchat/screen/image_view_screen.dart';
 import 'package:coolchat/servises/account_provider.dart';
+import 'package:coolchat/servises/audio_player.dart';
 import 'package:coolchat/servises/change_message_provider.dart';
+import 'package:coolchat/servises/custom_stopwatch.dart';
 import 'package:coolchat/servises/file_controller.dart';
 import 'package:coolchat/servises/reply_provider.dart';
 import 'package:coolchat/servises/send_file_provider.dart';
+import 'package:coolchat/servises/video_recorder.dart';
+import 'package:coolchat/servises/video_recorder_provider.dart';
+import 'package:coolchat/servises/voice_recorder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marquee/marquee.dart';
 import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
-import 'package:photo_view/photo_view.dart';
 
 import 'package:coolchat/bloc/token_blok.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
@@ -31,9 +37,8 @@ import '../bloc/token_state.dart';
 import '../login_popup.dart';
 import '../members.dart';
 import '../menu.dart';
-import '../message_provider.dart';
-import '../messages.dart';
-import '../my_appbar.dart';
+import '../servises/message_provider.dart';
+import '../model/messages.dart';
 import '../theme_provider.dart';
 
 class MessageData {
@@ -104,22 +109,20 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   void messageListen() async {
-    print('messageListen');
     if (providerInScreen !=
         MessageProviderContainer.instance.getProvider(widget.topicName)!) {
       providerInScreen =
           MessageProviderContainer.instance.getProvider(widget.topicName)!;
       await _messageSubscription?.cancel();
-      print('listen begin');
+      //print('listen begin');
       clearMessages();
       _messageSubscription = providerInScreen!.messagesStream.listen(
         (event) async {
-          //print(event);
           if (event.toString().startsWith('{"created_at"')) {
             formMessage(event.toString());
           } else if (event.toString().startsWith('{"type":"active_users"')) {
             formMembersList(event.toString());
-          } else if (event.toString().startsWith('{"message":"Vote posted')) {
+          } else if (event.toString().startsWith('{"message":')) {
             clearMessages();
           } else if (event.toString().startsWith('{"type":')) {
             showWriting(event.toString());
@@ -182,7 +185,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       ],
       child: BlocBuilder<TokenBloc, TokenState>(
         builder: (context, state) {
-          print(state.toString());
           if (state is TokenEmptyState) {
             return CommonChatScreen(
               state: 'empty',
@@ -273,6 +275,7 @@ class _CommonChatScreenState extends State<CommonChatScreen>
   late List<Messages> messageData;
   late SendFileProvider showFileSend;
   late ChangeMessageProvider changer;
+  late VideoRecorderProvider videoRecorderProvider;
   BuildContext? _buildContext;
 
   @override
@@ -284,6 +287,9 @@ class _CommonChatScreenState extends State<CommonChatScreen>
     showFileSend.addListener(_onShowFileSend);
     changer = Provider.of<ChangeMessageProvider>(context, listen: false);
     changer.addListener(_onChangeMessage);
+    videoRecorderProvider =
+        Provider.of<VideoRecorderProvider>(context, listen: false);
+    videoRecorderProvider.addListener(_onVideoRecorder);
     final TokenBloc tokenBloc = context.read<TokenBloc>();
     if (widget.account.email.isNotEmpty) {
       tokenBloc.add(TokenLoadEvent(roomName: widget.topicName, type: 'ws'));
@@ -297,10 +303,12 @@ class _CommonChatScreenState extends State<CommonChatScreen>
   void dispose() {
     showFileSend.removeListener(_onShowFileSend);
     changer.removeListener(_onChangeMessage);
+    changer.clearChangeMessage();
+    videoRecorderProvider.removeListener(_onVideoRecorder);
     if (widget.messageProvider != null) {
       widget.messageProvider!.dispose();
       WidgetsBinding.instance.removeObserver(this);
-      print('dispose in screen');
+      //print('dispose in screen');
     }
     super.dispose();
   }
@@ -327,6 +335,10 @@ class _CommonChatScreenState extends State<CommonChatScreen>
     setState(() {});
   }
 
+  void _onVideoRecorder() {
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     _buildContext = context;
@@ -338,75 +350,81 @@ class _CommonChatScreenState extends State<CommonChatScreen>
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return Scaffold(
-          appBar: MyAppBar(
+          appBar: ChatAppBar(
             roomName: widget.topicName,
           ),
           body: Container(
             alignment: Alignment.bottomCenter,
             height: screenHeight,
             padding:
-                const EdgeInsets.only(left: 16, right: 16, top: 0, bottom: 16),
+                const EdgeInsets.only(left: 0, right: 0, top: 0, bottom: 0),
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
                 color: themeProvider.currentTheme.primaryColorDark),
-            child: SingleChildScrollView(
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                        height: 27,
-                        child: TopicName(topicName: widget.topicName)),
-                    SizedBox(
-                        height: 140,
-                        child: ChatMembers(
-                            key: chatMembersStateKey,
-                            topicName: widget.topicName,
-                            server: widget.server,
-                            updateState: () {
-                              setState(() {});
-                            })),
-                    SizedBox(
-                      height: showFileSend.readyToSend
-                          ? (screenHeight - 300) * 1
-                          : (screenHeight - 250) * 1,
-                      child: BlockMessages(
-                        key: blockMessageStateKey,
-                        checkContext: context,
-                        state: widget.state,
-                        messageData: widget.messageData,
-                        updateState: () {
-                          setState(() {});
-                        },
-                        hasMessage: widget.hasMessage,
-                        roomName: widget.topicName,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      //SizedBox(
+                      //    height: 27,
+                      //    child: TopicName(topicName: widget.topicName)),
+                      /*SizedBox(
+                          height: 140,
+                          child: ChatMembers(
+                              key: chatMembersStateKey,
+                              topicName: widget.topicName,
+                              server: widget.server,
+                              updateState: () {
+                                setState(() {});
+                              })),*/
+                      Expanded(
+                        child: BlockMessages(
+                          key: blockMessageStateKey,
+                          checkContext: context,
+                          state: widget.state,
+                          messageData: widget.messageData,
+                          updateState: () {
+                            setState(() {});
+                          },
+                          hasMessage: widget.hasMessage,
+                          roomName: widget.topicName,
+                        ),
                       ),
-                    ),
-                    showFileSend.readyToSend
-                        ? SizedBox(
-                            height: 50,
-                            child: FileSend(
-                              roomName: widget.topicName,
-                              messageProvider: widget.messageProvider,
-                            ),
-                          )
-                        : Container(),
-                    showFileSend.addComent
-                        ? AddComentToFile(
-                            state: widget.state,
-                            contextScreen: widget.contextScreen)
-                        : changer.readyToChangeMessage
-                            ? ChangeMessage(
-                                state: widget.state,
-                                contextScreen: widget.contextScreen)
-                            : TextAndSend(
-                                state: widget.state,
-                                topicName: widget.topicName,
-                                server: widget.server,
+                      showFileSend.readyToSend
+                          ? SizedBox(
+                              //height: 58,
+                              child: FileSend(
+                                roomName: widget.topicName,
                                 messageProvider: widget.messageProvider,
-                                account: widget.account,
-                                contextScreen: widget.contextScreen,
                               ),
-                  ]),
+                            )
+                          : Container(),
+                      showFileSend.addComent
+                          ? AddComentToFile(
+                              state: widget.state,
+                              contextScreen: widget.contextScreen)
+                          : changer.readyToChangeMessage
+                              ? ChangeMessage(
+                                  state: widget.state,
+                                  contextScreen: widget.contextScreen)
+                              : TextAndSend(
+                                  state: widget.state,
+                                  topicName: widget.topicName,
+                                  server: widget.server,
+                                  messageProvider: widget.messageProvider,
+                                  account: widget.account,
+                                  contextScreen: widget.contextScreen,
+                                ),
+                    ]),
+                videoRecorderProvider.isRecording
+                    ? VideoRecorder(
+                        cameras: videoRecorderProvider.cameras,
+                        controller: videoRecorderProvider.controller!,
+                        videoController: videoRecorderProvider.videoController)
+                    : Container(),
+              ],
             ),
           ),
         );
@@ -683,8 +701,9 @@ class _BlockMessagesState extends State<BlockMessages> {
   @override
   void dispose() {
     controller.dispose();
-    //isReplying.afterReplyToMessage();
+    isReplying.afterReplyToMessage();
     isReplying.removeListener(_onReplying);
+    //isReplying.dispose();
     super.dispose();
   }
 
@@ -693,9 +712,9 @@ class _BlockMessagesState extends State<BlockMessages> {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return Padding(
-            padding: const EdgeInsets.only(top: 8, bottom: 8),
+            padding: const EdgeInsets.only(top: 0, bottom: 0),
             child: Container(
-              decoration: ShapeDecoration(
+              /*decoration: ShapeDecoration(
                 color: themeProvider.currentTheme.primaryColorDark,
                 shape: RoundedRectangleBorder(
                   side: BorderSide(
@@ -711,7 +730,7 @@ class _BlockMessagesState extends State<BlockMessages> {
                     spreadRadius: 0,
                   )
                 ],
-              ),
+              ),*/
               child: Stack(
                 alignment: Alignment.bottomRight,
                 children: [
@@ -769,7 +788,6 @@ class _BlockMessagesState extends State<BlockMessages> {
                       final position =
                           itemPositionsListener.itemPositions.value;
                       if (position.isNotEmpty) {
-                        print('position $lastIndex alg $lastOffset');
                         if (position.first.index > 10 &&
                             !watch(scrollChatController.showArrow)) {
                           scrollChatController.clearNewMessagess();
@@ -878,7 +896,7 @@ class _BlockMessagesState extends State<BlockMessages> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  'Reply to ${isReplying.nameRecevierMessage}',
+                                  '${AppLocalizations.of(context).translate('common_reply')} ${isReplying.nameRecevierMessage}',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
@@ -933,27 +951,31 @@ class _BlockMessagesState extends State<BlockMessages> {
                                                 Icon(
                                                   Icons.file_copy,
                                                   color: themeProvider
-                                                      .currentTheme
-                                                      .primaryColor,
+                                                      .currentTheme.shadowColor,
                                                   size: 24,
                                                 ),
-                                                Text(
-                                                    Messages.extractFileName(
-                                                        isReplying.fileUrl!),
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                    maxLines: 1,
-                                                    textScaler:
-                                                        TextScaler.noScaling,
-                                                    style: TextStyle(
-                                                      color: themeProvider
-                                                          .currentTheme
-                                                          .primaryColor,
-                                                      fontSize: 14,
-                                                      fontFamily: 'Manrope',
-                                                      fontWeight:
-                                                          FontWeight.w400,
-                                                    )),
+                                                const SizedBox(
+                                                  width: 8,
+                                                ),
+                                                Expanded(
+                                                  child: Text(
+                                                      Messages.extractFileName(
+                                                          isReplying.fileUrl!),
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      maxLines: 1,
+                                                      textScaler:
+                                                          TextScaler.noScaling,
+                                                      style: TextStyle(
+                                                        color: themeProvider
+                                                            .currentTheme
+                                                            .primaryColor,
+                                                        fontSize: 14,
+                                                        fontFamily: 'Manrope',
+                                                        fontWeight:
+                                                            FontWeight.w400,
+                                                      )),
+                                                ),
                                               ],
                                             ))
                               ],
@@ -1179,193 +1201,200 @@ class _FileSendState extends State<FileSend> {
 
   @override
   Widget build(BuildContext context) {
-    print('file in ${sendFile.file!.path}');
     return Consumer<ThemeProvider>(builder: (context, themeProvider, child) {
-      return Container(
-          padding: const EdgeInsets.only(right: 0, left: 0),
-          decoration: ShapeDecoration(
-            color: themeProvider.currentTheme.primaryColorDark,
-            shape: RoundedRectangleBorder(
-              side: BorderSide(
-                  width: 0.50, color: themeProvider.currentTheme.shadowColor),
+      return Padding(
+        padding: const EdgeInsets.only(top: 8, bottom: 0, left: 8, right: 8),
+        child: Container(
+            padding:
+                const EdgeInsets.only(right: 0, left: 0, top: 0, bottom: 0),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [
+                  themeProvider.currentTheme.shadowColor.withOpacity(0.4),
+                  themeProvider.currentTheme.shadowColor.withOpacity(0.1)
+                ],
+              ),
               borderRadius: BorderRadius.circular(10),
             ),
-            shadows: [
-              BoxShadow(
-                color: themeProvider.currentTheme.cardColor,
-                blurRadius: 8,
-                offset: const Offset(2, 2),
-                spreadRadius: 0,
-              ),
-            ],
-          ),
-          child: Stack(
-            children: [
-              Container(
-                width: (MediaQuery.of(context).size.width - 32) * progress,
-                decoration: ShapeDecoration(
-                  color:
-                      themeProvider.currentTheme.shadowColor.withOpacity(0.2),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
-              MediaQuery(
-                  data: MediaQuery.of(context)
-                      .copyWith(textScaler: TextScaler.noScaling),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const SizedBox(
-                        width: 8,
-                      ),
-                      FileController.isImageFileName(
-                              sendFile.file!.path.split('/').last)
-                          ? InkWell(
-                              onTap: () {
-                                showDialog(
-                                  context: context,
-                                  barrierColor: Colors.transparent,
-                                  builder: (context) => Dialog(
-                                    backgroundColor: Colors.transparent,
-                                    insetPadding: EdgeInsets.zero,
-                                    child: PhotoView(
-                                      imageProvider: FileImage(sendFile.file!),
-                                      backgroundDecoration: const BoxDecoration(
-                                        color: Colors.transparent,
-                                      ),
-                                      //minScale:
-                                      //    PhotoViewComputedScale.contained * 0.8,
-                                      //maxScale:
-                                      //    PhotoViewComputedScale.covered * 2,
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: FileController.isImageFileName(
-                                      sendFile.file!.path.split('/').last)
-                                  ? Image.file(sendFile.file!,
-                                      width: 32, height: 32)
-                                  : Icon(
-                                      Icons.file_copy,
-                                      color: themeProvider
-                                          .currentTheme.primaryColor,
-                                      size: 32,
-                                    ),
-                            )
-                          : Icon(
-                              Icons.file_copy,
-                              color: themeProvider.currentTheme.primaryColor,
-                              size: 32,
-                            ),
-                      const SizedBox(
-                        width: 8,
-                      ),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(sendFile.file!.path.split('/').last,
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                                style: TextStyle(
-                                  color:
-                                      themeProvider.currentTheme.primaryColor,
-                                  fontSize: 14,
-                                  fontFamily: 'Manrope',
-                                  fontWeight: FontWeight.w400,
-                                )),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                    '${(sendFile.file!.statSync().size / 1000000).toStringAsFixed(3)} MB',
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
-                                    style: TextStyle(
-                                      color: themeProvider
-                                          .currentTheme.primaryColor,
-                                      fontSize: 14,
-                                      fontFamily: 'Manrope',
-                                      fontWeight: FontWeight.w400,
-                                    )),
-                                const SizedBox(
-                                  width: 8,
-                                ),
-                                Expanded(
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      sendFile.startAddComent();
-                                    },
-                                    child: Text(
-                                        sendFile.coment == null
-                                            ? AppLocalizations.of(context)
-                                                .translate(
-                                                    'common_chats_add_comment')
-                                            : sendFile.coment!,
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                        style: TextStyle(
-                                          color: themeProvider
-                                              .currentTheme.shadowColor,
-                                          fontSize: 14,
-                                          fontFamily: 'Manrope',
-                                          fontWeight: FontWeight.w400,
-                                        )),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+            child: Stack(
+              alignment: Alignment.bottomLeft,
+              children: [
+                MediaQuery(
+                    data: MediaQuery.of(context)
+                        .copyWith(textScaler: TextScaler.noScaling),
+                    child: Column(
+                      children: [
+                        const SizedBox(
+                          height: 4,
                         ),
-                      ),
-                      sending
-                          ? Container(
-                              height: 24,
-                              width: 24,
-                              child: CircularProgressIndicator(
-                                color: themeProvider.currentTheme.shadowColor,
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const SizedBox(
+                              width: 8,
+                            ),
+                            FileController.isImageFileName(
+                                    sendFile.file!.path.split('/').last)
+                                ? InkWell(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => ImageViewScreen(
+                                            fileSend: true,
+                                            imageUrl: sendFile.file!.path,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: FileController.isImageFileName(
+                                            sendFile.file!.path.split('/').last)
+                                        ? Image.file(sendFile.file!,
+                                            width: 32, height: 32)
+                                        : Icon(
+                                            Icons.file_copy,
+                                            color: themeProvider
+                                                .currentTheme.primaryColor,
+                                            size: 32,
+                                          ),
+                                  )
+                                : FileController.isAacFileName(
+                                        sendFile.file!.path)
+                                    ? AudioPlayerWidget(
+                                        filePath: sendFile.file!.path)
+                                    : Icon(
+                                        Icons.file_copy,
+                                        color: themeProvider
+                                            .currentTheme.primaryColor,
+                                        size: 32,
+                                      ),
+                            const SizedBox(
+                              width: 8,
+                            ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(sendFile.file!.path.split('/').last,
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                      style: TextStyle(
+                                        color: themeProvider
+                                            .currentTheme.primaryColor,
+                                        fontSize: 14,
+                                        fontFamily: 'Manrope',
+                                        fontWeight: FontWeight.w400,
+                                      )),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                          '${(sendFile.file!.statSync().size / 1000000).toStringAsFixed(3)} MB',
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
+                                          style: TextStyle(
+                                            color: themeProvider
+                                                .currentTheme.primaryColor,
+                                            fontSize: 14,
+                                            fontFamily: 'Manrope',
+                                            fontWeight: FontWeight.w400,
+                                          )),
+                                      const SizedBox(
+                                        width: 8,
+                                      ),
+                                      Expanded(
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            sendFile.startAddComent();
+                                          },
+                                          child: Text(
+                                              sendFile.coment == null
+                                                  ? AppLocalizations.of(context)
+                                                      .translate(
+                                                          'common_chats_add_comment')
+                                                  : sendFile.coment!,
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 1,
+                                              style: TextStyle(
+                                                color: themeProvider
+                                                    .currentTheme.shadowColor,
+                                                fontSize: 14,
+                                                fontFamily: 'Manrope',
+                                                fontWeight: FontWeight.w400,
+                                              )),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
-                            )
-                          : SizedBox(
+                            ),
+                            sending
+                                ? Container(
+                                    height: 24,
+                                    width: 24,
+                                    child: CircularProgressIndicator(
+                                      color: themeProvider
+                                          .currentTheme.shadowColor,
+                                    ),
+                                  )
+                                : SizedBox(
+                                    height: 32,
+                                    width: 32,
+                                    child: IconButton(
+                                      onPressed: () {
+                                        _sendMessage();
+                                      },
+                                      padding: EdgeInsets.zero,
+                                      splashRadius: 1,
+                                      icon: Icon(
+                                        Icons.send,
+                                        color: themeProvider
+                                            .currentTheme.shadowColor,
+                                      ),
+                                    ),
+                                  ),
+                            SizedBox(
                               height: 32,
                               width: 32,
                               child: IconButton(
                                 onPressed: () {
-                                  _sendMessage();
+                                  sendFile.clearFileFromSend();
+                                  sendFile.endAddComent();
                                 },
                                 padding: EdgeInsets.zero,
-                                splashRadius: 1,
                                 icon: Icon(
-                                  Icons.send,
+                                  Icons.close,
                                   color: themeProvider.currentTheme.shadowColor,
                                 ),
                               ),
                             ),
-                      SizedBox(
-                        height: 32,
-                        width: 32,
-                        child: IconButton(
-                          onPressed: () {
-                            sendFile.clearFileFromSend();
-                            sendFile.endAddComent();
-                          },
-                          padding: EdgeInsets.zero,
-                          icon: Icon(
-                            Icons.close,
-                            color: themeProvider.currentTheme.shadowColor,
-                          ),
+                            const SizedBox(
+                              width: 8,
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(
-                        width: 8,
-                      ),
-                    ],
-                  )),
-            ],
-          ));
+                        const SizedBox(
+                          height: 4,
+                        ),
+                      ],
+                    )),
+                Container(
+                  width: (MediaQuery.of(context).size.width - 16) * progress,
+                  height: 2,
+                  decoration: ShapeDecoration(
+                    color: themeProvider.currentTheme.shadowColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ],
+            )),
+      );
     });
   }
 }
@@ -1395,14 +1424,28 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
   var token = {};
   final _textFieldFocusNode = FocusNode();
   bool isWriting = false;
+  bool recording = false;
   late ReplyProvider isReplying;
   late AccountProvider _accountProvider;
+  final CustomStopwatch _stopwatch = CustomStopwatch();
+  String _displayTime = "00:00.00";
+  final recorder = VoiceRecorder();
+  String? voiceFilePath;
+  late VideoRecorderProvider videoRecorderProvider;
+  bool sendVideoIcon = true;
 
   @override
   void initState() {
     super.initState();
     isReplying = Provider.of<ReplyProvider>(context, listen: false);
     _accountProvider = Provider.of<AccountProvider>(context, listen: false);
+    videoRecorderProvider =
+        Provider.of<VideoRecorderProvider>(context, listen: false);
+    _stopwatch.tickStream.listen((time) {
+      setState(() {
+        _displayTime = time;
+      });
+    });
   }
 
   @override
@@ -1448,16 +1491,29 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return Padding(
-          padding: const EdgeInsets.only(top: 8),
+          padding: const EdgeInsets.only(top: 8, bottom: 8),
           child: Row(
-            mainAxisSize: MainAxisSize.max,
-            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              const SizedBox(width: 8),
               Expanded(
-                flex: 4,
+                flex: 8,
                 child: Container(
-                  padding: const EdgeInsets.only(right: 8, left: 8),
-                  decoration: ShapeDecoration(
+                  padding: const EdgeInsets.only(
+                      right: 8, left: 8, top: 0, bottom: 0),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        themeProvider.currentTheme.shadowColor.withOpacity(0.4),
+                        themeProvider.currentTheme.shadowColor.withOpacity(0.1)
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  /*decoration: ShapeDecoration(
                     color: themeProvider.currentTheme.primaryColorDark,
                     shape: RoundedRectangleBorder(
                       side: BorderSide(
@@ -1473,7 +1529,7 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
                         spreadRadius: 0,
                       ),
                     ],
-                  ),
+                  ),*/
                   child: MediaQuery(
                     data: MediaQuery.of(context)
                         .copyWith(textScaler: TextScaler.noScaling),
@@ -1496,8 +1552,10 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
                             ? AppLocalizations.of(context)
                                 .translate('chats_please_log_in_or_register')
                             : widget.state == 'loaded'
-                                ? AppLocalizations.of(context)
-                                    .translate('chats_write_message')
+                                ? recording
+                                    ? _displayTime
+                                    : AppLocalizations.of(context)
+                                        .translate('chats_write_message')
                                 : AppLocalizations.of(context)
                                     .translate('chats_loading'),
                         hintStyle: TextStyle(
@@ -1508,17 +1566,105 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
                           fontWeight: FontWeight.w400,
                         ),
                         border: InputBorder.none,
-                        suffixIcon: GestureDetector(
-                          onTapDown: (details) async {
-                            if (_accountProvider.isLoginProvider) {
-                              FileController.showPopupMenu(widget.contextScreen,
-                                  themeProvider, details.globalPosition);
-                            }
-                          },
-                          child: Icon(
-                            Icons.attach_file,
-                            color: themeProvider.currentTheme.primaryColor,
-                          ),
+                        suffixIcon: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            GestureDetector(
+                              onTapDown: (details) async {
+                                if (_accountProvider.isLoginProvider) {
+                                  FileController.showPopupMenu(
+                                      widget.contextScreen,
+                                      themeProvider,
+                                      details.globalPosition);
+                                }
+                              },
+                              child: Icon(
+                                Icons.attach_file,
+                                color: themeProvider.currentTheme.primaryColor,
+                              ),
+                            ),
+                            sendVideoIcon
+                                ? GestureDetector(
+                                    onTap: () {
+                                      HapticFeedback.lightImpact();
+                                      setState(() {
+                                        sendVideoIcon = !sendVideoIcon;
+                                      });
+                                    },
+                                    onLongPress: () async {
+                                      _stopwatch.start();
+                                      if (_accountProvider.isLoginProvider) {
+                                        await recorder.init();
+                                        if (recorder.isRecorderInitialized) {
+                                          final filePath =
+                                              await recorder.startRecording();
+                                          setState(() {
+                                            recording = true;
+                                            voiceFilePath = filePath;
+                                          });
+                                        }
+                                      }
+                                    },
+                                    onLongPressUp: () async {
+                                      if (_accountProvider.isLoginProvider) {
+                                        await recorder.stopRecording(
+                                            context, voiceFilePath!);
+                                        setState(() {
+                                          recording = false;
+                                        });
+                                        _stopwatch.stop();
+                                        _stopwatch.reset();
+                                      }
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(
+                                          right: 6, left: 6),
+                                      child: Icon(
+                                        Icons.mic,
+                                        color: themeProvider
+                                            .currentTheme.primaryColor,
+                                      ),
+                                    ),
+                                  )
+                                : GestureDetector(
+                                    onTap: () {
+                                      HapticFeedback.lightImpact();
+                                      setState(() {
+                                        sendVideoIcon = !sendVideoIcon;
+                                      });
+                                    },
+                                    onLongPress: () async {
+                                      _stopwatch.start();
+                                      if (_accountProvider.isLoginProvider) {
+                                        await videoRecorderProvider
+                                            .startRecording();
+                                        setState(() {
+                                          recording = true;
+                                        });
+                                      }
+                                    },
+                                    onLongPressUp: () async {
+                                      if (_accountProvider.isLoginProvider) {
+                                        await videoRecorderProvider
+                                            .stopRecording(context);
+                                        setState(() {
+                                          recording = false;
+                                        });
+                                        _stopwatch.stop();
+                                        _stopwatch.reset();
+                                      }
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(
+                                          right: 6, left: 6),
+                                      child: Icon(
+                                        Icons.camera,
+                                        color: themeProvider
+                                            .currentTheme.primaryColor,
+                                      ),
+                                    ),
+                                  ),
+                          ],
                         ),
                       ),
                       maxLines: null,
@@ -1572,41 +1718,17 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
                     }
                   },
                   child: Container(
-                    padding: const EdgeInsets.only(top: 16, bottom: 16),
-                    alignment: Alignment.center,
-                    decoration: ShapeDecoration(
-                      color: themeProvider.currentTheme.shadowColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      shadows: [
-                        BoxShadow(
-                          color: themeProvider.currentTheme.cardColor,
-                          blurRadius: 8,
-                          offset: const Offset(2, 2),
-                          spreadRadius: 0,
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.send,
-                      color: Color(0xFFF5FBFF),
-                    ),
-                    /*Text(
-                      AppLocalizations.of(context)
-                          .translate('common_chats_send'),
-                      textScaler: TextScaler.noScaling,
-                      style: const TextStyle(
-                        color: Color(0xFFF5FBFF),
-                        fontSize: 16,
-                        fontFamily: 'Manrope',
-                        fontWeight: FontWeight.w500,
-                        height: 1.24,
-                      ),
-                    ),*/
-                  ),
+                      padding: const EdgeInsets.only(top: 0, bottom: 0),
+                      alignment: Alignment.center,
+                      child: Image.asset(
+                        'assets/images/send_dark.png',
+                        alignment: Alignment.center,
+                        width: 40,
+                        height: 40,
+                      )),
                 ),
               ),
+              const SizedBox(width: 8),
             ],
           ),
         );
@@ -1657,32 +1779,27 @@ class _AddComentToFileState extends State<AddComentToFile>
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return Padding(
-          padding: const EdgeInsets.only(top: 8),
+          padding: const EdgeInsets.only(top: 8, bottom: 8),
           child: Row(
-            mainAxisSize: MainAxisSize.max,
-            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              const SizedBox(width: 8),
               Expanded(
-                flex: 4,
+                flex: 8,
                 child: Container(
-                  padding: const EdgeInsets.only(right: 8, left: 8),
-                  decoration: ShapeDecoration(
-                    color:
-                        themeProvider.currentTheme.shadowColor.withOpacity(0.3),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                          width: 0.50,
-                          color: themeProvider.currentTheme.shadowColor),
-                      borderRadius: BorderRadius.circular(10),
+                  padding: const EdgeInsets.only(
+                      right: 8, left: 8, top: 0, bottom: 0),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        themeProvider.currentTheme.shadowColor.withOpacity(0.4),
+                        themeProvider.currentTheme.shadowColor.withOpacity(0.1)
+                      ],
                     ),
-                    shadows: [
-                      BoxShadow(
-                        color: themeProvider.currentTheme.cardColor,
-                        blurRadius: 8,
-                        offset: const Offset(2, 2),
-                        spreadRadius: 0,
-                      ),
-                    ],
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: MediaQuery(
                     data: MediaQuery.of(context)
@@ -1741,37 +1858,17 @@ class _AddComentToFileState extends State<AddComentToFile>
                     sendFile.endAddComent();
                   },
                   child: Container(
-                    padding: const EdgeInsets.only(top: 16, bottom: 16),
-                    alignment: Alignment.center,
-                    decoration: ShapeDecoration(
-                      color: themeProvider.currentTheme.shadowColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      shadows: [
-                        BoxShadow(
-                          color: themeProvider.currentTheme.cardColor,
-                          blurRadius: 8,
-                          offset: const Offset(2, 2),
-                          spreadRadius: 0,
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      AppLocalizations.of(context)
-                          .translate('common_chats_add'),
-                      textScaler: TextScaler.noScaling,
-                      style: const TextStyle(
-                        color: Color(0xFFF5FBFF),
-                        fontSize: 16,
-                        fontFamily: 'Manrope',
-                        fontWeight: FontWeight.w500,
-                        height: 1.24,
-                      ),
-                    ),
-                  ),
+                      padding: const EdgeInsets.only(top: 0, bottom: 0),
+                      alignment: Alignment.center,
+                      child: Image.asset(
+                        'assets/images/send_dark.png',
+                        alignment: Alignment.center,
+                        width: 40,
+                        height: 40,
+                      )),
                 ),
               ),
+              const SizedBox(width: 8),
             ],
           ),
         );
@@ -1820,32 +1917,27 @@ class _ChangeMessageState extends State<ChangeMessage>
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return Padding(
-          padding: const EdgeInsets.only(top: 8),
+          padding: const EdgeInsets.only(top: 8, bottom: 8),
           child: Row(
-            mainAxisSize: MainAxisSize.max,
-            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              const SizedBox(width: 8),
               Expanded(
-                flex: 4,
+                flex: 8,
                 child: Container(
-                  padding: const EdgeInsets.only(right: 8, left: 8),
-                  decoration: ShapeDecoration(
-                    color:
-                        themeProvider.currentTheme.shadowColor.withOpacity(0.1),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                          width: 0.50,
-                          color: themeProvider.currentTheme.shadowColor),
-                      borderRadius: BorderRadius.circular(10),
+                  padding: const EdgeInsets.only(
+                      right: 8, left: 8, top: 0, bottom: 0),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        themeProvider.currentTheme.shadowColor.withOpacity(0.4),
+                        themeProvider.currentTheme.shadowColor.withOpacity(0.1)
+                      ],
                     ),
-                    shadows: [
-                      BoxShadow(
-                        color: themeProvider.currentTheme.cardColor,
-                        blurRadius: 8,
-                        offset: const Offset(2, 2),
-                        spreadRadius: 0,
-                      ),
-                    ],
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: MediaQuery(
                     data: MediaQuery.of(context)
@@ -1866,7 +1958,7 @@ class _ChangeMessageState extends State<ChangeMessage>
                         contentPadding:
                             const EdgeInsets.symmetric(vertical: 14),
                         hintText: AppLocalizations.of(context)
-                            .translate('chats_write_message'),
+                            .translate('chats_add_coment_to_file'),
                         hintStyle: TextStyle(
                           color: themeProvider.currentTheme.primaryColor
                               .withOpacity(0.5),
@@ -1904,37 +1996,17 @@ class _ChangeMessageState extends State<ChangeMessage>
                     HapticFeedback.lightImpact();
                   },
                   child: Container(
-                    padding: const EdgeInsets.only(top: 16, bottom: 16),
-                    alignment: Alignment.center,
-                    decoration: ShapeDecoration(
-                      color: themeProvider.currentTheme.shadowColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      shadows: [
-                        BoxShadow(
-                          color: themeProvider.currentTheme.cardColor,
-                          blurRadius: 8,
-                          offset: const Offset(2, 2),
-                          spreadRadius: 0,
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      AppLocalizations.of(context)
-                          .translate('common_chats_edit'),
-                      textScaler: TextScaler.noScaling,
-                      style: const TextStyle(
-                        color: Color(0xFFF5FBFF),
-                        fontSize: 16,
-                        fontFamily: 'Manrope',
-                        fontWeight: FontWeight.w500,
-                        height: 1.24,
-                      ),
-                    ),
-                  ),
+                      padding: const EdgeInsets.only(top: 0, bottom: 0),
+                      alignment: Alignment.center,
+                      child: Image.asset(
+                        'assets/images/send_dark.png',
+                        alignment: Alignment.center,
+                        width: 40,
+                        height: 40,
+                      )),
                 ),
               ),
+              const SizedBox(width: 8),
             ],
           ),
         );

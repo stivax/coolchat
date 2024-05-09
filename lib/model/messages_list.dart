@@ -1,4 +1,4 @@
-import 'package:coolchat/messages.dart';
+import 'package:coolchat/model/messages.dart';
 
 class ListMessages {
   static final ListMessages _instance = ListMessages._internal();

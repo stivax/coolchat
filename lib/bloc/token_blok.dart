@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:coolchat/account.dart';
-import 'package:coolchat/message_provider.dart';
-import 'package:coolchat/messages.dart';
+import 'package:coolchat/servises/message_provider.dart';
+import 'package:coolchat/model/messages.dart';
 import 'package:coolchat/model/messages_list.dart';
 import 'package:coolchat/model/token.dart';
 import 'package:coolchat/server/server.dart';

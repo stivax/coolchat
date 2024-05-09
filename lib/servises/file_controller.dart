@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:coolchat/app_localizations.dart';
+import 'package:coolchat/model/messages.dart';
 import 'package:device_info/device_info.dart';
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
@@ -12,6 +13,8 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_file/open_file.dart';
 
 import 'package:coolchat/server/server.dart';
 import 'package:coolchat/servises/send_file_provider.dart';
@@ -61,7 +64,8 @@ class FileController {
       if (file.size < 5000000) {
         fileProvider.addPlatformFileToSend(file);
       } else {
-        errorSnackBar(context, themeProvider);
+        final error = AppLocalizations.of(context).translate('error_size');
+        showSnackBar(context, themeProvider, error);
       }
     } else {
       print('Файл не вибраний');
@@ -88,8 +92,9 @@ class FileController {
         fileProvider.addImageToSend(
             photo); // Переконайтеся, що ваш провайдер може приймати шлях до файлу
       } else {
-        errorSnackBar(
-            context, themeProvider); // Показати помилку, якщо файл завеликий
+        final error = AppLocalizations.of(context).translate('error_size');
+        showSnackBar(context, themeProvider,
+            error); // Показати помилку, якщо файл завеликий
       }
     } else {
       print('Фото не зроблено');
@@ -147,15 +152,16 @@ class FileController {
       if (fileSize < 5000000) {
         fileProvider.addFileToSend(fileToSend);
       } else {
-        errorSnackBar(
-            context, themeProvider); // Показати помилку, якщо файл завеликий
+        final error = AppLocalizations.of(context).translate('error_size');
+        showSnackBar(context, themeProvider, error);
       }
     } else {
       print('Фото не зроблено');
     }
   }
 
-  static void errorSnackBar(BuildContext context, ThemeProvider themeProvider) {
+  static void showSnackBar(
+      BuildContext context, ThemeProvider themeProvider, String text) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor:
@@ -163,11 +169,11 @@ class FileController {
         content: MediaQuery(
           data:
               MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
-          child: const Center(
+          child: Center(
             child: Text(
-              'The file must not be larger than 5 mb',
+              text,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Color(0xFFF5FBFF),
                 fontSize: 14,
                 fontFamily: 'Manrope',
@@ -176,7 +182,7 @@ class FileController {
             ),
           ),
         ),
-        duration: const Duration(seconds: 3),
+        duration: const Duration(seconds: 4),
       ),
     );
   }
@@ -214,6 +220,20 @@ class FileController {
     return imageFileNameRegExp.hasMatch(text);
   }
 
+  static bool isVideoFileName(String text) {
+    final RegExp videoFileNameRegExp =
+        RegExp(r'\b\w+\.(mp4|avi|mov|wmv|mkv)\b', caseSensitive: false);
+
+    return videoFileNameRegExp.hasMatch(text);
+  }
+
+  static bool isAacFileName(String text) {
+    final RegExp aacFileNameRegExp =
+        RegExp(r'\b\w+\.(aac)\b', caseSensitive: false);
+
+    return aacFileNameRegExp.hasMatch(text);
+  }
+
   static bool isUrl(String text) {
     final RegExp urlPattern = RegExp(
       r'^((https?):\/\/)?'
@@ -235,7 +255,6 @@ class FileController {
     String fileName = file.path.split('/').last;
     const server = Server.server;
     const suffix = Server.suffix;
-    //final url = Uri.https(server, '/$suffix/upload_google/uploadfile/');
     const url = 'https://$server/$suffix/upload_google/uploadfile/';
     const urlSuperbase = 'https://$server/$suffix/upload/upload-to-supabase/';
 
@@ -295,6 +314,117 @@ class FileController {
         print("Помилка при завантаженні файлу: $e");
         return '';
       }
+    }
+  }
+
+  Future<void> downloadFile(String url, {ProgressCallback? onProgress}) async {
+    try {
+      // Запит директорії для збереження
+      final directoryPath = await getTemporaryDirectory();
+
+      String fileName = Messages.extractFileName(url);
+
+      String savePath = '${directoryPath.path}/$fileName';
+
+      Response response = await dio.download(
+        url,
+        savePath,
+        onReceiveProgress: (int receive, int total) {
+          if (onProgress != null) {
+            onProgress(receive, total);
+          }
+        },
+      );
+
+      // Перевірка на успішне завантаження
+      if (response.statusCode == 200) {
+        print("Завантаження успішне: Файл збережено до $savePath");
+      } else {
+        print("Завантаження не вдалося: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Помилка завантаження файлу: $e");
+    }
+  }
+
+  static Future<bool> doesFileExistInCache(String url) async {
+    final filename = Messages.extractFileName(url);
+
+    try {
+      // Отримання шляху до тимчасової кеш-директорії
+      Directory tempDir = await getTemporaryDirectory();
+      String filePath = '${tempDir.path}/$filename';
+
+      // Створення файлового об'єкта
+      File file = File(filePath);
+
+      // Перевірка, чи файл існує
+      return await file.exists();
+    } catch (e) {
+      print("Помилка при перевірці файлу: $e");
+      return false;
+    }
+  }
+
+  static Future<String?> getFilePathInCache(String url) async {
+    final filename = Messages.extractFileName(url);
+
+    try {
+      Directory tempDir = await getTemporaryDirectory();
+      String filePath = '${tempDir.path}/$filename';
+
+      return filePath;
+    } catch (e) {
+      print("Помилка при отриманні шляху до файлу: $e");
+      return null;
+    }
+  }
+
+  static Future<void> openFileFromCache(String url) async {
+    final filename = Messages.extractFileName(url);
+    try {
+      final directory = await getTemporaryDirectory();
+      final filePath = "${directory.path}/$filename";
+      final file = File(filePath);
+
+      if (await file.exists()) {
+        // Файл існує, відкриваємо його
+        final result = await OpenFile.open(filePath);
+        print("Файл відкрито: ${result.message}");
+      } else {
+        // Файл не існує
+        print("Файл не знайдено: $filePath");
+      }
+    } catch (e) {
+      print("Помилка при відкритті файлу: $e");
+    }
+  }
+
+  static Future<void> manageFileDownload(
+      BuildContext context, ThemeProvider themeProvider, String url) async {
+    await Permission.storage.request();
+    bool fileExists = await doesFileExistInCache(url);
+
+    if (!fileExists) {
+      final downloader = FileController();
+      await downloader.downloadFile(url);
+    }
+
+    final tempDir = await getTemporaryDirectory();
+    final filename = Messages.extractFileName(url);
+    final cacheFilePath = "${tempDir.path}/$filename";
+
+    String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+
+    if (selectedDirectory != null) {
+      final newFilePath = "$selectedDirectory/$filename";
+      File cacheFile = File(cacheFilePath);
+      await cacheFile.copy(newFilePath);
+      print("Файл успішно скопійований до: $newFilePath");
+      showSnackBar(context, themeProvider,
+          '${AppLocalizations.of(context).translate('file_downloaded')} $newFilePath');
+    } else {
+      print("Користувач не обрав папку");
     }
   }
 

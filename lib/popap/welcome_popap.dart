@@ -115,7 +115,7 @@ class WelcomePopup {
                               height: 1.24,
                             ),
                           ),
-                          onPressed: () => Navigator.pop(dialogContext),
+                          onPressed: () => Navigator.pop(context, account),
                         ),
                       ),
                     ],
