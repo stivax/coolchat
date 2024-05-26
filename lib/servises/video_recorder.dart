@@ -5,14 +5,9 @@ import 'package:camera/camera.dart';
 class VideoRecorder extends StatefulWidget {
   final List<CameraDescription> cameras;
   final CameraController controller;
-  final VideoRecorderController videoController;
 
-  const VideoRecorder({
-    super.key,
-    required this.cameras,
-    required this.controller,
-    required this.videoController,
-  });
+  const VideoRecorder(
+      {super.key, required this.cameras, required this.controller});
 
   @override
   _VideoRecorderState createState() => _VideoRecorderState();

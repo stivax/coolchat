@@ -2,6 +2,7 @@ import 'package:coolchat/model/token.dart';
 
 class TokenContainer {
   static Token _token = Token(token: {});
+  static DateTime _dateTime = DateTime(2020);
 
   TokenContainer._();
 
@@ -11,6 +12,7 @@ class TokenContainer {
 
   static void addToken(Token object) {
     _token = object;
+    _dateTime = DateTime.now();
   }
 
   static void removeToken() {
@@ -19,5 +21,9 @@ class TokenContainer {
 
   static Token viewToken() {
     return _token;
+  }
+
+  static DateTime viewDateTime() {
+    return _dateTime;
   }
 }

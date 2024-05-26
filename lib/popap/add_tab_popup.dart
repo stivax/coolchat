@@ -1,26 +1,27 @@
 import 'dart:async';
 
 import 'package:coolchat/app_localizations.dart';
-import 'package:coolchat/servises/account_setting_provider.dart';
+import 'package:coolchat/popap/login_popup.dart';
+import 'package:coolchat/servises/main_widget_provider.dart';
+import 'package:coolchat/servises/tab_controller.dart';
+import 'package:coolchat/servises/my_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
-import 'screen/common_chat.dart';
-import 'servises/message_provider.dart';
-import 'server/server.dart';
-import 'theme_provider.dart';
-import 'account.dart';
-import 'rooms.dart';
+import '../screen/common_chat.dart';
+import '../server/server.dart';
+import '../theme_provider.dart';
+import '../account.dart';
+import '../rooms.dart';
 
-class RoomAddDialog extends StatefulWidget {
-  const RoomAddDialog({super.key});
+class TabAddDialog extends StatefulWidget {
+  const TabAddDialog({super.key});
 
   @override
-  _RoomAddDialogState createState() => _RoomAddDialogState();
+  _TabAddDialogState createState() => _TabAddDialogState();
 }
 
-class _RoomAddDialogState extends State<RoomAddDialog> {
+class _TabAddDialogState extends State<TabAddDialog> {
   final _formKey = GlobalKey<FormState>();
   final _nameRoomController = TextEditingController();
   String _selectedItems = '';
@@ -59,41 +60,17 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
     });
   }
 
-  Future<MessageProvider> socketConnect() async {
-    const server = Server.server;
-    final acc = await readAccountFromStorage();
-    Map<dynamic, dynamic> token = await loginProcess(acc.email, acc.password);
-    MessageProvider messageProvider = await MessageProvider.create(
-        'wss://$server/ws/${_nameRoomController.text}?token=${token["access_token"]}');
-    return messageProvider;
-  }
-
   Future<void> _saveDataAndClosePopup() async {
-    final _accountSettingProvider =
-        Provider.of<AccountSettingProvider>(context, listen: false);
-    const server = Server.server;
     if (_formKey.currentState!.validate() && _selectedItems != '') {
-      final acc = await readAccountFromStorage();
-      // ignore: use_build_context_synchronously
-      final answer = await sendRoom(
-          context, _nameRoomController.text.trimRight(), _selectedItems, acc);
+      final answer = await TabViewController.createTab(
+          _nameRoomController.text, _selectedItems);
       if (answer == '') {
-        // ignore: use_build_context_synchronously
         Navigator.pop(context);
-        // ignore: use_build_context_synchronously
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ChatScreen(
-              topicName: _nameRoomController.text,
-              server: server,
-              account: acc,
-              hasMessage: false,
-            ),
-          ),
-        ).then((value) => {_accountSettingProvider.refreshScreen()});
+        final provider =
+            Provider.of<MainWidgetProvider>(context, listen: false);
+        provider.tabShow(true);
+        // move to tab
       } else {
-        // ignore: use_build_context_synchronously
         _showPopupErrorInput(answer, context);
       }
     } else if (_formKey.currentState!.validate() && _selectedItems == '') {
@@ -117,22 +94,20 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
     });
   }
 
-  List<Widget> makeListRoomAvatar() {
-    return List.generate(listRoom.length, (index) {
-      return GestureDetector(
-        onTap: () {
-          _addToSelectedItems(listRoom[index]);
-        },
-        child: _selectedItems == listRoom[index]
-            ? RoomAvatar(
-                image: CachedNetworkImageProvider(listRoom[index]),
-                isChoise: true,
-              )
-            : RoomAvatar(
-                image: CachedNetworkImageProvider(listRoom[index]),
-                isChoise: false,
-              ),
-      );
+  List<Widget> makeListIconGrid() {
+    final listIcons = MyIcons.getAllIconNames();
+    return List.generate(listIcons.length, (index) {
+      return Consumer<ThemeProvider>(builder: (context, themeProvider, child) {
+        return GestureDetector(
+            onTap: () {
+              _addToSelectedItems(listIcons[index]);
+            },
+            child: _selectedItems == listIcons[index]
+                ? Icon(MyIcons.returnIconData(listIcons[index]),
+                    color: Colors.red)
+                : Icon(MyIcons.returnIconData(listIcons[index]),
+                    color: themeProvider.currentTheme.shadowColor));
+      });
     });
   }
 
@@ -167,7 +142,7 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
                               Center(
                                 child: Text(
                                   AppLocalizations.of(context)
-                                      .translate('add_room_add'),
+                                      .translate('add_tab_add'),
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color:
@@ -184,7 +159,7 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
                                     const EdgeInsets.only(top: 15, bottom: 5),
                                 child: Text(
                                   AppLocalizations.of(context)
-                                      .translate('add_room_name'),
+                                      .translate('add_tab_name'),
                                   style: TextStyle(
                                     color: themeProvider
                                         .currentTheme.primaryColor
@@ -234,7 +209,7 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
                                           .withOpacity(0.5)),
                                   border: InputBorder.none,
                                   hintText: AppLocalizations.of(context)
-                                      .translate('add_room_name_2'),
+                                      .translate('add_tab_name_2'),
                                   hintStyle: TextStyle(
                                       color: themeProvider
                                           .currentTheme.primaryColor
@@ -277,14 +252,14 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
                         padding: const EdgeInsets.only(top: 16),
                         sliver: SliverGrid(
                           delegate: SliverChildBuilderDelegate(
-                            (context, index) => makeListRoomAvatar()[index],
-                            childCount: makeListRoomAvatar().length,
+                            (context, index) => makeListIconGrid()[index],
+                            childCount: makeListIconGrid().length,
                           ),
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 8.0,
-                            mainAxisSpacing: 8.0,
+                            crossAxisCount: 5,
+                            crossAxisSpacing: 2.0,
+                            mainAxisSpacing: 2.0,
                             childAspectRatio: 0.84,
                           ),
                         ),
@@ -293,16 +268,24 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
                   ),
                 ),
                 Positioned(
-                  top: -16.0,
-                  right: -16.0,
-                  child: IconButton(
-                    icon: Icon(
-                      Icons.close,
-                      color: themeProvider.currentTheme.shadowColor,
+                  top: 0,
+                  right: 0,
+                  child: Container(
+                    height: 20,
+                    width: 20,
+                    padding: const EdgeInsets.all(0),
+                    alignment: Alignment.center,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      iconSize: 20,
+                      icon: Icon(
+                        Icons.close,
+                        color: themeProvider.currentTheme.shadowColor,
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
                     ),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
                   ),
                 ),
               ],
@@ -410,7 +393,7 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
                         ),
                         child: const Text(
                           'OK',
-                          textScaleFactor: 1,
+                          textScaler: TextScaler.noScaling,
                           style: TextStyle(
                             color: Color(0xFFF5FBFF),
                             fontSize: 24,
@@ -445,5 +428,33 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
     } else {
       return null;
     }
+  }
+}
+
+void addTabDialog(BuildContext context) async {
+  Account acc = await readAccountFromStorage();
+  if (acc.userName == '') {
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return LoginDialog();
+      },
+    );
+    acc = await readAccountFromStorage();
+    if (acc.userName != '') {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return const TabAddDialog();
+        },
+      );
+    }
+  } else {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return const TabAddDialog();
+      },
+    );
   }
 }

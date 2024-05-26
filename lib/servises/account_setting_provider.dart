@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 class AccountSettingProvider with ChangeNotifier {
   Setting _accountSettingCurentState =
-      Setting(scale: true, favoriteroomList: []);
+      Setting(scale: false, favoriteroomList: []);
 
   AccountSettingProvider() {
     _loadSetting();

@@ -101,5 +101,9 @@
     "add_room_name_correct": "Proszę podać poprawną nazwę\n(znaki, cyfry i ()_)",
     "add_room_image_is_reqired": "Wygląda na to, że nie wybrałeś zdjęcia do pokoju",
     "error_size": "Plik nie może być większy niż 5 mb",
-    "file_downloaded": "Plik został pobrany do folderu"
+    "file_downloaded": "Plik został pobrany do folderu",
+
+    "add_tab_add": "Dodaj nową\nkartę",
+    "add_tab_name": "Nazwa dla zakładki",
+    "add_tab_name_2": "Nazwa zakładki *"
   }

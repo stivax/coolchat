@@ -1,18 +1,18 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
 import 'dart:convert';
 import 'dart:core';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:connectivity/connectivity.dart';
-import 'package:coolchat/app_localizations.dart';
-import 'package:coolchat/screen/setting.dart';
-import 'package:coolchat/servises/change_message_provider.dart';
-import 'package:coolchat/servises/locale_provider.dart';
-import 'package:coolchat/servises/send_file_provider.dart';
-import 'package:coolchat/servises/video_recorder_provider.dart';
+import 'package:coolchat/servises/main_widget_provider.dart';
+import 'package:coolchat/widget/main_footer.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -21,26 +21,32 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 import 'package:coolchat/animation_start.dart';
-import 'package:coolchat/servises/message_provider.dart';
+import 'package:coolchat/app_localizations.dart';
 import 'package:coolchat/model/message_privat_push.dart';
 import 'package:coolchat/model/token.dart';
 import 'package:coolchat/screen/private_chat_list.dart';
+import 'package:coolchat/screen/setting.dart';
 import 'package:coolchat/server/server.dart';
 import 'package:coolchat/servises/account_provider.dart';
 import 'package:coolchat/servises/account_setting_provider.dart';
+import 'package:coolchat/servises/change_message_provider.dart';
+import 'package:coolchat/servises/locale_provider.dart';
 import 'package:coolchat/servises/message_private_push_container.dart';
+import 'package:coolchat/servises/message_provider.dart';
 import 'package:coolchat/servises/message_provider_container.dart';
 import 'package:coolchat/servises/reply_provider.dart';
+import 'package:coolchat/servises/send_file_provider.dart';
 import 'package:coolchat/servises/token_container.dart';
 import 'package:coolchat/servises/token_provider.dart';
 import 'package:coolchat/servises/token_repository.dart';
+import 'package:coolchat/servises/video_recorder_provider.dart';
 
 import 'account.dart';
 import 'bloc/token_blok.dart';
 import 'menu.dart';
-import 'widget/main_appbar.dart';
 import 'rooms.dart';
 import 'theme_provider.dart';
+import 'widget/main_appbar.dart';
 import 'widget/tap_view.dart';
 
 void main() {
@@ -63,6 +69,8 @@ void main() {
             create: (context) => ChangeMessageProvider()),
         ChangeNotifierProvider<VideoRecorderProvider>(
             create: (context) => VideoRecorderProvider()),
+        ChangeNotifierProvider<MainWidgetProvider>(
+            create: (context) => MainWidgetProvider()),
       ],
       child: RepositoryProvider(
           create: (context) => TokenRepository(), child: const StartScreen()),
@@ -417,8 +425,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       if (response.statusCode == 200) {
         String responseBody = utf8.decode(response.bodyBytes);
         List<dynamic> jsonList = jsonDecode(responseBody);
-        List<Room> rooms =
-            Room.fromJsonList(jsonList, favoriteroomsList, scale).toList();
+        List<Room> rooms = Room.fromJsonList(jsonList).toList();
         if (mounted) {
           rooms.sort((a, b) {
             if (a.isFavorite == b.isFavorite) {
@@ -479,111 +486,64 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         builder: (context, themeProvider, child) {
           return Scaffold(
             appBar: MyAppBar(),
-            floatingActionButton: FloatingActionButton(
-              onPressed: () {
-                addRoomDialog(context);
-              },
-              backgroundColor:
-                  themeProvider.currentTheme.shadowColor.withOpacity(0.7),
-              child: const Icon(
-                Icons.add,
-                color: Color(0xFFF5FBFF),
-              ),
-            ),
-            floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-            body: Column(
+            body: Stack(
+              alignment: Alignment.centerRight,
               children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 400),
-                  height: refresh ? 70 : 0,
-                  alignment: Alignment.center,
-                  color: themeProvider.currentTheme.primaryColorDark,
-                  child: const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Center(child: AnimationRefresh(size: 38)),
-                  ),
-                ),
-                Expanded(
-                  child: Container(
-                    clipBehavior: Clip.antiAlias,
-                    decoration: BoxDecoration(
-                        color: themeProvider.currentTheme.primaryColorDark),
-                    child: NotificationListener(
-                      onNotification: (notification) {
-                        if (notification is OverscrollNotification &&
-                            !refresh) {
-                          if (notification.overscroll < 0) {
-                            refreshScreen();
-                          }
-                        }
-                        return false;
-                      },
-                      child: CustomScrollView(
-                        controller: _scrollController,
-                        slivers: [
-                          const SliverToBoxAdapter(child: HeaderWidget()),
-                          const SliverToBoxAdapter(
-                            child: SizedBox(height: 30),
-                          ),
-                          Consumer<ThemeProvider>(
-                            builder: (context, themeProvider, child) {
-                              return SliverToBoxAdapter(
-                                child: SizedBox(
-                                  width: double.infinity,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(
-                                        left: 20, bottom: 5, right: 20),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            AppLocalizations.of(context)
-                                                .translate('main_choose'),
-                                            textScaler: TextScaler.noScaling,
-                                            style: TextStyle(
-                                              color: themeProvider
-                                                  .currentTheme.primaryColor,
-                                              fontSize: 20,
-                                              fontFamily: 'Manrope',
-                                              fontWeight: FontWeight.w500,
-                                              height: 1.24,
-                                            ),
-                                          ),
-                                        ),
-                                        Container(),
-                                        IconButton(
-                                            onPressed: () async {
-                                              await _accountSettingProvider
-                                                  .changeScale(context);
-                                              await fetchData(Server.server);
-                                            },
-                                            icon: Icon(
-                                                scale
-                                                    ? Icons.grid_on
-                                                    : Icons.grid_view,
-                                                color: themeProvider
-                                                    .currentTheme.primaryColor))
-                                      ],
-                                    ),
+                Positioned.fill(
+                  child: Column(
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 400),
+                        height: refresh ? 70 : 0,
+                        alignment: Alignment.center,
+                        color: themeProvider.currentTheme.primaryColorDark,
+                        child: const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Center(child: AnimationRefresh(size: 38)),
+                        ),
+                      ),
+                      Expanded(
+                        child: Container(
+                          clipBehavior: Clip.antiAlias,
+                          decoration: BoxDecoration(
+                              color:
+                                  themeProvider.currentTheme.primaryColorDark),
+                          child: NotificationListener(
+                            onNotification: (notification) {
+                              if (notification is OverscrollNotification &&
+                                  !refresh) {
+                                if (notification.overscroll < 0) {
+                                  refreshScreen();
+                                }
+                              }
+                              return false;
+                            },
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const SizedBox(height: 10),
+                                const TabName(),
+                                Expanded(
+                                  child: ScrollRoomsList(
+                                    roomsList: roomsList,
                                   ),
                                 ),
-                              );
-                            },
+                              ],
+                            ),
                           ),
-                          ScrollRoomsList(
-                            roomsList: roomsList,
-                            scale: scale,
-                          ),
-                          const SliverToBoxAdapter(
-                              child:
-                                  SizedBox(height: 8, width: double.infinity)),
-                        ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
+                const Positioned.fill(child: BlurBackground()),
+                Positioned(right: 0, bottom: 100, child: IconCarousel()),
+                const Positioned(
+                  bottom: 0,
+                  right: 0,
+                  left: 0,
+                  child: MainFooter(),
+                )
               ],
             ),
           );
@@ -646,24 +606,54 @@ class HeaderWidget extends StatelessWidget {
   }
 }
 
-class ScrollRoomsList extends StatelessWidget {
+class ScrollRoomsList extends StatefulWidget {
   final List<Room> roomsList;
-  final bool scale;
   const ScrollRoomsList({
     super.key,
     required this.roomsList,
-    required this.scale,
   });
 
   @override
+  State<ScrollRoomsList> createState() => _ScrollRoomsListState();
+}
+
+class _ScrollRoomsListState extends State<ScrollRoomsList> {
+  bool scale = true;
+  late List<Room> rooms;
+  late MainWidgetProvider _tabProvider;
+  late AccountSettingProvider _accountSettingProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabProvider = Provider.of<MainWidgetProvider>(context, listen: false);
+    _tabProvider.addListener(_onSwitchTab);
+    _accountSettingProvider =
+        Provider.of<AccountSettingProvider>(context, listen: false);
+    _accountSettingProvider.addListener(_onSwitchScale);
+    rooms = widget.roomsList;
+  }
+
+  @override
+  void dispose() {
+    _tabProvider.removeListener(_onSwitchTab);
+    _accountSettingProvider.removeListener(_onSwitchScale);
+    super.dispose();
+  }
+
+  void _onSwitchScale() {
+    setState(() {
+      scale = _accountSettingProvider.accountSettingProvider.scale;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return SliverPadding(
-      padding: const EdgeInsets.all(16.0),
-      sliver: SliverGrid(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) => roomsList[index],
-          childCount: roomsList.length,
-        ),
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, right: 8, bottom: 0, top: 8),
+      child: GridView.builder(
+        itemBuilder: (context, index) => rooms[index],
+        itemCount: rooms.length,
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: scale ? 2 : 3,
           crossAxisSpacing: scale ? 16.0 : 10.0,
@@ -672,5 +662,144 @@ class ScrollRoomsList extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _onSwitchTab() {
+    setState(() {
+      rooms = _tabProvider.tab.rooms!;
+    });
+  }
+}
+
+class TabName extends StatefulWidget {
+  const TabName({super.key});
+
+  @override
+  State<TabName> createState() => _TabNameState();
+}
+
+class _TabNameState extends State<TabName> {
+  String name = 'All room';
+  bool scale = false;
+  late MainWidgetProvider _tabProvider;
+  late AccountSettingProvider _accountSettingProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabProvider = Provider.of<MainWidgetProvider>(context, listen: false);
+    _tabProvider.addListener(_onSwitchTab);
+    _accountSettingProvider =
+        Provider.of<AccountSettingProvider>(context, listen: false);
+    _accountSettingProvider.addListener(_onSwitchScale);
+  }
+
+  @override
+  void dispose() {
+    _tabProvider.removeListener(_onSwitchTab);
+    _accountSettingProvider.removeListener(_onSwitchScale);
+    super.dispose();
+  }
+
+  void _onSwitchTab() {
+    setState(() {
+      name = _tabProvider.tab.nameTab!;
+    });
+  }
+
+  void _onSwitchScale() {
+    setState(() {
+      scale = _accountSettingProvider.accountSettingProvider.scale;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<ThemeProvider>(builder: (context, themeProvider, child) {
+      return SizedBox(
+        width: double.infinity,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, bottom: 0, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  name,
+                  textScaler: TextScaler.noScaling,
+                  style: TextStyle(
+                    color: themeProvider.currentTheme.primaryColor,
+                    fontSize: 20,
+                    fontFamily: 'Manrope',
+                    fontWeight: FontWeight.w500,
+                    height: 1.24,
+                  ),
+                ),
+              ),
+              Container(),
+              IconButton(
+                  onPressed: () async {
+                    await _accountSettingProvider.changeScale(context);
+                    await fetchData(Server.server);
+                  },
+                  icon: Icon(scale ? Icons.grid_on : Icons.grid_view,
+                      color: themeProvider.currentTheme.primaryColor))
+            ],
+          ),
+        ),
+      );
+    });
+  }
+}
+
+class BlurBackground extends StatefulWidget {
+  const BlurBackground({super.key});
+
+  @override
+  State<BlurBackground> createState() => _BlurBackgroundState();
+}
+
+class _BlurBackgroundState extends State<BlurBackground> {
+  bool show = false;
+  late MainWidgetProvider provider;
+
+  @override
+  void initState() {
+    super.initState();
+    provider = Provider.of<MainWidgetProvider>(context, listen: false);
+    provider.addListener(_onShow);
+  }
+
+  @override
+  void dispose() {
+    provider.removeListener(_onShow);
+    super.dispose();
+  }
+
+  void _onShow() {
+    setState(() {
+      show = provider.showAddVariant;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return show
+        ? Column(
+            children: [
+              const SizedBox(
+                height: 5,
+              ),
+              ClipRect(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
+                  child: Container(
+                    height: MediaQuery.of(context).size.height - 100,
+                  ),
+                ),
+              ),
+            ],
+          )
+        : Container();
   }
 }

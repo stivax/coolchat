@@ -10,9 +10,9 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-import 'account.dart';
+import '../account.dart';
 import 'login_popup.dart';
-import 'theme_provider.dart';
+import '../theme_provider.dart';
 
 class RegisterDialog extends StatefulWidget {
   RegisterDialog({

@@ -2,9 +2,11 @@ import 'package:coolchat/account.dart';
 import 'package:coolchat/app_localizations.dart';
 import 'package:coolchat/bloc/token_blok.dart';
 import 'package:coolchat/bloc/token_event.dart';
-import 'package:coolchat/register_popup.dart';
+import 'package:coolchat/popap/register_popup.dart';
 import 'package:coolchat/servises/account_setting_provider.dart';
 import 'package:coolchat/servises/message_private_push_container.dart';
+import 'package:coolchat/servises/main_widget_provider.dart';
+import 'package:coolchat/servises/token_container.dart';
 import 'package:coolchat/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -122,8 +124,13 @@ class LogoutPopup {
                                   id: 0),
                               context);
                           MessagePrivatePushContainer.removeObjects();
+                          TokenContainer.removeToken();
                           final clearFavorite = AccountSettingProvider();
                           clearFavorite.clearRoomFavorite(context);
+                          final tabProvider = Provider.of<MainWidgetProvider>(
+                              context,
+                              listen: false);
+                          tabProvider.switchToMain();
                           Navigator.popUntil(context, ModalRoute.withName('/'));
                         },
                       ),

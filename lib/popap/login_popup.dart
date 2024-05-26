@@ -6,8 +6,8 @@ import 'package:coolchat/popap/welcome_popap.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'theme_provider.dart';
-import 'account.dart';
+import '../theme_provider.dart';
+import '../account.dart';
 import 'register_popup.dart';
 
 class LoginDialog extends StatefulWidget {

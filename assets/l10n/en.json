@@ -101,6 +101,10 @@
     "add_room_name_correct": "Please input correct Name\n(char, number and ()_)",
     "add_room_image_is_reqired": "It seems that you have not selected your room image",
     "error_size": "The file must not be larger than 5 mb",
-    "file_downloaded": "The file was downloaded to the folder"
+    "file_downloaded": "The file was downloaded to the folder",
+
+    "add_tab_add": "Add a new \ntab",
+    "add_tab_name": "Name of the tab",
+    "add_tab_name_2": "Name tab *"
 
   }

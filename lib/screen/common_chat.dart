@@ -34,7 +34,7 @@ import '../account.dart';
 import '../beholder/scroll_chat_controll.dart';
 import '../bloc/token_event.dart';
 import '../bloc/token_state.dart';
-import '../login_popup.dart';
+import '../popap/login_popup.dart';
 import '../members.dart';
 import '../menu.dart';
 import '../servises/message_provider.dart';
@@ -420,9 +420,10 @@ class _CommonChatScreenState extends State<CommonChatScreen>
                     ]),
                 videoRecorderProvider.isRecording
                     ? VideoRecorder(
-                        cameras: videoRecorderProvider.cameras,
-                        controller: videoRecorderProvider.controller!,
-                        videoController: videoRecorderProvider.videoController)
+                        cameras: videoRecorderProvider.videoController.cameras,
+                        controller:
+                            videoRecorderProvider.videoController.controller,
+                      )
                     : Container(),
               ],
             ),
@@ -1592,10 +1593,10 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
                                       });
                                     },
                                     onLongPress: () async {
-                                      _stopwatch.start();
                                       if (_accountProvider.isLoginProvider) {
                                         await recorder.init();
                                         if (recorder.isRecorderInitialized) {
+                                          _stopwatch.start();
                                           final filePath =
                                               await recorder.startRecording();
                                           setState(() {
@@ -1606,7 +1607,8 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
                                       }
                                     },
                                     onLongPressUp: () async {
-                                      if (_accountProvider.isLoginProvider) {
+                                      if (_accountProvider.isLoginProvider &&
+                                          recorder.isRecording) {
                                         await recorder.stopRecording(
                                             context, voiceFilePath!);
                                         setState(() {
@@ -1634,17 +1636,22 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
                                       });
                                     },
                                     onLongPress: () async {
-                                      _stopwatch.start();
                                       if (_accountProvider.isLoginProvider) {
                                         await videoRecorderProvider
                                             .startRecording();
-                                        setState(() {
-                                          recording = true;
-                                        });
+                                        if (videoRecorderProvider
+                                            .videoController.isRecording) {
+                                          setState(() {
+                                            recording = true;
+                                          });
+                                          _stopwatch.start();
+                                        }
                                       }
                                     },
                                     onLongPressUp: () async {
-                                      if (_accountProvider.isLoginProvider) {
+                                      if (_accountProvider.isLoginProvider &&
+                                          videoRecorderProvider
+                                              .videoController.isRecording) {
                                         await videoRecorderProvider
                                             .stopRecording(context);
                                         setState(() {

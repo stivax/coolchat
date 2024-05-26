@@ -14,14 +14,13 @@ class VoiceRecorder {
 
   Future<void> init() async {
     _recorder = FlutterSoundRecorder();
-
-    final status = await Permission.microphone.request();
-    if (status != PermissionStatus.granted) {
-      throw RecordingPermissionException('Microphone permission not granted');
+    final status = await Permission.microphone.isGranted;
+    if (!status) {
+      await Permission.microphone.request();
+    } else {
+      await _recorder!.openRecorder();
+      _isRecorderInitialized = true;
     }
-
-    await _recorder!.openRecorder();
-    _isRecorderInitialized = true;
   }
 
   Future<String?> startRecording() async {

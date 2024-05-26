@@ -1,6 +1,6 @@
 import 'package:coolchat/account.dart';
 import 'package:coolchat/app_localizations.dart';
-import 'package:coolchat/register_popup.dart';
+import 'package:coolchat/popap/register_popup.dart';
 import 'package:coolchat/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -24,7 +24,8 @@ class WelcomePopup {
               backgroundColor: themeProvider.currentTheme.primaryColorDark,
               scrollable: true,
               content: MediaQuery(
-                data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+                data: MediaQuery.of(context)
+                    .copyWith(textScaler: TextScaler.noScaling),
                 child: SizedBox(
                   width: 250,
                   child: Column(
@@ -39,41 +40,45 @@ class WelcomePopup {
                             isChoise: false),
                       ),
                       const SizedBox(height: 10),
-                      Text.rich(
-                        TextSpan(
-                          children: [
-                            TextSpan(
-                              text: AppLocalizations.of(context)
-                                  .translate('login_hello'),
-                              style: TextStyle(
-                                color: themeProvider.currentTheme.primaryColor,
-                                fontSize: 24,
-                                fontFamily: 'Manrope',
-                                fontWeight: FontWeight.w500,
-                                height: 1.24,
+                      Center(
+                        child: Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                text: AppLocalizations.of(context)
+                                    .translate('login_hello'),
+                                style: TextStyle(
+                                  color:
+                                      themeProvider.currentTheme.primaryColor,
+                                  fontSize: 24,
+                                  fontFamily: 'Manrope',
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.24,
+                                ),
                               ),
-                            ),
-                            TextSpan(
-                              text: account.userName,
-                              style: TextStyle(
-                                color: themeProvider.currentTheme.shadowColor,
-                                fontSize: 24,
-                                fontFamily: 'Manrope',
-                                fontWeight: FontWeight.w500,
-                                height: 1.24,
+                              TextSpan(
+                                text: account.userName,
+                                style: TextStyle(
+                                  color: themeProvider.currentTheme.shadowColor,
+                                  fontSize: 24,
+                                  fontFamily: 'Manrope',
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.24,
+                                ),
                               ),
-                            ),
-                            TextSpan(
-                              text: '!',
-                              style: TextStyle(
-                                color: themeProvider.currentTheme.primaryColor,
-                                fontSize: 24,
-                                fontFamily: 'Manrope',
-                                fontWeight: FontWeight.w500,
-                                height: 1.24,
+                              TextSpan(
+                                text: '!',
+                                style: TextStyle(
+                                  color:
+                                      themeProvider.currentTheme.primaryColor,
+                                  fontSize: 24,
+                                  fontFamily: 'Manrope',
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.24,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                       const SizedBox(height: 10),

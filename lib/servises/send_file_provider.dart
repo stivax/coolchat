@@ -18,9 +18,6 @@ class SendFileProvider with ChangeNotifier {
     this.addComent = false,
   });
 
-  //Account get accountProvider => _accountCurentState;
-  //bool get isLoginProvider => _isLogin;
-
   Future<void> addFileToSend(File fileToSend) async {
     file = fileToSend;
     readyToSend = true;

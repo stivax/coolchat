@@ -33,19 +33,10 @@ class FileController {
   }
 
   static Future<bool> requestPermissions(int androidVersion) async {
-    // Request storage permission
-    var storageStatus = await Permission.storage.request();
-    //if (!storageStatus.isGranted) {
-    //  return false; // Permission denied
-    //}
+    await Permission.storage.request();
+    await Permission.camera.request();
 
-    // Request camera permission (always request, regardless of Android version)
-    var cameraStatus = await Permission.camera.request();
-    //if (!cameraStatus.isGranted) {
-    //  return false; // Permission denied
-    //}
-
-    return true; // Permissions granted
+    return true;
   }
 
   static Future<void> pickFile(
@@ -153,15 +144,15 @@ class FileController {
         fileProvider.addFileToSend(fileToSend);
       } else {
         final error = AppLocalizations.of(context).translate('error_size');
-        showSnackBar(context, themeProvider, error);
+        await showSnackBar(context, themeProvider, error);
       }
     } else {
       print('Фото не зроблено');
     }
   }
 
-  static void showSnackBar(
-      BuildContext context, ThemeProvider themeProvider, String text) {
+  static Future<void> showSnackBar(
+      BuildContext context, ThemeProvider themeProvider, String text) async {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor:
@@ -252,7 +243,7 @@ class FileController {
   Future<String> uploadFileDio(String filePath, int fileSize,
       {ProgressCallback? onProgress}) async {
     File file = File(filePath);
-    String fileName = file.path.split('/').last;
+    String fileName = transliterateAndSanitize(file.path.split('/').last);
     const server = Server.server;
     const suffix = Server.suffix;
     const url = 'https://$server/$suffix/upload_google/uploadfile/';
@@ -421,7 +412,7 @@ class FileController {
       File cacheFile = File(cacheFilePath);
       await cacheFile.copy(newFilePath);
       print("Файл успішно скопійований до: $newFilePath");
-      showSnackBar(context, themeProvider,
+      await showSnackBar(context, themeProvider,
           '${AppLocalizations.of(context).translate('file_downloaded')} $newFilePath');
     } else {
       print("Користувач не обрав папку");
@@ -515,6 +506,95 @@ class FileController {
       elevation: 8.0,
       shadowColor: themeProvider.currentTheme.cardColor,
     );
+  }
+
+  String transliterateAndSanitize(String fileName) {
+    final Map<String, String> transliterationMap = {
+      'А': 'A',
+      'Б': 'B',
+      'В': 'V',
+      'Г': 'G',
+      'Д': 'D',
+      'Е': 'E',
+      'Ё': 'E',
+      'Ж': 'Zh',
+      'З': 'Z',
+      'И': 'I',
+      'Й': 'Y',
+      'К': 'K',
+      'Л': 'L',
+      'М': 'M',
+      'Н': 'N',
+      'О': 'O',
+      'П': 'P',
+      'Р': 'R',
+      'С': 'S',
+      'Т': 'T',
+      'У': 'U',
+      'Ф': 'F',
+      'Х': 'Kh',
+      'Ц': 'Ts',
+      'Ч': 'Ch',
+      'Ш': 'Sh',
+      'Щ': 'Shch',
+      'Ы': 'Y',
+      'Э': 'E',
+      'Ю': 'Yu',
+      'Я': 'Ya',
+      'Ї': 'Yi',
+      'І': 'I',
+      'Є': 'Ye',
+      'Ґ': 'G',
+      'а': 'a',
+      'б': 'b',
+      'в': 'v',
+      'г': 'g',
+      'д': 'd',
+      'е': 'e',
+      'ё': 'e',
+      'ж': 'zh',
+      'з': 'z',
+      'и': 'i',
+      'й': 'y',
+      'к': 'k',
+      'л': 'l',
+      'м': 'm',
+      'н': 'n',
+      'о': 'o',
+      'п': 'p',
+      'р': 'r',
+      'с': 's',
+      'т': 't',
+      'у': 'u',
+      'ф': 'f',
+      'х': 'kh',
+      'ц': 'ts',
+      'ч': 'ch',
+      'ш': 'sh',
+      'щ': 'shch',
+      'ы': 'y',
+      'э': 'e',
+      'ю': 'yu',
+      'я': 'ya',
+      'ї': 'yi',
+      'і': 'i',
+      'є': 'ye',
+      'ґ': 'g'
+    };
+
+    String transliteratedFileName = fileName.split('').map((char) {
+      if (transliterationMap.containsKey(char)) {
+        return transliterationMap[char];
+      } else if (char == ' ') {
+        return '_';
+      } else if (RegExp(r'[a-zA-Z0-9\-_\.]').hasMatch(char)) {
+        return char;
+      } else {
+        return '';
+      }
+    }).join('');
+
+    return transliteratedFileName;
   }
 
   /*static Future<File?> compressImageFile(File file) async {
