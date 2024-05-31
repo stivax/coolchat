@@ -100,7 +100,7 @@
     "add_room_name_is_reqired": "Nazwa jest wymagana",
     "add_room_name_correct": "Proszę podać poprawną nazwę\n(znaki, cyfry i ()_)",
     "add_room_image_is_reqired": "Wygląda na to, że nie wybrałeś zdjęcia do pokoju",
-    "error_size": "Plik nie może być większy niż 5 mb",
+    "error_size": "Plik nie może być większy niż 15 mb",
     "file_downloaded": "Plik został pobrany do folderu",
 
     "add_tab_add": "Dodaj nową\nkartę",

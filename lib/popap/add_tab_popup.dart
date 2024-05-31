@@ -27,7 +27,6 @@ class _TabAddDialogState extends State<TabAddDialog> {
   String _selectedItems = '';
   final _nameRoomFocus = FocusNode();
   List<String> listRoom = [];
-  late String server;
 
   @override
   void initState() {
@@ -37,8 +36,7 @@ class _TabAddDialogState extends State<TabAddDialog> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    server = Server.server;
-    fetchRoomList(server);
+    fetchRoomList();
   }
 
   @override
@@ -65,10 +63,14 @@ class _TabAddDialogState extends State<TabAddDialog> {
       final answer = await TabViewController.createTab(
           _nameRoomController.text, _selectedItems);
       if (answer == '') {
-        Navigator.pop(context);
         final provider =
             Provider.of<MainWidgetProvider>(context, listen: false);
+        await provider.loadTab();
         provider.tabShow(true);
+        await Future.delayed(const Duration(seconds: 1));
+        final countTab = provider.allTab.length;
+        provider.moveToTab(countTab - 1);
+        Navigator.pop(context);
         // move to tab
       } else {
         _showPopupErrorInput(answer, context);
@@ -86,8 +88,8 @@ class _TabAddDialogState extends State<TabAddDialog> {
     FocusManager.instance.primaryFocus?.unfocus();
   }
 
-  void fetchRoomList(String server) async {
-    final result = await fetchData(server);
+  void fetchRoomList() async {
+    final result = await fetchData();
     result.removeAt(0);
     setState(() {
       listRoom = result;
@@ -431,18 +433,18 @@ class _TabAddDialogState extends State<TabAddDialog> {
   }
 }
 
-void addTabDialog(BuildContext context) async {
+Future<void> addTabDialog(BuildContext context) async {
   Account acc = await readAccountFromStorage();
   if (acc.userName == '') {
     await showDialog(
       context: context,
       builder: (BuildContext context) {
-        return LoginDialog();
+        return const LoginDialog();
       },
     );
     acc = await readAccountFromStorage();
     if (acc.userName != '') {
-      showDialog(
+      await showDialog(
         context: context,
         builder: (BuildContext context) {
           return const TabAddDialog();
@@ -450,7 +452,7 @@ void addTabDialog(BuildContext context) async {
       );
     }
   } else {
-    showDialog(
+    await showDialog(
       context: context,
       builder: (BuildContext context) {
         return const TabAddDialog();

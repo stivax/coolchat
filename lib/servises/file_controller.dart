@@ -52,7 +52,7 @@ class FileController {
       final fileProvider =
           Provider.of<SendFileProvider>(context, listen: false);
       PlatformFile file = result.files.first;
-      if (file.size < 5000000) {
+      if (file.size < 15000000) {
         fileProvider.addPlatformFileToSend(file);
       } else {
         final error = AppLocalizations.of(context).translate('error_size');
@@ -78,7 +78,7 @@ class FileController {
       final fileProvider =
           Provider.of<SendFileProvider>(context, listen: false);
       final fileSize = await photo.length();
-      if (fileSize < 5000000) {
+      if (fileSize < 15000000) {
         // Перевірка розміру файлу, якщо потрібно
         fileProvider.addImageToSend(
             photo); // Переконайтеся, що ваш провайдер може приймати шлях до файлу
@@ -133,14 +133,10 @@ class FileController {
         fileToSend = File(croppedFile.path);
       }
 
-//////////////////
       final fileProvider =
           Provider.of<SendFileProvider>(context, listen: false);
-      /*final fileSize = await photo.length();
-      if (fileSize < 5000000) {
-        fileProvider.addImageToSend(photo);*/
       final fileSize = await fileToSend!.length();
-      if (fileSize < 5000000) {
+      if (fileSize < 15000000) {
         fileProvider.addFileToSend(fileToSend);
       } else {
         final error = AppLocalizations.of(context).translate('error_size');
@@ -248,63 +244,35 @@ class FileController {
     const suffix = Server.suffix;
     const url = 'https://$server/$suffix/upload_google/uploadfile/';
     const urlSuperbase = 'https://$server/$suffix/upload/upload-to-supabase/';
+    const urlBackblaze = 'https://$server/$suffix/upload-to-backblaze/chat';
 
     FormData formData = FormData.fromMap({
       "file": await MultipartFile.fromFile(filePath, filename: fileName),
     });
     print('size $fileSize');
 
-    if (fileSize < 1000000) {
-      try {
-        Response response = await dio.post(
-          url,
-          data: formData,
-          onSendProgress: (int sent, int total) {
-            if (onProgress != null) {
-              onProgress(sent, total);
-            }
-          },
-        );
+    try {
+      Response response = await dio.post(
+        urlBackblaze,
+        data: formData,
+        onSendProgress: (int sent, int total) {
+          if (onProgress != null) {
+            onProgress(sent, total);
+          }
+        },
+      );
 
-        if (response.statusCode == 200) {
-          var jsonResponse = json.decode(response.toString());
-
-          String fileUrl = jsonResponse['public_url'] ?? '';
-          print("Файл успішно завантажений: $fileUrl");
-          return fileUrl;
-        } else {
-          print("Помилка завантаження файлу: ${response.statusCode}");
-          return '';
-        }
-      } catch (e) {
-        print("Помилка при завантаженні файлу: $e");
+      if (response.statusCode == 200) {
+        String fileUrl = response.data.toString();
+        print("Файл успішно завантажений: $fileUrl");
+        return fileUrl;
+      } else {
+        print("Помилка завантаження файлу: ${response.statusCode}");
         return '';
       }
-    } else {
-      try {
-        Response response = await dio.post(
-          urlSuperbase,
-          data: formData,
-          onSendProgress: (int sent, int total) {
-            if (onProgress != null) {
-              onProgress(sent, total);
-            }
-          },
-        );
-
-        if (response.statusCode == 200) {
-          String fileUrl =
-              response.toString().substring(0, response.toString().length - 1);
-          print("Файл успішно завантажений: $fileUrl");
-          return fileUrl;
-        } else {
-          print("Помилка завантаження файлу: ${response.statusCode}");
-          return '';
-        }
-      } catch (e) {
-        print("Помилка при завантаженні файлу: $e");
-        return '';
-      }
+    } catch (e) {
+      print("Помилка при завантаженні файлу: $e");
+      return '';
     }
   }
 
@@ -411,7 +379,6 @@ class FileController {
       final newFilePath = "$selectedDirectory/$filename";
       File cacheFile = File(cacheFilePath);
       await cacheFile.copy(newFilePath);
-      print("Файл успішно скопійований до: $newFilePath");
       await showSnackBar(context, themeProvider,
           '${AppLocalizations.of(context).translate('file_downloaded')} $newFilePath');
     } else {

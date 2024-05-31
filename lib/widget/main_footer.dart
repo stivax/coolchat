@@ -2,10 +2,14 @@ import 'dart:ui';
 
 import 'package:coolchat/rooms.dart';
 import 'package:coolchat/popap/add_tab_popup.dart';
+import 'package:coolchat/screen/private_chat_list.dart';
+import 'package:coolchat/screen/search_screen.dart';
 import 'package:coolchat/servises/main_widget_provider.dart';
+import 'package:coolchat/servises/search_provider.dart';
 import 'package:coolchat/theme_provider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
@@ -183,14 +187,39 @@ class _MainFooterState extends State<MainFooter> {
                         Icons.home_outlined,
                         color: themeProvider.currentTheme.primaryColor,
                       ),
-                      onPressed: () {},
+                      onPressed: () async {
+                        provider.tabShow(true);
+                        await Future.delayed(const Duration(milliseconds: 100));
+                        final currentTab = provider.tab;
+                        int index = 0;
+                        for (final t in provider.allTab) {
+                          if (t.nameTab == currentTab.nameTab) {
+                            break;
+                          }
+                          index++;
+                        }
+                        final controller = provider.infiniteCarouselController;
+                        controller.jumpToItem(index);
+                        await Future.delayed(const Duration(milliseconds: 500));
+                        await provider.loadTab();
+                        provider.moveToMain();
+                        HapticFeedback.lightImpact();
+                      },
                     ),
                     IconButton(
                       icon: Icon(
                         Icons.search_outlined,
                         color: themeProvider.currentTheme.primaryColor,
                       ),
-                      onPressed: () {},
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SearchScreen(),
+                          ),
+                        );
+                      },
                     ),
                     Stack(
                       alignment: Alignment.center,
@@ -211,6 +240,7 @@ class _MainFooterState extends State<MainFooter> {
                             ),
                           ),
                           onPressed: () {
+                            HapticFeedback.lightImpact();
                             provider.switchAddVariantsShow();
                           },
                         ),
@@ -221,7 +251,15 @@ class _MainFooterState extends State<MainFooter> {
                         Icons.message_outlined,
                         color: themeProvider.currentTheme.primaryColor,
                       ),
-                      onPressed: () {},
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PrivateChatList(),
+                          ),
+                        );
+                      },
                     ),
                     IconButton(
                       icon: Icon(

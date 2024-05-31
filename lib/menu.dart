@@ -115,7 +115,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
       final account = await showDialog(
         context: context,
         builder: (BuildContext context) {
-          return LoginDialog();
+          return const LoginDialog();
         },
       );
       setState(() {
@@ -363,7 +363,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                   PopupMenuItem<String>(
                     value: 'item8',
                     child: Text(
-                      '${AppLocalizations.of(context).translate('burger_menu_version')} v1.0.19',
+                      '${AppLocalizations.of(context).translate('burger_menu_version')} v1.0.23',
                       textScaler: TextScaler.noScaling,
                       style: TextStyle(
                         color: themeProvider.currentTheme.primaryColor

@@ -1,12 +1,13 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
-import 'dart:convert';
 import 'dart:core';
 import 'dart:io';
 import 'dart:ui';
 
 import 'package:connectivity/connectivity.dart';
+import 'package:coolchat/screen/search_screen.dart';
 import 'package:coolchat/servises/main_widget_provider.dart';
+import 'package:coolchat/servises/search_provider.dart';
 import 'package:coolchat/widget/main_footer.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -16,14 +17,12 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 import 'package:coolchat/animation_start.dart';
 import 'package:coolchat/app_localizations.dart';
 import 'package:coolchat/model/message_privat_push.dart';
-import 'package:coolchat/model/token.dart';
 import 'package:coolchat/screen/private_chat_list.dart';
 import 'package:coolchat/screen/setting.dart';
 import 'package:coolchat/server/server.dart';
@@ -71,6 +70,8 @@ void main() {
             create: (context) => VideoRecorderProvider()),
         ChangeNotifierProvider<MainWidgetProvider>(
             create: (context) => MainWidgetProvider()),
+        ChangeNotifierProvider<SearchProvider>(
+            create: (context) => SearchProvider()),
       ],
       child: RepositoryProvider(
           create: (context) => TokenRepository(), child: const StartScreen()),
@@ -133,6 +134,7 @@ class MyApp extends StatelessWidget {
         '/': (context) => const MyHomePage(),
         '/p': (context) => PrivateChatList(),
         '/s': (context) => const SettingScreen(),
+        '/search': (context) => const SearchScreen(),
       },
       scaffoldMessengerKey: scaffoldMessengerKey,
       theme: themeProvider.currentTheme,
@@ -159,14 +161,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
-  final _scrollController = ScrollController();
-  List<Room> roomsList = [];
-  List<String> favoriteroomsList = [];
   MessageProvider? messageProvider;
   final server = Server.server;
   final suffix = Server.suffix;
-  late Map<String, String> token;
-  bool scale = false;
   bool isListeningNotofication = false;
   bool refresh = false;
   StreamSubscription? _messageSubscription;
@@ -174,28 +171,17 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   List<MessagePrivatPush> oldMessagePrivatPushList = [];
   List<MessagePrivatPush> differenceList = [];
   late AccountProvider _accountProvider;
-  late AccountSettingProvider _accountSettingProvider;
   late Timer _timerCheckAndRefreshListenWebsocket;
-
-  //
+  late MainWidgetProvider provider;
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
-    //requestPermissions();
+    loadAndPeriodicReloadToken();
     _accountProvider = Provider.of<AccountProvider>(context, listen: false);
     _accountProvider.addListener(_onAccountChange);
-    _accountSettingProvider =
-        Provider.of<AccountSettingProvider>(context, listen: false);
-    _accountSettingProvider.addListener(_onScaleChange);
-    scale = _accountSettingProvider.accountSettingProvider.scale;
-    _accountSettingProvider.addListener(_onFavoriteRoomChange);
-    favoriteroomsList =
-        _accountSettingProvider.accountSettingProvider.favoriteroomList;
-    _accountSettingProvider.addListener(_onRefresh);
     timerCheckAndRefreshListenWebsocket();
 
     // Ініціалізація плагіна
@@ -220,8 +206,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   @override
   void dispose() {
     _accountProvider.removeListener(_onAccountChange);
-    _accountSettingProvider.removeListener(_onScaleChange);
-    _accountSettingProvider.removeListener(_onFavoriteRoomChange);
     messageProvider?.dispose();
     _messageSubscription?.cancel();
     _connectivitySubscription?.cancel();
@@ -253,12 +237,17 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     );
   }
 
+  void loadAndPeriodicReloadToken() {
+    getToken();
+    Timer.periodic(const Duration(minutes: 20), (timer) {
+      getToken();
+    });
+  }
+
   void timerCheckAndRefreshListenWebsocket() {
     _timerCheckAndRefreshListenWebsocket =
         Timer.periodic(const Duration(seconds: 30), (timer) {
       if (_accountProvider.isLoginProvider) {
-        print('is Login');
-        print('isListeningNotofication $isListeningNotofication');
         if (!isListeningNotofication) {
           print('isListeningNotofication');
           startListenSocket();
@@ -270,11 +259,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
           startListenSocket();
         } else if (_messageSubscription == null) {
           print('timer messageSubscription == null');
-          //listenSocket();
           startListenSocket();
         } else if (_messageSubscription!.isPaused) {
           print('timer messageSubscription!.isPaused');
-          //_messageSubscription!.resume();
           startListenSocket();
         }
       }
@@ -289,52 +276,31 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     }
   }
 
-  void _onScaleChange() async {
-    setState(() {
-      scale = _accountSettingProvider.accountSettingProvider.scale;
-    });
-  }
-
-  void _onRefresh() async {
-    await fetchData(server);
-    setState(() {});
-  }
-
-  void _onFavoriteRoomChange() async {
-    setState(() {
-      favoriteroomsList =
-          _accountSettingProvider.accountSettingProvider.favoriteroomList;
-    });
-    await fetchData(server);
-  }
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    fetchData(server);
+    fetchData();
   }
 
   Future<void> startListenSocket() async {
     await getToken();
-    if (token["access_token"].toString().isNotEmpty) {
-      TokenContainer.addToken(Token(token: token));
+    final token = TokenContainer.viewToken();
+    if (token.token["access_token"].toString().isNotEmpty) {
       await createProvider();
       listenSocket();
     }
   }
 
   Future<void> createProvider() async {
-    print('createProvider()');
+    final token = TokenContainer.viewToken();
     messageProvider = await MessageProvider.create(
-        'wss://$server/notification?token=${token["access_token"]}');
+        'wss://$server/notification?token=${token.token["access_token"]}');
     MessageProviderContainer.instance.addProvider('main', messageProvider!);
     createConnectivitySubscription();
   }
 
   Future<void> listenSocket() async {
     messageProvider ??= MessageProviderContainer.instance.getProvider('main')!;
-    //if ((_messageSubscription != null && _messageSubscription!.isPaused) || _messageSubscription == null) {
-    print('listenSocket()');
     _messageSubscription?.cancel();
     isListeningNotofication = true;
     _messageSubscription = messageProvider!.messagesStream.listen(
@@ -378,7 +344,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     Timer.periodic(const Duration(seconds: 5), (timer) {
       messageProvider!.sendMessage('ping');
     });
-    //}
   }
 
   void createConnectivitySubscription() {
@@ -386,7 +351,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         Connectivity().onConnectivityChanged.listen((result) {
       if (result != ConnectivityResult.none) {
         if (!isListeningNotofication) {
-          //listenSocket();
           startListenSocket();
         }
       }
@@ -396,7 +360,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    fetchData(server);
+    fetchData();
     if (state == AppLifecycleState.resumed) {
       if (!isListeningNotofication) {
         startListenSocket();
@@ -408,65 +372,24 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     final tokenProvider = TokenProvider();
     final acc = await readAccountFromStorage();
     final tok = await tokenProvider.loginProcess(acc.email, acc.password);
-    setState(() {
-      token = tok.token;
-    });
-  }
-
-  Future<http.Response> _getData(String server) async {
-    const suffix = Server.suffix;
-    final url = Uri.https(server, '/$suffix/rooms/');
-    return await http.get(url);
-  }
-
-  Future<void> fetchData(String server) async {
-    try {
-      http.Response response = await _getData(server);
-      if (response.statusCode == 200) {
-        String responseBody = utf8.decode(response.bodyBytes);
-        List<dynamic> jsonList = jsonDecode(responseBody);
-        List<Room> rooms = Room.fromJsonList(jsonList).toList();
-        if (mounted) {
-          rooms.sort((a, b) {
-            if (a.isFavorite == b.isFavorite) {
-              return 0;
-            } else if (a.isFavorite) {
-              return -1;
-            }
-            return 1;
-          });
-          setState(() {
-            roomsList = rooms;
-          });
-        }
-      } else {}
-      // ignore: empty_catches
-    } catch (error) {}
-  }
-
-  void _onScroll() {
-    double offset = _scrollController.position.pixels;
-    double maxOffset = _scrollController.position.maxScrollExtent;
-    if (offset >= maxOffset &&
-        _scrollController.position.userScrollDirection ==
-            ScrollDirection.reverse) {
-      _updateScreen();
+    if (tok.token["access_token"].toString().isNotEmpty) {
+      TokenContainer.addToken(tok);
     }
-  }
-
-  Future<void> _updateScreen() async {
-    await fetchData(server);
+    final provider = Provider.of<MainWidgetProvider>(context, listen: false);
+    provider.loadTab();
   }
 
   Future<void> refreshScreen() async {
     setState(() {
       refresh = !refresh;
     });
-    await _updateScreen();
     await Future.delayed(const Duration(seconds: 1));
     setState(() {
       refresh = !refresh;
     });
+    final provider = Provider.of<MainWidgetProvider>(context, listen: false);
+    await provider.loadTab();
+    provider.updateCurrentTab();
   }
 
   @override
@@ -518,15 +441,13 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                               }
                               return false;
                             },
-                            child: Column(
+                            child: const Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const SizedBox(height: 10),
-                                const TabName(),
+                                SizedBox(height: 10),
+                                TabName(),
                                 Expanded(
-                                  child: ScrollRoomsList(
-                                    roomsList: roomsList,
-                                  ),
+                                  child: ScrollRoomsList(),
                                 ),
                               ],
                             ),
@@ -607,11 +528,7 @@ class HeaderWidget extends StatelessWidget {
 }
 
 class ScrollRoomsList extends StatefulWidget {
-  final List<Room> roomsList;
-  const ScrollRoomsList({
-    super.key,
-    required this.roomsList,
-  });
+  const ScrollRoomsList({super.key});
 
   @override
   State<ScrollRoomsList> createState() => _ScrollRoomsListState();
@@ -619,7 +536,7 @@ class ScrollRoomsList extends StatefulWidget {
 
 class _ScrollRoomsListState extends State<ScrollRoomsList> {
   bool scale = true;
-  late List<Room> rooms;
+  List<Room> rooms = [];
   late MainWidgetProvider _tabProvider;
   late AccountSettingProvider _accountSettingProvider;
 
@@ -631,7 +548,7 @@ class _ScrollRoomsListState extends State<ScrollRoomsList> {
     _accountSettingProvider =
         Provider.of<AccountSettingProvider>(context, listen: false);
     _accountSettingProvider.addListener(_onSwitchScale);
-    rooms = widget.roomsList;
+    _tabProvider.switchAndUpdateToMain();
   }
 
   @override
@@ -647,27 +564,39 @@ class _ScrollRoomsListState extends State<ScrollRoomsList> {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 8, right: 8, bottom: 0, top: 8),
-      child: GridView.builder(
-        itemBuilder: (context, index) => rooms[index],
-        itemCount: rooms.length,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: scale ? 2 : 3,
-          crossAxisSpacing: scale ? 16.0 : 10.0,
-          mainAxisSpacing: scale ? 16.0 : 10.0,
-          childAspectRatio: 0.826,
-        ),
-      ),
-    );
-  }
-
   void _onSwitchTab() {
     setState(() {
       rooms = _tabProvider.tab.rooms!;
     });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, right: 8, bottom: 0, top: 8),
+      child: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.only(bottom: 0),
+            sliver: SliverGrid(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) => rooms[index],
+                childCount: rooms.length,
+              ),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: scale ? 2 : 3,
+                crossAxisSpacing: scale ? 16.0 : 10.0,
+                mainAxisSpacing: scale ? 16.0 : 10.0,
+                childAspectRatio: 0.826,
+              ),
+            ),
+          ),
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 68),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -740,7 +669,7 @@ class _TabNameState extends State<TabName> {
               IconButton(
                   onPressed: () async {
                     await _accountSettingProvider.changeScale(context);
-                    await fetchData(Server.server);
+                    await fetchData();
                   },
                   icon: Icon(scale ? Icons.grid_on : Icons.grid_view,
                       color: themeProvider.currentTheme.primaryColor))
@@ -785,20 +714,24 @@ class _BlurBackgroundState extends State<BlurBackground> {
   @override
   Widget build(BuildContext context) {
     return show
-        ? Column(
-            children: [
-              const SizedBox(
-                height: 5,
-              ),
-              ClipRect(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
-                  child: Container(
-                    height: MediaQuery.of(context).size.height - 100,
+        ? IgnorePointer(
+            ignoring: true,
+            child: Column(
+              children: [
+                const SizedBox(
+                  height: 5,
+                ),
+                ClipRect(
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
+                    child: Container(
+                      height: MediaQuery.of(context).size.height - 100,
+                      width: MediaQuery.of(context).size.width,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           )
         : Container();
   }

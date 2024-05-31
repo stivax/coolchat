@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:coolchat/app_localizations.dart';
 import 'package:coolchat/servises/account_setting_provider.dart';
+import 'package:coolchat/servises/main_widget_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -78,6 +79,9 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
           context, _nameRoomController.text.trimRight(), _selectedItems, acc);
       if (answer == '') {
         Navigator.pop(context);
+        final provider =
+            Provider.of<MainWidgetProvider>(context, listen: false);
+        provider.loadTab();
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -88,7 +92,7 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
               hasMessage: false,
             ),
           ),
-        ).then((value) => {_accountSettingProvider.refreshScreen()});
+        ).then((value) => {provider.moveToMain()});
       } else {
         // ignore: use_build_context_synchronously
         _showPopupErrorInput(answer, context);
@@ -107,7 +111,7 @@ class _RoomAddDialogState extends State<RoomAddDialog> {
   }
 
   void fetchRoomList(String server) async {
-    final result = await fetchData(server);
+    final result = await fetchData();
     result.removeAt(0);
     setState(() {
       listRoom = result;

@@ -20,10 +20,14 @@ class VideoRecorderController {
   Future<void> init() async {
     final hasCameraRequest = await Permission.camera.isGranted;
     final hasStorageRequest = await Permission.storage.isGranted;
-    if (!hasCameraRequest || !hasStorageRequest) {
+    final hasMicrophoneRequest = await Permission.microphone.isGranted;
+    if (!hasCameraRequest || !hasStorageRequest || !hasMicrophoneRequest) {
+      print('отримання дозволів');
       await Permission.storage.request();
       await Permission.camera.request();
+      await Permission.microphone.request();
     } else {
+      print('запис');
       _cameras = await availableCameras();
       _controller = CameraController(
         _cameras.last,

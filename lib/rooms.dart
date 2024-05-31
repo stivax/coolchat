@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:coolchat/app_localizations.dart';
 import 'package:coolchat/popap/add_room_popup.dart';
 import 'package:coolchat/servises/account_setting_provider.dart';
+import 'package:coolchat/servises/main_widget_provider.dart';
 import 'package:coolchat/servises/tab_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -21,21 +22,27 @@ import 'account.dart';
 
 class Room extends StatefulWidget {
   final String name;
+  final int owner;
   final int id;
   final String createdAt;
   final ImageProvider image;
   final int countPeopleOnline;
   final int countMessages;
+  final bool secretRoom;
+  final bool? blocked;
   final bool isFavorite;
 
   const Room({
     super.key,
     required this.name,
+    required this.owner,
     required this.id,
     required this.createdAt,
     required this.image,
     required this.countPeopleOnline,
     required this.countMessages,
+    required this.secretRoom,
+    required this.blocked,
     required this.isFavorite,
   });
 
@@ -44,12 +51,15 @@ class Room extends StatefulWidget {
       return Room(
         name: json["name_room"],
         id: json["id"],
+        owner: json["owner"],
         createdAt: json["created_at"],
         image: CachedNetworkImageProvider(
           json["image_room"],
         ),
         countPeopleOnline: json["count_users"],
         countMessages: json["count_messages"],
+        secretRoom: json["secret_room"],
+        blocked: json["block"],
         isFavorite: false, //favoriteRoomList.contains(json["name_room"]),
       );
     }).toList();
@@ -134,8 +144,13 @@ class _RoomState extends State<Room> {
                             hasMessage: widget.countMessages > 0,
                           ),
                         ),
-                      ).then(
-                          (value) => {_accountSettingProvider.refreshScreen()});
+                      ).then((value) async {
+                        final provider = Provider.of<MainWidgetProvider>(
+                            context,
+                            listen: false);
+                        await provider.loadTab();
+                        provider.updateCurrentTab();
+                      });
                     },
                     child: Container(
                       width: double.infinity,
@@ -488,15 +503,16 @@ Future<String> sendRoom(BuildContext context, String roomName, String roomImage,
   }
 }
 
-Future<http.Response> _getData(String server) async {
+Future<http.Response> _getData() async {
+  const server = Server.server;
   const suffix = Server.suffix;
   final url = Uri.https(server, '/$suffix/images/Home');
   return await http.get(url);
 }
 
-Future<List<String>> fetchData(String server) async {
+Future<List<String>> fetchData() async {
   try {
-    http.Response response = await _getData(server);
+    http.Response response = await _getData();
     if (response.statusCode == 200) {
       String responseBody = utf8.decode(response.bodyBytes);
       List<dynamic> jsonList = jsonDecode(responseBody);

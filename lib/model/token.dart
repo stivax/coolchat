@@ -10,6 +10,7 @@ class Token {
 
     token['access_token'] = json['access_token'];
     token['token_type'] = json['token_type'];
+    token['refresh_token'] = json['refresh_token'];
 
     return Token(token: token);
   }

@@ -6,6 +6,7 @@ import 'package:coolchat/servises/tab_controller.dart';
 import 'package:coolchat/servises/main_widget_provider.dart';
 import 'package:coolchat/theme_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:infinite_carousel/infinite_carousel.dart';
 import 'package:provider/provider.dart';
 
@@ -15,7 +16,7 @@ class IconCarousel extends StatefulWidget {
 }
 
 class _IconCarouselState extends State<IconCarousel> {
-  final List<MyTab> tabs = [];
+  List<MyTab> tabs = [];
   bool showTap = false;
 
   int currentIndex = 0;
@@ -25,9 +26,11 @@ class _IconCarouselState extends State<IconCarousel> {
   @override
   void initState() {
     super.initState();
-    controller = InfiniteScrollController();
     provider = Provider.of<MainWidgetProvider>(context, listen: false);
     provider.addListener(_onShow);
+    provider.addListener(_onChangeTab);
+    //provider.addListener(_onScroll);
+    controller = provider.infiniteCarouselController;
   }
 
   @override
@@ -35,6 +38,8 @@ class _IconCarouselState extends State<IconCarousel> {
     super.dispose();
     controller.dispose();
     provider.removeListener(_onShow);
+    provider.removeListener(_onChangeTab);
+    //provider.removeListener(_onScroll);
   }
 
   void _onShow() {
@@ -43,29 +48,23 @@ class _IconCarouselState extends State<IconCarousel> {
     });
   }
 
+  void _onChangeTab() {
+    setState(() {
+      tabs = provider.allTab;
+    });
+  }
+
+  void _onScroll() {
+    setState(() {
+      controller = provider.infiniteCarouselController;
+    });
+  }
+
   void onIconTap(int index) {
     setState(() {
       currentIndex = index;
     });
     controller.animateToItem(index);
-  }
-
-  Future<void> fetchTab() async {
-    final allRooms = await TabViewController.fetchTabAllRoom();
-    final myRoom = await TabViewController.fetchTabMyRoom();
-    final mySecretRoom = await TabViewController.fetchTabSecretRoom();
-    final allTab = await TabViewController.fetchAllTab();
-    final List<MyTab> myTabs = [];
-    myTabs.add(allRooms);
-    myTabs.add(myRoom);
-    myTabs.add(mySecretRoom);
-    for (var t in allTab) {
-      myTabs.add(t);
-    }
-    setState(() {
-      tabs.clear();
-      tabs.addAll(myTabs);
-    });
   }
 
   @override
@@ -114,29 +113,40 @@ class _IconCarouselState extends State<IconCarousel> {
                             final Color color = isActive
                                 ? Colors.red
                                 : themeProvider.currentTheme.primaryColor;
-                            return IconButton(
-                                onPressed: () {
-                                  onIconTap(index);
-                                  final tabProvider =
-                                      Provider.of<MainWidgetProvider>(context,
-                                          listen: false);
-                                  tabProvider.switchTab(tabs[index]);
-                                },
-                                icon: Icon(
-                                  MyIcons.returnIconData(tabs[index].imageTab!),
-                                  color: color,
-                                ));
+                            return GestureDetector(
+                              onTap: () {
+                                onIconTap(index);
+                                final tabProvider =
+                                    Provider.of<MainWidgetProvider>(context,
+                                        listen: false);
+                                tabProvider.switchTab(tabs[index]);
+                              },
+                              onLongPressStart: (details) async {
+                                if (tabs[index].id != null) {
+                                  await TabViewController.showMenuTabFunction(
+                                      context,
+                                      themeProvider,
+                                      details.globalPosition,
+                                      tabs[index].id!);
+                                  await provider.loadTab();
+                                  provider.moveToMain();
+                                }
+                              },
+                              child: Icon(
+                                MyIcons.returnIconData(tabs[index].imageTab!),
+                                color: color,
+                              ),
+                            );
                           },
                           itemCount: tabs.length,
                           onIndexChanged: (index) {
-                            setState(() {
-                              currentIndex = index;
-                            });
                             final tabProvider = Provider.of<MainWidgetProvider>(
                                 context,
                                 listen: false);
                             tabProvider.switchTab(tabs[index]);
-                            //onIconTap(index); // Call tap handler if desired
+                            setState(() {
+                              currentIndex = index;
+                            });
                           },
                         ),
                       )
@@ -148,10 +158,12 @@ class _IconCarouselState extends State<IconCarousel> {
                           .withOpacity(0.2)),
                   child: IconButton(
                       onPressed: () async {
-                        await fetchTab();
-                        provider.switchTabShow();
-                        await Future.delayed(const Duration(milliseconds: 100));
-                        controller.animateToItem(currentIndex);
+                        if (tabs.isNotEmpty) {
+                          provider.switchTabShow();
+                          await Future.delayed(
+                              const Duration(milliseconds: 100));
+                          controller.animateToItem(currentIndex);
+                        }
                       },
                       icon: Icon(
                         showTap ? Icons.arrow_downward : Icons.arrow_upward,

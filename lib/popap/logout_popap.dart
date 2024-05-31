@@ -130,7 +130,9 @@ class LogoutPopup {
                           final tabProvider = Provider.of<MainWidgetProvider>(
                               context,
                               listen: false);
-                          tabProvider.switchToMain();
+                          await tabProvider.loadTab();
+                          await tabProvider.moveToMain();
+                          tabProvider.tabShow(false);
                           Navigator.popUntil(context, ModalRoute.withName('/'));
                         },
                       ),

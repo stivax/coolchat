@@ -19,7 +19,7 @@
     "burger_menu_personal_chats": "Personal chats",
     "burger_menu_rules_of_the_chat": "Rules of the chat",
     "burger_menu_privacy_policy": "Privacy policy",
-    "burger_menu_setting": "Setting",
+    "burger_menu_setting": "Settings",
     "burger_menu_log_in": "Log in",
     "burger_menu_log_out": "Log out:",
     "burger_menu_version": "Version: ",
@@ -100,7 +100,7 @@
     "add_room_name_is_reqired": "Name is reqired",
     "add_room_name_correct": "Please input correct Name\n(char, number and ()_)",
     "add_room_image_is_reqired": "It seems that you have not selected your room image",
-    "error_size": "The file must not be larger than 5 mb",
+    "error_size": "The file must not be larger than 15 mb",
     "file_downloaded": "The file was downloaded to the folder",
 
     "add_tab_add": "Add a new \ntab",

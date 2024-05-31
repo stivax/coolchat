@@ -48,8 +48,8 @@ class MyIcons {
     'call': Icons.call,
     'directions': Icons.directions,
     'done': Icons.done,
-    'download': Icons.download,
     'favorite_border': Icons.favorite_border,
+    'wait': Icons.lock_clock_rounded
   };
 
   static IconData returnIconData(String icon) {
