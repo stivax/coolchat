@@ -6,15 +6,14 @@ import 'package:connectivity/connectivity.dart';
 import 'package:coolchat/bloc/token_blok.dart';
 import 'package:coolchat/bloc/token_event.dart';
 import 'package:coolchat/bloc/token_state.dart';
-import 'package:coolchat/servises/message_provider_container.dart';
+import 'package:coolchat/servises/socket_connect_container.dart';
 import 'package:coolchat/servises/token_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:marquee/marquee.dart';
 import 'package:provider/provider.dart';
 
 import '../menu.dart';
-import '../servises/message_provider.dart';
+import '../servises/socket_connect.dart';
 import '../model/messages_privat.dart';
 import '../widget/main_appbar.dart';
 import '../theme_provider.dart';
@@ -49,7 +48,7 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
   bool isListening = false;
   final messagePrivatData = MessagePrivatData();
   bool emptyMessages = true;
-  MessageProvider? providerInPrivateScreen;
+  SocketConnect? providerInPrivateScreen;
   StreamSubscription? _messageSubscription;
   StreamSubscription<ConnectivityResult>? _connectivitySubscription;
 
@@ -66,13 +65,11 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
   }
 
   void messageListen() async {
-    print('messagePrivateListen');
     if (providerInPrivateScreen !=
-        MessageProviderContainer.instance
+        SocketConnectContainer.instance
             .getProvider(widget.recipientId.toString())!) {
-      providerInPrivateScreen = MessageProviderContainer.instance
+      providerInPrivateScreen = SocketConnectContainer.instance
           .getProvider(widget.recipientId.toString())!;
-      print('listen begin');
       clearMessages();
       _messageSubscription = providerInPrivateScreen!.messagesStream.listen(
         (event) async {
@@ -88,12 +85,10 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
         onDone: () {
           print('onDone');
           isListening = false;
-          //providerInPrivateScreen!.setIsConnected = false;
         },
         onError: (e) {
           print('onError');
           isListening = false;
-          //providerInPrivateScreen!.setIsConnected = false;
         },
       );
     }
@@ -188,7 +183,7 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
 
 class CommonChatScreen extends StatefulWidget {
   final String topicName;
-  final MessageProvider? messageProvider;
+  final SocketConnect? messageProvider;
   final String state;
   final int recepientId;
   MessagePrivatData messageData;
@@ -217,8 +212,8 @@ class _CommonChatScreenState extends State<CommonChatScreen>
     WidgetsBinding.instance.addObserver(this);
     messageData = widget.messageData;
     final TokenBloc tokenBloc = context.read<TokenBloc>();
-    tokenBloc.add(TokenLoadEvent(
-        roomName: widget.recepientId.toString(), type: 'private'));
+    //tokenBloc.add(TokenLoadEvent(
+    //    screenName: widget.recepientId.toString(), type: 'private'));
   }
 
   @override
@@ -235,10 +230,9 @@ class _CommonChatScreenState extends State<CommonChatScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed && _buildContext != null) {
-      print('resume!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
       final TokenBloc tokenBloc = _buildContext!.read<TokenBloc>();
-      tokenBloc.add(TokenLoadEvent(
-          roomName: widget.recepientId.toString(), type: 'private'));
+      //tokenBloc.add(TokenLoadEvent(
+      //    screenName: widget.recepientId.toString(), type: 'private'));
     }
   }
 
@@ -291,8 +285,7 @@ class _CommonChatScreenState extends State<CommonChatScreen>
 }
 
 class ReceiverName extends StatefulWidget {
-  // ignore: prefer_typing_uninitialized_variables
-  final topicName;
+  final String topicName;
   const ReceiverName({super.key, required this.topicName});
 
   @override
@@ -349,9 +342,9 @@ class _ReceiverNameState extends State<ReceiverName> {
                 constraints:
                     BoxConstraints(maxWidth: MediaQuery.of(context).size.width),
                 child: shouldAnimate
-                    ? Marquee(
-                        text: 'Direct chat: ${widget.topicName}',
-                        textScaleFactor: 1,
+                    ? Text(
+                        'Direct chat: ${widget.topicName}',
+                        textScaler: TextScaler.noScaling,
                         style: TextStyle(
                           color: themeProvider.currentTheme.primaryColor,
                           fontSize: 20,
@@ -359,7 +352,6 @@ class _ReceiverNameState extends State<ReceiverName> {
                           fontWeight: FontWeight.w500,
                           height: 1.24,
                         ),
-                        blankSpace: MediaQuery.of(context).size.width,
                       )
                     : Text(
                         'Direct chat: ${widget.topicName}',
@@ -510,7 +502,7 @@ class _BlockPrivateMessagesState extends State<BlockPrivateMessages> {
 
 class TextAndSend extends StatefulWidget {
   final String topicName;
-  final MessageProvider? messageProvider;
+  final SocketConnect? messageProvider;
   const TextAndSend({
     super.key,
     required this.topicName,

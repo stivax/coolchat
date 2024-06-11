@@ -5,7 +5,6 @@ import 'package:coolchat/model/user_search.dart';
 import 'package:coolchat/rooms.dart';
 import 'package:coolchat/screen/common_chat.dart';
 import 'package:coolchat/screen/private_chat.dart';
-import 'package:coolchat/server/server.dart';
 import 'package:coolchat/servises/account_provider.dart';
 import 'package:coolchat/servises/main_widget_provider.dart';
 import 'package:coolchat/servises/search_provider.dart';
@@ -284,10 +283,11 @@ class UserSearchResultWidget extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (contextPrivateRoom) => PrivateChatScreen(
-                      receiverName: user.userName,
-                      recipientId: user.id,
-                      myId: accountProvider.accountProvider.id,
+                    builder: (contextPrivateRoom) => ChatScreen(
+                      screenName: user.userName,
+                      screenId: user.id,
+                      hasMessage: false,
+                      private: true,
                     ),
                   ),
                 );
@@ -331,11 +331,10 @@ class RoomSearchResultWidget extends StatelessWidget {
               context,
               MaterialPageRoute(
                 builder: (context) => ChatScreen(
-                  topicName: room.name,
-                  id: room.id,
-                  server: Server.server,
-                  account: accountProvider.accountProvider,
+                  screenName: room.name,
+                  screenId: room.id,
                   hasMessage: room.countMessages > 0,
+                  private: false,
                 ),
               ),
             ).then((value) async {

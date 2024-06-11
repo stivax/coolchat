@@ -1,6 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:coolchat/account.dart';
-import 'package:coolchat/servises/message_provider.dart';
+import 'package:coolchat/servises/socket_connect.dart';
 import 'package:coolchat/model/messages.dart';
 
 import '../model/token.dart';
@@ -18,11 +18,11 @@ class TokenLoadingState extends TokenState {}
 
 class TokenLoadedState extends TokenState {
   final Token token;
-  final MessageProvider messageProvider;
+  final SocketConnect socketConnect;
   final Account account;
   TokenLoadedState({
     required this.token,
-    required this.messageProvider,
+    required this.socketConnect,
     required this.account,
   });
 }

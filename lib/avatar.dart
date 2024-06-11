@@ -1,4 +1,5 @@
 import 'package:coolchat/app_localizations.dart';
+import 'package:coolchat/screen/common_chat.dart';
 import 'package:coolchat/screen/private_chat.dart';
 import 'package:coolchat/servises/account_provider.dart';
 import 'package:coolchat/theme_provider.dart';
@@ -9,10 +10,10 @@ class AvatarMember extends StatelessWidget {
   final ImageProvider avatar;
   final String name;
   final int memberID;
-  bool isOnline = true;
+  final bool isOnline;
   final BuildContext contextAvatarMember;
-  bool big;
-  AvatarMember(
+  final bool big;
+  const AvatarMember(
       {super.key,
       required this.avatar,
       required this.name,
@@ -95,10 +96,11 @@ class AvatarMember extends StatelessWidget {
             Navigator.push(
               contextAvatarMember,
               MaterialPageRoute(
-                  builder: (contextAvatarMember) => PrivateChatScreen(
-                        receiverName: name,
-                        recipientId: memberID,
-                        myId: memberID,
+                  builder: (contextAvatarMember) => ChatScreen(
+                        screenName: name,
+                        screenId: memberID,
+                        hasMessage: false,
+                        private: true,
                       )),
             );
           },

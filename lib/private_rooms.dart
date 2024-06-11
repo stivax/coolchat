@@ -1,12 +1,9 @@
-import 'package:coolchat/screen/private_chat.dart';
+import 'package:coolchat/screen/common_chat.dart';
 import 'package:coolchat/servises/account_setting_provider.dart';
-import 'package:coolchat/servises/message_provider_container.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-import 'servises/message_provider.dart';
-import 'server/server.dart';
 import 'theme_provider.dart';
 import 'account.dart';
 
@@ -14,13 +11,14 @@ class RoomPrivate extends StatelessWidget {
   final int recipientId;
   final String recipientName;
   final String recipientAvatar;
-  bool isRead;
+  final bool isRead;
   final Account account;
   final BuildContext contextPrivateRoom;
   final Map<dynamic, dynamic> token;
 
-  RoomPrivate(
-      {required this.recipientId,
+  const RoomPrivate(
+      {super.key,
+      required this.recipientId,
       required this.recipientName,
       required this.recipientAvatar,
       required this.isRead,
@@ -32,9 +30,9 @@ class RoomPrivate extends StatelessWidget {
       Map<dynamic, dynamic> token, BuildContext context) {
     return jsonList.map((json) {
       return RoomPrivate(
-        recipientId: json['recipient_id'],
-        recipientName: json['recipient_name'],
-        recipientAvatar: json['recipient_avatar'],
+        recipientId: json['receiver_id'],
+        recipientName: json['receiver_name'],
+        recipientAvatar: json['receiver_avatar'],
         isRead: json['is_read'],
         account: account,
         contextPrivateRoom: context,
@@ -49,16 +47,15 @@ class RoomPrivate extends StatelessWidget {
         Provider.of<AccountSettingProvider>(context, listen: false);
     return GestureDetector(
       onTap: () {
-        print('start chat with ${recipientName.toString()}');
         Navigator.push(
           contextPrivateRoom,
           MaterialPageRoute(
-            builder: (contextPrivateRoom) => PrivateChatScreen(
-              receiverName: recipientName,
-              recipientId: recipientId,
-              myId: account.id,
-            ),
-          ),
+              builder: (contextPrivateRoom) => ChatScreen(
+                    screenName: recipientName,
+                    screenId: recipientId,
+                    hasMessage: false,
+                    private: true,
+                  )),
         ).then((value) => {_accountSettingProvider.refreshScreen()});
       },
       child: Consumer<ThemeProvider>(

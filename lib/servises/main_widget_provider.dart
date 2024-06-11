@@ -37,16 +37,20 @@ class MainWidgetProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void updateCurrentTab() {
+  Future<void> updateCurrentTab() async {
+    _allTab = await TabViewController.fetchTab();
+    //_showTab = true;
     int idCurrentTab = 0;
     for (MyTab t in _allTab) {
-      if (t.id != null && t.id == _tab.id) {
+      if (t.nameTab == _tab.nameTab) {
         break;
       }
       idCurrentTab++;
     }
     _tab = _allTab[idCurrentTab];
     notifyListeners();
+    Future.delayed(const Duration(milliseconds: 500));
+    _infiniteCarouselController.animateToItem(idCurrentTab);
   }
 
   void switchAndUpdateToMain() async {

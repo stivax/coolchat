@@ -3,13 +3,13 @@ import 'dart:async';
 
 import 'package:coolchat/app_localizations.dart';
 import 'package:coolchat/main.dart';
-import 'package:coolchat/popap/logout_popap.dart';
+import 'package:coolchat/popup/logout_popap.dart';
 import 'package:coolchat/screen/privacy_policy.dart';
 import 'package:coolchat/screen/private_chat_list.dart';
 import 'package:coolchat/screen/rools.dart';
 import 'package:coolchat/screen/setting.dart';
 import 'package:coolchat/servises/message_private_push_container.dart';
-import 'package:coolchat/servises/message_provider_container.dart';
+import 'package:coolchat/servises/socket_connect_container.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -22,7 +22,7 @@ import 'account.dart';
 import 'bloc/token_blok.dart';
 import 'bloc/token_event.dart';
 import 'bloc/token_state.dart';
-import 'popap/login_popup.dart';
+import 'popup/login_popup.dart';
 import 'theme_provider.dart';
 
 enum MenuStatus { open, closed }
@@ -59,11 +59,9 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
 }
 
 class MainDropdownMenu extends StatefulWidget {
-  String? roomName;
-  MainDropdownMenu({
-    super.key,
-    this.roomName,
-  });
+  final String? screenName;
+  final int? screenId;
+  MainDropdownMenu({super.key, this.screenName, this.screenId});
   @override
   State<MainDropdownMenu> createState() => _MainDropdownMenuState();
 }
@@ -141,15 +139,17 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                   if (value == 'item7') {
                     final TokenBloc tokenBloc = context.read<TokenBloc>();
                     await handleLogIn(_account, tokenBloc, context);
-                    if (_account.id != 0 && widget.roomName != null) {
+                    if (_account.id != 0 && widget.screenName != null) {
                       tokenBloc.add(TokenLoadEvent(
-                          roomName: widget.roomName, type: 'ws'));
+                          screenName: widget.screenName,
+                          screenId: widget.screenId,
+                          type: 'ws'));
                     } else {
                       //tokenBloc.add(TokenClearEvent());
                     }
                   } else if (value == 'item2') {
                     if (_account.email.isNotEmpty) {
-                      MessageProviderContainer.instance
+                      SocketConnectContainer.instance
                           .getProvider('direct')
                           ?.dispose();
                       if (Navigator.canPop(context)) {
@@ -363,7 +363,7 @@ class _MainDropdownMenuState extends State<MainDropdownMenu> {
                   PopupMenuItem<String>(
                     value: 'item8',
                     child: Text(
-                      '${AppLocalizations.of(context).translate('burger_menu_version')} v1.0.23',
+                      '${AppLocalizations.of(context).translate('burger_menu_version')} v1.0.24',
                       textScaler: TextScaler.noScaling,
                       style: TextStyle(
                         color: themeProvider.currentTheme.primaryColor

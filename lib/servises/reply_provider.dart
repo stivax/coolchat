@@ -33,6 +33,14 @@ class ReplyProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void clearReplyToMessage() {
+    nameRecevierMessage = '';
+    textMessageToReply = '';
+    fileUrl = null;
+    idMessageToReplying = null;
+    isReplying = false;
+  }
+
   void scrollToMessage(int id) {
     itemScrollController.scrollTo(
       index: id,

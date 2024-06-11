@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:coolchat/error_answer.dart';
 import 'package:coolchat/model/tab.dart';
-import 'package:coolchat/popap/add_tab_popup.dart';
+import 'package:coolchat/popup/add_tab_popup.dart';
 import 'package:coolchat/rooms.dart';
 import 'package:coolchat/server/server.dart';
 import 'package:coolchat/servises/main_widget_provider.dart';
@@ -257,8 +257,8 @@ class TabViewController {
           final indexNewTab = provider.allTab.length - 1;
           await TabViewController.putRoomInTab(
               provider.allTab[indexNewTab].id!, roomId);
-          await provider.loadTab();
-          provider.updateCurrentTab();
+          //await provider.loadTab();
+          await provider.updateCurrentTab();
           HapticFeedback.lightImpact();
         },
         child: MediaQuery(

@@ -7,13 +7,13 @@ import 'dart:ui';
 import 'package:connectivity/connectivity.dart';
 import 'package:coolchat/screen/search_screen.dart';
 import 'package:coolchat/servises/main_widget_provider.dart';
+import 'package:coolchat/servises/message_block_function_provider.dart';
+import 'package:coolchat/servises/messages_list_provider.dart';
 import 'package:coolchat/servises/search_provider.dart';
 import 'package:coolchat/widget/main_footer.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -31,8 +31,8 @@ import 'package:coolchat/servises/account_setting_provider.dart';
 import 'package:coolchat/servises/change_message_provider.dart';
 import 'package:coolchat/servises/locale_provider.dart';
 import 'package:coolchat/servises/message_private_push_container.dart';
-import 'package:coolchat/servises/message_provider.dart';
-import 'package:coolchat/servises/message_provider_container.dart';
+import 'package:coolchat/servises/socket_connect.dart';
+import 'package:coolchat/servises/socket_connect_container.dart';
 import 'package:coolchat/servises/reply_provider.dart';
 import 'package:coolchat/servises/send_file_provider.dart';
 import 'package:coolchat/servises/token_container.dart';
@@ -72,6 +72,10 @@ void main() {
             create: (context) => MainWidgetProvider()),
         ChangeNotifierProvider<SearchProvider>(
             create: (context) => SearchProvider()),
+        ChangeNotifierProvider<MessagesListProvider>(
+            create: (context) => MessagesListProvider()),
+        ChangeNotifierProvider<MessagesBlockFunctionProvider>(
+            create: (context) => MessagesBlockFunctionProvider()),
       ],
       child: RepositoryProvider(
           create: (context) => TokenRepository(), child: const StartScreen()),
@@ -104,15 +108,13 @@ class StartScreen extends StatelessWidget {
 }
 
 class MyApp extends StatelessWidget {
-  static final MessageProviderContainer messageProviderContainer =
-      MessageProviderContainer.instance;
+  static final SocketConnectContainer socketConnectContainer =
+      SocketConnectContainer.instance;
   const MyApp({super.key});
 
   void hasNotificationPermission() async {
-    print('Platform.isAndroid ${Platform.isAndroid}');
     if (Platform.isAndroid) {
       final status = await Permission.notification.status;
-      print('status $status');
       if (status != PermissionStatus.granted) {
         await Permission.notification.request();
       }
@@ -121,7 +123,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    //hasNotificationPermission();
     final themeProvider = Provider.of<ThemeProvider>(context);
     final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
         GlobalKey<ScaffoldMessengerState>();
@@ -161,7 +162,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
-  MessageProvider? messageProvider;
+  SocketConnect? socketConnect;
   final server = Server.server;
   final suffix = Server.suffix;
   bool isListeningNotofication = false;
@@ -182,6 +183,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     loadAndPeriodicReloadToken();
     _accountProvider = Provider.of<AccountProvider>(context, listen: false);
     _accountProvider.addListener(_onAccountChange);
+    provider = Provider.of<MainWidgetProvider>(context, listen: false);
     timerCheckAndRefreshListenWebsocket();
 
     // Ініціалізація плагіна
@@ -206,7 +208,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   @override
   void dispose() {
     _accountProvider.removeListener(_onAccountChange);
-    messageProvider?.dispose();
+    socketConnect?.dispose();
     _messageSubscription?.cancel();
     _connectivitySubscription?.cancel();
     _timerCheckAndRefreshListenWebsocket.cancel();
@@ -251,11 +253,11 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         if (!isListeningNotofication) {
           print('isListeningNotofication');
           startListenSocket();
-        } else if (messageProvider == null) {
-          print('timer messageProvider == null');
+        } else if (socketConnect == null) {
+          print('timer socketConnect == null');
           startListenSocket();
-        } else if (!messageProvider!.isConnected) {
-          print('timer messageProvider!.isConnected');
+        } else if (!socketConnect!.isConnected) {
+          print('timer socketConnect!.isConnected');
           startListenSocket();
         } else if (_messageSubscription == null) {
           print('timer messageSubscription == null');
@@ -293,44 +295,48 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
   Future<void> createProvider() async {
     final token = TokenContainer.viewToken();
-    messageProvider = await MessageProvider.create(
+    socketConnect = await SocketConnect.create(
         'wss://$server/notification?token=${token.token["access_token"]}');
-    MessageProviderContainer.instance.addProvider('main', messageProvider!);
+    SocketConnectContainer.instance.addProvider('main', socketConnect!);
     createConnectivitySubscription();
   }
 
   Future<void> listenSocket() async {
-    messageProvider ??= MessageProviderContainer.instance.getProvider('main')!;
+    socketConnect ??= SocketConnectContainer.instance.getProvider('main')!;
     _messageSubscription?.cancel();
     isListeningNotofication = true;
-    _messageSubscription = messageProvider!.messagesStream.listen(
-      (message) async {
-        final messagePushList = MessagePrivatPush.fromJsonList(message);
-        if (messagePushList.isNotEmpty) {
-          differenceList = MessagePrivatPush.differenceList(
-              oldMessagePrivatPushList, messagePushList);
-          if (differenceList.length == 1) {
-            final mes = differenceList.last;
-            _showNotification(
-                mes.sender,
-                mes.message.length > 20
-                    ? '${mes.message.substring(0, 20)} ...'
-                    : mes.message);
-          } else if (MessagePrivatPush.checkSenderIdConsistency(
-              differenceList)) {
-            final mes = differenceList.last;
-            _showNotification(
-                mes.sender, '${differenceList.length.toString()} new messages');
-          } else {
-            _showNotification('Multiple senders',
-                '${differenceList.length.toString()} new messages');
-          }
+    _messageSubscription = socketConnect!.messagesStream.listen(
+      (event) async {
+        if (event.toString().startsWith('{"update":"room update"')) {
+          provider.updateCurrentTab();
         } else {
-          differenceList.clear();
+          final messagePushList = MessagePrivatPush.fromJsonList(event);
+          if (messagePushList.isNotEmpty) {
+            differenceList = MessagePrivatPush.differenceList(
+                oldMessagePrivatPushList, messagePushList);
+            if (differenceList.length == 1) {
+              final mes = differenceList.last;
+              _showNotification(
+                  mes.sender,
+                  mes.message.length > 20
+                      ? '${mes.message.substring(0, 20)} ...'
+                      : mes.message);
+            } else if (MessagePrivatPush.checkSenderIdConsistency(
+                differenceList)) {
+              final mes = differenceList.last;
+              _showNotification(mes.sender,
+                  '${differenceList.length.toString()} new messages');
+            } else {
+              _showNotification('Multiple senders',
+                  '${differenceList.length.toString()} new messages');
+            }
+          } else {
+            differenceList.clear();
+          }
+          MessagePrivatePushContainer.removeObjects();
+          MessagePrivatePushContainer.addObject(differenceList);
+          oldMessagePrivatPushList = messagePushList;
         }
-        MessagePrivatePushContainer.removeObjects();
-        MessagePrivatePushContainer.addObject(differenceList);
-        oldMessagePrivatPushList = messagePushList;
       },
       onDone: () {
         print('onDone');
@@ -342,7 +348,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       },
     );
     Timer.periodic(const Duration(seconds: 5), (timer) {
-      messageProvider!.sendMessage('ping');
+      socketConnect!.sendMessage('ping');
     });
   }
 
@@ -387,9 +393,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     setState(() {
       refresh = !refresh;
     });
-    final provider = Provider.of<MainWidgetProvider>(context, listen: false);
-    await provider.loadTab();
-    provider.updateCurrentTab();
+    await provider.updateCurrentTab();
+    HapticFeedback.lightImpact();
   }
 
   @override

@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:coolchat/servises/message_provider_container.dart';
+import 'package:coolchat/servises/socket_connect_container.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -258,7 +258,7 @@ class TheirMessege extends StatelessWidget {
                           ),
                           GestureDetector(
                             onDoubleTap: () {
-                              MessageProviderContainer.instance
+                              SocketConnectContainer.instance
                                   .getProvider(recipientId.toString())
                                   ?.sendMessage(json.encode({
                                     "vote": {"message_id": id, "dir": 1}
@@ -473,7 +473,7 @@ class MyMessege extends StatelessWidget {
                           ),
                           GestureDetector(
                             onDoubleTap: () {
-                              MessageProviderContainer.instance
+                              SocketConnectContainer.instance
                                   .getProvider(recipientId.toString())
                                   ?.sendMessage(json.encode({
                                     "vote": {"message_id": id, "dir": 1}

@@ -2,9 +2,11 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:beholder_flutter/beholder_flutter.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:coolchat/app_localizations.dart';
+import 'package:coolchat/servises/message_block_function_provider.dart';
+import 'package:coolchat/servises/messages_list_controller.dart';
+import 'package:coolchat/servises/messages_list_provider.dart';
 import 'package:coolchat/widget/chat_appbar.dart';
 import 'package:coolchat/model/messages_list.dart';
 import 'package:coolchat/screen/image_view_screen.dart';
@@ -21,81 +23,69 @@ import 'package:coolchat/servises/voice_recorder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:marquee/marquee.dart';
 import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import 'package:coolchat/bloc/token_blok.dart';
-import 'package:coolchat/servises/message_provider_container.dart';
 import 'package:coolchat/servises/token_repository.dart';
 import 'package:coolchat/widget/write.dart';
 
-import '../account.dart';
-import '../beholder/scroll_chat_controll.dart';
 import '../bloc/token_event.dart';
 import '../bloc/token_state.dart';
-import '../popap/login_popup.dart';
+import '../popup/login_popup.dart';
 import '../members.dart';
 import '../menu.dart';
-import '../servises/message_provider.dart';
+import '../servises/socket_connect.dart';
 import '../model/messages.dart';
 import '../theme_provider.dart';
 
-class MessageData {
-  List<Messages> messages;
-  int previousMemberID;
-
-  MessageData()
-      : messages = [],
-        previousMemberID = 0;
-}
-
-final blockMessageStateKey = GlobalKey<_BlockMessagesState>();
-final chatMembersStateKey = GlobalKey<_ChatMembersState>();
-final chatScreenStateKey = GlobalKey<_ChatScreenState>();
+//final blockMessageStateKey = GlobalKey<_BlockMessagesState>();
+//final chatMembersStateKey = GlobalKey<_ChatMembersState>();
+//final chatScreenStateKey = GlobalKey<_ChatScreenState>();
 
 class ChatScreen extends StatefulWidget {
-  final String topicName;
-  final int? id;
-  final String server;
-  final Account account;
-  final MessageData messageData;
+  final String screenName;
+  final int? screenId;
   final bool hasMessage;
+  final bool private;
 
-  ChatScreen(
+  const ChatScreen(
       {super.key,
-      required this.topicName,
-      this.id,
-      required this.server,
-      required this.account,
-      required this.hasMessage})
-      : messageData = MessageData();
+      required this.screenName,
+      this.screenId,
+      required this.hasMessage,
+      required this.private});
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
 class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
-  bool isListening = false;
   late bool hasMessages;
-  final messageData = MessageData();
-  Account acc =
-      Account(email: '', userName: '', password: '', avatar: '', id: 0);
-  MessageProvider? providerInScreen;
+  SocketConnect? providerInScreen;
   StreamSubscription? _messageSubscription;
   late StreamSubscription<ConnectivityResult> _connectivitySubscription;
   final ListMessages listMessages = ListMessages();
   late BuildContext contextScreen;
+  late AccountProvider _accountProvider;
+  late MessagesListController messagesListController;
 
   @override
   void initState() {
     super.initState();
     hasMessages = widget.hasMessage;
     WidgetsBinding.instance.addObserver(this);
-    if (widget.account.email != '') {
-      acc = widget.account;
-    }
     contextScreen = context;
+    _accountProvider = Provider.of<AccountProvider>(context, listen: false);
+    _accountProvider.addListener(_onAccountChange);
+    messagesListController = MessagesListController(
+        context: context,
+        providerInScreen: providerInScreen,
+        messageSubscription: _messageSubscription,
+        screenName: widget.screenName,
+        screenId: widget.screenId!,
+        accountProvider: _accountProvider,
+        private: widget.private);
   }
 
   @override
@@ -108,13 +98,21 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     super.dispose();
   }
 
+  void _onAccountChange() {
+    setState(() {});
+  }
+
   void messageListen() async {
+    Future.delayed(const Duration(milliseconds: 500));
+    await messagesListController.messageListen();
+  }
+
+  /*void messageListen() async {
     if (providerInScreen !=
-        MessageProviderContainer.instance.getProvider(widget.topicName)!) {
+        SocketConnectContainer.instance.getProvider(widget.topicName)!) {
       providerInScreen =
-          MessageProviderContainer.instance.getProvider(widget.topicName)!;
+          SocketConnectContainer.instance.getProvider(widget.topicName)!;
       await _messageSubscription?.cancel();
-      //print('listen begin');
       clearMessages();
       _messageSubscription = providerInScreen!.messagesStream.listen(
         (event) async {
@@ -130,13 +128,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         },
         onDone: () {
           print('onDone');
-          isListening = false;
-          //providerInScreen!.setIsConnected = false;
         },
         onError: (e) {
           print('onError');
-          isListening = false;
-          //providerInScreen!.setIsConnected = false;
         },
       );
     }
@@ -144,10 +138,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   void formMessage(String responseBody) {
     dynamic jsonMessage = jsonDecode(responseBody);
-    Messages message = Messages.fromJsonMessage(jsonMessage,
-        messageData.previousMemberID, context, widget.topicName, acc.id);
+    Messages message = Messages.fromJsonMessage(
+        jsonMessage,
+        messageData.previousMemberID!,
+        context,
+        widget.topicName,
+        _accountProvider.accountProvider.id);
     messageData.previousMemberID = message.ownerId!.toInt();
-    messageData.messages.add(message);
+    messageData.messages!.add(message);
     listMessages.addObject(message);
     blockMessageStateKey.currentState!._messages.add(message);
     blockMessageStateKey.currentState!.widget.updateState();
@@ -168,7 +166,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   void showWriting(String name) {
     blockMessageStateKey.currentState!.whenWriting(name);
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -188,16 +186,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           if (state is TokenEmptyState) {
             return CommonChatScreen(
               state: 'empty',
-              topicName: widget.topicName,
-              server: widget.server,
-              account: widget.account,
+              topicName: widget.screenName,
+              screenId: widget.screenId!,
               messageData: state.messagesList,
               hasMessage: hasMessages,
               contextScreen: contextScreen,
+              private: widget.private,
             );
           } else if (state is TokenLoadedState) {
-            acc = state.account;
-            //providerInScreen = MessageProviderContainer.instance.getProvider(widget.topicName)!;
             messageListen();
             _connectivitySubscription =
                 Connectivity().onConnectivityChanged.listen((result) {
@@ -209,33 +205,33 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             });
             return CommonChatScreen(
               state: 'loaded',
-              topicName: widget.topicName,
-              messageProvider: providerInScreen,
-              server: widget.server,
-              account: acc,
+              topicName: widget.screenName,
+              screenId: widget.screenId!,
+              socketConnect: state.socketConnect,
               messageData: const [],
               hasMessage: hasMessages,
               contextScreen: contextScreen,
+              private: widget.private,
             );
           } else if (state is TokenErrorState) {
             return CommonChatScreen(
               state: state.error,
-              topicName: widget.topicName,
-              server: widget.server,
-              account: widget.account,
+              topicName: widget.screenName,
+              screenId: widget.screenId!,
               messageData: const [],
               hasMessage: hasMessages,
               contextScreen: contextScreen,
+              private: widget.private,
             );
           } else if (state is TokenLoadingState) {
             return CommonChatScreen(
               state: 'loading',
-              topicName: widget.topicName,
-              server: widget.server,
-              account: widget.account,
+              topicName: widget.screenName,
+              screenId: widget.screenId!,
               messageData: const [],
               hasMessage: hasMessages,
               contextScreen: contextScreen,
+              private: widget.private,
             );
           } else {
             return const Center(child: LinearProgressIndicator());
@@ -248,23 +244,23 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
 class CommonChatScreen extends StatefulWidget {
   final String topicName;
-  final MessageProvider? messageProvider;
-  final String server;
-  final Account account;
+  final SocketConnect? socketConnect;
   final String state;
   final List<Messages> messageData;
   final bool hasMessage;
   final BuildContext contextScreen;
+  final int screenId;
+  final bool private;
   const CommonChatScreen(
       {super.key,
       required this.topicName,
-      this.messageProvider,
-      required this.server,
-      required this.account,
+      this.socketConnect,
       required this.state,
       required this.messageData,
       required this.hasMessage,
-      required this.contextScreen});
+      required this.contextScreen,
+      required this.screenId,
+      required this.private});
 
   @override
   State<CommonChatScreen> createState() => _CommonChatScreenState();
@@ -276,6 +272,7 @@ class _CommonChatScreenState extends State<CommonChatScreen>
   late SendFileProvider showFileSend;
   late ChangeMessageProvider changer;
   late VideoRecorderProvider videoRecorderProvider;
+  late AccountProvider _accountProvider;
   BuildContext? _buildContext;
 
   @override
@@ -290,12 +287,20 @@ class _CommonChatScreenState extends State<CommonChatScreen>
     videoRecorderProvider =
         Provider.of<VideoRecorderProvider>(context, listen: false);
     videoRecorderProvider.addListener(_onVideoRecorder);
+    _accountProvider = Provider.of<AccountProvider>(context, listen: false);
+    _accountProvider.addListener(_onAccountChange);
     final TokenBloc tokenBloc = context.read<TokenBloc>();
-    if (widget.account.email.isNotEmpty) {
-      tokenBloc.add(TokenLoadEvent(roomName: widget.topicName, type: 'ws'));
+    if (_accountProvider.isLoginProvider) {
+      tokenBloc.add(TokenLoadEvent(
+          screenName:
+              widget.private ? widget.screenId.toString() : widget.topicName,
+          screenId: widget.screenId,
+          type: widget.private ? 'private' : 'ws'));
     } else {
-      tokenBloc.add(
-          TokenLoadFromGetEvent(roomName: widget.topicName, context: context));
+      tokenBloc.add(TokenLoadFromGetEvent(
+          screenName: widget.topicName,
+          context: context,
+          screenId: widget.screenId));
     }
   }
 
@@ -305,10 +310,9 @@ class _CommonChatScreenState extends State<CommonChatScreen>
     changer.removeListener(_onChangeMessage);
     changer.clearChangeMessage();
     videoRecorderProvider.removeListener(_onVideoRecorder);
-    if (widget.messageProvider != null) {
-      widget.messageProvider!.dispose();
+    if (widget.socketConnect != null) {
+      widget.socketConnect!.dispose();
       WidgetsBinding.instance.removeObserver(this);
-      //print('dispose in screen');
     }
     super.dispose();
   }
@@ -318,13 +322,23 @@ class _CommonChatScreenState extends State<CommonChatScreen>
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed && _buildContext != null) {
       final TokenBloc tokenBloc = _buildContext!.read<TokenBloc>();
-      if (widget.account.email.isNotEmpty) {
-        tokenBloc.add(TokenLoadEvent(roomName: widget.topicName, type: 'ws'));
+      if (_accountProvider.isLoginProvider) {
+        tokenBloc.add(TokenLoadEvent(
+            screenName:
+                widget.private ? widget.screenId.toString() : widget.topicName,
+            screenId: widget.screenId,
+            type: widget.private ? 'private' : 'ws'));
       } else {
         tokenBloc.add(TokenLoadFromGetEvent(
-            roomName: widget.topicName, context: context));
+            screenName: widget.topicName,
+            context: context,
+            screenId: widget.screenId));
       }
     }
+  }
+
+  void _onAccountChange() {
+    setState(() {});
   }
 
   void _onShowFileSend() {
@@ -381,7 +395,7 @@ class _CommonChatScreenState extends State<CommonChatScreen>
                               })),*/
                       Expanded(
                         child: BlockMessages(
-                          key: blockMessageStateKey,
+                          //key: blockMessageStateKey,
                           checkContext: context,
                           state: widget.state,
                           messageData: widget.messageData,
@@ -394,10 +408,9 @@ class _CommonChatScreenState extends State<CommonChatScreen>
                       ),
                       showFileSend.readyToSend
                           ? SizedBox(
-                              //height: 58,
                               child: FileSend(
                                 roomName: widget.topicName,
-                                messageProvider: widget.messageProvider,
+                                socketConnect: widget.socketConnect,
                               ),
                             )
                           : Container(),
@@ -411,11 +424,11 @@ class _CommonChatScreenState extends State<CommonChatScreen>
                                   contextScreen: widget.contextScreen)
                               : TextAndSend(
                                   state: widget.state,
-                                  topicName: widget.topicName,
-                                  server: widget.server,
-                                  messageProvider: widget.messageProvider,
-                                  account: widget.account,
+                                  screenName: widget.topicName,
+                                  screenId: widget.screenId,
+                                  socketConnect: widget.socketConnect,
                                   contextScreen: widget.contextScreen,
+                                  private: widget.private,
                                 ),
                     ]),
                 videoRecorderProvider.isRecording
@@ -435,8 +448,7 @@ class _CommonChatScreenState extends State<CommonChatScreen>
 }
 
 class TopicName extends StatefulWidget {
-  // ignore: prefer_typing_uninitialized_variables
-  final topicName;
+  final String topicName;
   const TopicName({super.key, required this.topicName});
 
   @override
@@ -494,10 +506,9 @@ class _TopicNameState extends State<TopicName> {
                 constraints:
                     BoxConstraints(maxWidth: MediaQuery.of(context).size.width),
                 child: shouldAnimate
-                    ? Marquee(
-                        text:
-                            '${AppLocalizations.of(context).translate('common_chats_topic')}${widget.topicName}',
-                        textScaleFactor: 1,
+                    ? Text(
+                        '${AppLocalizations.of(context).translate('common_chats_topic')}${widget.topicName}',
+                        textScaler: TextScaler.noScaling,
                         style: TextStyle(
                           color: themeProvider.currentTheme.primaryColor,
                           fontSize: 20,
@@ -505,11 +516,10 @@ class _TopicNameState extends State<TopicName> {
                           fontWeight: FontWeight.w500,
                           height: 1.24,
                         ),
-                        blankSpace: MediaQuery.of(context).size.width,
                       )
                     : Text(
                         '${AppLocalizations.of(context).translate('common_chats_topic')}${widget.topicName}',
-                        textScaleFactor: 1,
+                        textScaler: TextScaler.noScaling,
                         style: TextStyle(
                           color: themeProvider.currentTheme.primaryColor,
                           fontSize: 20,
@@ -544,15 +554,25 @@ class ChatMembers extends StatefulWidget {
 
 class _ChatMembersState extends State<ChatMembers> {
   Set<Member> members = {};
+  late MessagesListProvider messagesListProvider;
 
   @override
   void initState() {
     super.initState();
+    messagesListProvider =
+        Provider.of<MessagesListProvider>(context, listen: false);
+    messagesListProvider.addListener(_onMemberListChange);
   }
 
   @override
   void dispose() {
     super.dispose();
+  }
+
+  void _onMemberListChange() {
+    setState(() {
+      members = messagesListProvider.messages[widget.topicName]!.members;
+    });
   }
 
   @override
@@ -595,7 +615,7 @@ class _ChatMembersState extends State<ChatMembers> {
                       child: Text(
                         AppLocalizations.of(context)
                             .translate('common_chats_chat_members'),
-                        textScaleFactor: 0.99,
+                        textScaler: TextScaler.noScaling,
                         style: TextStyle(
                           color: themeProvider.currentTheme.primaryColor,
                           fontSize: screenWidth * 0.038,
@@ -653,13 +673,14 @@ class BlockMessages extends StatefulWidget {
 }
 
 class _BlockMessagesState extends State<BlockMessages> {
-  final List<Messages> _messages = [];
+  final Set<Messages> _messages = {};
   List<Messages> _cachedMessages = [];
   bool showWrite = false;
   final controller = ScrollController();
-  bool showArrow = true;
-  final scrollChatController = ScrollChatControll();
-  final ItemScrollController itemScrollController = ItemScrollController();
+  bool showArrow = false;
+  int countNewMessagesOnArrowDown = 0;
+  //final scrollChatController = ScrollChatControll();
+  late ItemScrollController itemScrollController;
   final ScrollOffsetController scrollOffsetController =
       ScrollOffsetController();
   final ItemPositionsListener itemPositionsListener =
@@ -670,41 +691,78 @@ class _BlockMessagesState extends State<BlockMessages> {
   late ReplyProvider isReplying;
   int? lastIndex;
   double? lastOffset;
+  late MessagesListProvider messagesListProvider;
+  late MessagesBlockFunctionProvider messagesBlockFunctionProvider;
 
   @override
   void initState() {
     super.initState();
     isReplying = Provider.of<ReplyProvider>(context, listen: false);
     isReplying.addListener(_onReplying);
+    messagesListProvider =
+        Provider.of<MessagesListProvider>(context, listen: false);
+    messagesListProvider.addListener(_onMessagesListChange);
+    messagesBlockFunctionProvider =
+        Provider.of<MessagesBlockFunctionProvider>(context, listen: false);
+    messagesBlockFunctionProvider.addListener(_onWriting);
+    messagesBlockFunctionProvider.addListener(_onShowingArrowDown);
+    messagesBlockFunctionProvider
+        .addListener(_onChangeCountNewMessagesArrowDown);
+    itemScrollController =
+        messagesBlockFunctionProvider.getItemScrollController(widget.roomName);
   }
 
   void _onReplying() async {
     setState(() {});
   }
 
-  whenWriting(String name) async {
-    setState(() {
-      showWrite = true;
-    });
-    Timer(const Duration(seconds: 3), () {
+  Future<void> _onMessagesListChange() async {
+    await Future.delayed(const Duration(milliseconds: 10));
+    if (mounted) {
       setState(() {
-        showWrite = false;
+        _messages
+            .addAll(messagesListProvider.messages[widget.roomName]!.messages);
       });
-    });
+    }
   }
 
-  void showingArrow() {
-    setState(() {
-      showArrow = !showArrow;
-    });
+  void _onWriting() {
+    if (mounted) {
+      setState(() {
+        showWrite = messagesBlockFunctionProvider
+            .messagesBlockFunction[widget.roomName]!.showWriting;
+      });
+    }
+  }
+
+  void _onShowingArrowDown() {
+    if (mounted) {
+      setState(() {
+        showArrow = messagesBlockFunctionProvider
+            .messagesBlockFunction[widget.roomName]!.showArrowDown;
+      });
+    }
+  }
+
+  void _onChangeCountNewMessagesArrowDown() {
+    if (mounted) {
+      setState(() {
+        countNewMessagesOnArrowDown = messagesBlockFunctionProvider
+            .messagesBlockFunction[widget.roomName]!.countNewMessages;
+      });
+    }
   }
 
   @override
   void dispose() {
     controller.dispose();
-    isReplying.afterReplyToMessage();
+    isReplying.clearReplyToMessage();
     isReplying.removeListener(_onReplying);
-    //isReplying.dispose();
+    messagesListProvider.removeListener(_onMessagesListChange);
+    messagesBlockFunctionProvider.removeListener(_onWriting);
+    messagesBlockFunctionProvider.removeListener(_onShowingArrowDown);
+    messagesBlockFunctionProvider
+        .removeListener(_onChangeCountNewMessagesArrowDown);
     super.dispose();
   }
 
@@ -714,157 +772,153 @@ class _BlockMessagesState extends State<BlockMessages> {
       builder: (context, themeProvider, child) {
         return Padding(
             padding: const EdgeInsets.only(top: 0, bottom: 0),
-            child: Container(
-              /*decoration: ShapeDecoration(
-                color: themeProvider.currentTheme.primaryColorDark,
-                shape: RoundedRectangleBorder(
-                  side: BorderSide(
-                      width: 0.50,
-                      color: themeProvider.currentTheme.shadowColor),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                shadows: [
-                  BoxShadow(
-                    color: themeProvider.currentTheme.cardColor,
-                    blurRadius: 8,
-                    offset: const Offset(2, 2),
-                    spreadRadius: 0,
-                  )
-                ],
-              ),*/
-              child: Stack(
-                alignment: Alignment.bottomRight,
-                children: [
-                  widget.state == 'loaded'
-                      ? messageView(themeProvider)
-                      : widget.state == 'empty'
-                          ? messegeViewFromGet(themeProvider)
-                          : Center(
-                              child: widget.state == 'loading'
-                                  ? CircularProgressIndicator(
-                                      color: themeProvider
-                                          .currentTheme.shadowColor,
-                                    )
-                                  : Center(
-                                      child: Text(
-                                        widget.state,
-                                        style: TextStyle(
-                                          color: themeProvider
-                                              .currentTheme.primaryColor,
-                                          fontSize: 14,
-                                          fontFamily: 'Manrope',
-                                          fontWeight: FontWeight.w600,
-                                          height: 1.30,
-                                        ),
+            child: Stack(
+              alignment: Alignment.bottomRight,
+              children: [
+                widget.state == 'loaded'
+                    ? messageView(themeProvider)
+                    : widget.state == 'empty'
+                        ? messegeViewFromGet(themeProvider)
+                        : Center(
+                            child: widget.state == 'loading'
+                                ? CircularProgressIndicator(
+                                    color:
+                                        themeProvider.currentTheme.shadowColor,
+                                  )
+                                : Center(
+                                    child: Text(
+                                      widget.state,
+                                      style: TextStyle(
+                                        color: themeProvider
+                                            .currentTheme.primaryColor,
+                                        fontSize: 14,
+                                        fontFamily: 'Manrope',
+                                        fontWeight: FontWeight.w600,
+                                        height: 1.30,
                                       ),
-                                    )),
-                ],
-              ),
+                                    ),
+                                  )),
+              ],
             ));
       },
     );
   }
 
+  void showingArrowDown(Iterable<ItemPosition> position) async {
+    //print('index ${position.first.index} showArrow $showArrow');
+    if (position.first.index > 5 && !showArrow) {
+      messagesBlockFunctionProvider
+          .clearNewMessagessInArrowBlockMessages(widget.roomName);
+      messagesBlockFunctionProvider
+          .startShowingArrowDownBlockMessages(widget.roomName);
+      await Future.delayed(const Duration(milliseconds: 100));
+    } else if (position.first.index < 5 && showArrow) {
+      messagesBlockFunctionProvider
+          .clearNewMessagessInArrowBlockMessages(widget.roomName);
+      messagesBlockFunctionProvider
+          .stopShowingArrowDownBlockMessages(widget.roomName);
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+  }
+
   Widget messageView(ThemeProvider themeProvider) {
     bool countNewMessages = (_messages.length - _cachedMessages.length) == 1;
     if (widget.hasMessage || _messages.isNotEmpty) {
-      _cachedMessages = _messages.reversed.toList();
-      return Observer(builder: (context, watch) {
-        return Stack(
-          children: [
-            Container(
-              padding: EdgeInsets.only(bottom: isReplying.isReplying ? 74 : 0),
-              child: Stack(
-                alignment: Alignment.bottomRight,
-                children: [
-                  ScrollablePositionedList.builder(
-                    padding: const EdgeInsets.only(left: 10, right: 10),
-                    reverse: true,
-                    itemScrollController: isReplying.itemScrollController,
-                    itemPositionsListener: itemPositionsListener,
-                    scrollOffsetController: scrollOffsetController,
-                    scrollOffsetListener: scrollOffsetListener,
-                    itemCount: _cachedMessages.length,
-                    itemBuilder: (context, index) {
-                      final position =
-                          itemPositionsListener.itemPositions.value;
-                      if (position.isNotEmpty) {
-                        if (position.first.index > 10 &&
-                            !watch(scrollChatController.showArrow)) {
-                          scrollChatController.clearNewMessagess();
-                          scrollChatController.showingArrow();
-                        } else if (position.first.index < 10 &&
-                            watch(scrollChatController.showArrow)) {
-                          scrollChatController.showingArrow();
-                          scrollChatController.clearNewMessagess();
-                        }
-                        if (countNewMessages && position.first.index > 10) {
-                          countNewMessages = !countNewMessages;
-                          scrollChatController.addNewMessage();
-                          scrollOffsetController.animateScroll(
-                              offset: 82,
-                              duration: const Duration(microseconds: 1));
-                        }
+      _cachedMessages = _messages.toList().reversed.toList();
+      return Stack(
+        children: [
+          Container(
+            padding: EdgeInsets.only(bottom: isReplying.isReplying ? 74 : 0),
+            child: Stack(
+              alignment: Alignment.bottomRight,
+              children: [
+                ScrollablePositionedList.builder(
+                  padding: const EdgeInsets.only(left: 10, right: 10),
+                  reverse: true,
+                  itemScrollController: itemScrollController,
+                  itemPositionsListener: itemPositionsListener,
+                  scrollOffsetController: scrollOffsetController,
+                  scrollOffsetListener: scrollOffsetListener,
+                  itemCount: _cachedMessages.length,
+                  itemBuilder: (context, index) {
+                    final position = itemPositionsListener.itemPositions.value;
+                    if (position.isNotEmpty) {
+                      showingArrowDown(position);
+                      if (countNewMessages && position.first.index > 10) {
+                        countNewMessages = !countNewMessages;
+                        scrollOffsetController.animateScroll(
+                            offset: 82,
+                            duration: const Duration(microseconds: 1));
+                        messagesBlockFunctionProvider
+                            .addNewMessageInArrowBlockMessages(widget.roomName);
                       }
-                      return _cachedMessages[index];
-                    },
-                  ),
-                  AnimatedOpacity(
-                    opacity: watch(scrollChatController.showArrow) ? 1 : 0,
-                    duration: const Duration(milliseconds: 500),
-                    child: Stack(
-                      alignment: Alignment.bottomRight,
-                      children: [
-                        FloatingActionButton(
-                          onPressed: () async {
-                            isReplying.itemScrollController.scrollTo(
-                                index: 0,
-                                duration: const Duration(milliseconds: 10));
-                            await Future.delayed(
-                                const Duration(milliseconds: 50));
-                            scrollChatController.showingArrow();
-                            scrollChatController.clearNewMessagess();
-                          },
-                          backgroundColor: themeProvider.currentTheme.cardColor,
-                          mini: true,
-                          child: Icon(
-                            Icons.arrow_downward,
-                            color: themeProvider.currentTheme.primaryColor,
-                          ),
+                    }
+                    return _cachedMessages[index];
+                  },
+                ),
+                AnimatedOpacity(
+                  opacity: showArrow ? 1 : 0,
+                  duration: const Duration(milliseconds: 500),
+                  child: Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      FloatingActionButton(
+                        onPressed: () async {
+                          itemScrollController.scrollTo(
+                              index: 0,
+                              duration: const Duration(milliseconds: 10));
+                          await Future.delayed(
+                              const Duration(milliseconds: 50));
+                          messagesBlockFunctionProvider
+                              .clearNewMessagessInArrowBlockMessages(
+                                  widget.roomName);
+                          messagesBlockFunctionProvider
+                              .stopShowingArrowDownBlockMessages(
+                                  widget.roomName);
+                        },
+                        backgroundColor: themeProvider.currentTheme.cardColor,
+                        mini: true,
+                        child: Icon(
+                          Icons.arrow_downward,
+                          color: themeProvider.currentTheme.primaryColor,
                         ),
-                        watch(scrollChatController.countNewMessages) != 0
-                            ? Padding(
-                                padding: const EdgeInsets.all(2.0),
-                                child: Container(
-                                  height: 14,
-                                  width: 14,
-                                  alignment: Alignment.center,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.red,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Text(
-                                    watch(
-                                      scrollChatController.countNewMessages,
-                                    ).toString(),
-                                    textScaler: TextScaler.noScaling,
-                                    style: const TextStyle(
-                                        fontSize: 10, color: Colors.white),
-                                  ),
+                      ),
+                      countNewMessagesOnArrowDown != 0
+                          ? Padding(
+                              padding: const EdgeInsets.all(2.0),
+                              child: Container(
+                                height: 14,
+                                width: 14,
+                                alignment: Alignment.center,
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
                                 ),
-                              )
-                            : Container(),
-                      ],
-                    ),
+                                child: Text(
+                                  messagesBlockFunctionProvider
+                                      .messagesBlockFunction[widget.roomName]!
+                                      .countNewMessages
+                                      .toString(),
+                                  textScaler: TextScaler.noScaling,
+                                  style: const TextStyle(
+                                      fontSize: 10, color: Colors.white),
+                                ),
+                              ),
+                            )
+                          : Container(),
+                    ],
                   ),
-                  showWrite ? const WriteAnimated() : Container(),
-                ],
-              ),
+                ),
+                showWrite ? const WriteAnimated() : Container(),
+              ],
             ),
-            Positioned(
-              bottom: 0,
-              right: 0,
-              left: 0,
+          ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            left: 0,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 8, right: 8),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 100),
                 height: isReplying.isReplying ? 74 : 0,
@@ -872,6 +926,8 @@ class _BlockMessagesState extends State<BlockMessages> {
                   borderRadius: const BorderRadius.only(
                     bottomLeft: Radius.circular(10),
                     bottomRight: Radius.circular(10),
+                    topLeft: Radius.circular(10),
+                    topRight: Radius.circular(10),
                   ),
                   color: themeProvider.currentTheme.cardColor,
                 ),
@@ -891,7 +947,7 @@ class _BlockMessagesState extends State<BlockMessages> {
                           data: MediaQuery.of(context)
                               .copyWith(textScaler: TextScaler.noScaling),
                           child: Padding(
-                            padding: EdgeInsets.only(top: 6, bottom: 6),
+                            padding: const EdgeInsets.only(top: 6, bottom: 6),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -1001,10 +1057,10 @@ class _BlockMessagesState extends State<BlockMessages> {
                   ],
                 ),
               ),
-            )
-          ],
-        );
-      });
+            ),
+          )
+        ],
+      );
     } else {
       return ClearBlockMessages(
         themeProvider: themeProvider,
@@ -1016,7 +1072,7 @@ class _BlockMessagesState extends State<BlockMessages> {
     MediaQueryData mediaQuery = MediaQuery.of(context);
     double fontSize = mediaQuery.size.width * 0.033;
     if (widget.messageData.isNotEmpty) {
-      _cachedMessages = _messages.reversed.toList();
+      _cachedMessages = _messages.toList().reversed.toList();
       return Stack(
         children: [
           Container(
@@ -1143,12 +1199,12 @@ class ClearBlockMessages extends StatelessWidget {
 
 class FileSend extends StatefulWidget {
   final String roomName;
-  final MessageProvider? messageProvider;
+  final SocketConnect? socketConnect;
 
   const FileSend({
     super.key,
     required this.roomName,
-    required this.messageProvider,
+    required this.socketConnect,
   });
 
   @override
@@ -1185,7 +1241,7 @@ class _FileSendState extends State<FileSend> {
     final coment = sendFile.coment;
     final reply = isReplying.idMessageToReplying;
     if (messageForSend.isNotEmpty) {
-      widget.messageProvider?.sendMessage(json.encode({
+      widget.socketConnect?.sendMessage(json.encode({
         "send": {
           "original_message_id": isReplying.isReplying ? reply : null,
           "message": coment,
@@ -1401,20 +1457,20 @@ class _FileSendState extends State<FileSend> {
 }
 
 class TextAndSend extends StatefulWidget {
-  final String topicName;
-  final String server;
-  final MessageProvider? messageProvider;
-  final Account account;
+  final String screenName;
+  final int screenId;
+  final SocketConnect? socketConnect;
   final String state;
   final BuildContext contextScreen;
+  final bool private;
   const TextAndSend(
       {super.key,
-      required this.topicName,
-      required this.server,
-      required this.messageProvider,
-      required this.account,
+      required this.screenName,
+      required this.screenId,
+      required this.socketConnect,
       required this.state,
-      required this.contextScreen});
+      required this.contextScreen,
+      required this.private});
 
   @override
   _TextAndSendState createState() => _TextAndSendState();
@@ -1422,7 +1478,6 @@ class TextAndSend extends StatefulWidget {
 
 class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
   final TextEditingController messageController = TextEditingController();
-  var token = {};
   final _textFieldFocusNode = FocusNode();
   bool isWriting = false;
   bool recording = false;
@@ -1434,6 +1489,8 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
   String? voiceFilePath;
   late VideoRecorderProvider videoRecorderProvider;
   bool sendVideoIcon = true;
+  late MessagesBlockFunctionProvider messagesBlockFunctionProvider;
+  late ItemScrollController itemScrollController;
 
   @override
   void initState() {
@@ -1447,6 +1504,10 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
         _displayTime = time;
       });
     });
+    messagesBlockFunctionProvider =
+        Provider.of<MessagesBlockFunctionProvider>(context, listen: false);
+    itemScrollController = messagesBlockFunctionProvider
+        .getItemScrollController(widget.screenName);
   }
 
   @override
@@ -1463,7 +1524,7 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
   void _sendMessage(String message) {
     final messageForSend = message.trimRight().trimLeft();
     if (messageForSend.isNotEmpty) {
-      widget.messageProvider?.sendMessage(json.encode({
+      widget.socketConnect?.sendMessage(json.encode({
         "send": {
           "original_message_id":
               isReplying.isReplying ? isReplying.idMessageToReplying : null,
@@ -1476,7 +1537,7 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
   }
 
   void _sendStatus() {
-    widget.messageProvider?.sendMessage(json.encode({'type': "typing"}));
+    widget.socketConnect?.sendMessage(json.encode({'type': "typing"}));
   }
 
   void _onTapOutside(BuildContext context) {
@@ -1514,23 +1575,6 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
                     ),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  /*decoration: ShapeDecoration(
-                    color: themeProvider.currentTheme.primaryColorDark,
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                          width: 0.50,
-                          color: themeProvider.currentTheme.shadowColor),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    shadows: [
-                      BoxShadow(
-                        color: themeProvider.currentTheme.cardColor,
-                        blurRadius: 8,
-                        offset: const Offset(2, 2),
-                        spreadRadius: 0,
-                      ),
-                    ],
-                  ),*/
                   child: MediaQuery(
                     data: MediaQuery.of(context)
                         .copyWith(textScaler: TextScaler.noScaling),
@@ -1677,7 +1721,7 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
                       maxLines: null,
                       onTap: () async {
                         if (widget.state == 'empty' &&
-                            widget.account.email.isEmpty) {
+                            !_accountProvider.isLoginProvider) {
                           FocusScope.of(context).unfocus();
                           await showDialog(
                             context: context,
@@ -1689,7 +1733,11 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
                             final TokenBloc tokenBloc =
                                 context.read<TokenBloc>();
                             tokenBloc.add(TokenLoadEvent(
-                                roomName: widget.topicName, type: 'ws'));
+                                screenName: widget.private
+                                    ? widget.screenId.toString()
+                                    : widget.screenName,
+                                screenId: widget.screenId,
+                                type: widget.private ? 'private' : 'ws'));
                           } else {
                             _textFieldFocusNode.unfocus();
                           }
@@ -1715,13 +1763,13 @@ class _TextAndSendState extends State<TextAndSend> with WidgetsBindingObserver {
                       _sendMessage(message);
                       messageController.clear();
                       await Future.delayed(const Duration(milliseconds: 500));
-                      blockMessageStateKey
-                          .currentState!.isReplying.itemScrollController
-                          .jumpTo(index: 0);
-                      blockMessageStateKey.currentState!.scrollChatController
-                          .showingArrow();
-                      blockMessageStateKey.currentState!.scrollChatController
-                          .clearNewMessagess();
+                      itemScrollController.jumpTo(index: 0);
+                      messagesBlockFunctionProvider
+                          .messagesBlockFunction[widget.screenName]!
+                          .showingArrowDown(false);
+                      messagesBlockFunctionProvider
+                          .messagesBlockFunction[widget.screenName]!
+                          .clearNewMessagessInArrow();
                     }
                   },
                   child: Container(

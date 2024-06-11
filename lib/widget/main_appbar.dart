@@ -43,7 +43,7 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
             ),
           ),
-          leading: MainDropdownMenu(roomName: roomName),
+          leading: MainDropdownMenu(screenName: roomName),
           actions: [
             IconButton(
                 onPressed: () => {

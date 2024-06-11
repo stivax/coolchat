@@ -3,7 +3,7 @@
 import 'dart:convert';
 
 import 'package:coolchat/app_localizations.dart';
-import 'package:coolchat/popap/add_room_popup.dart';
+import 'package:coolchat/popup/add_room_popup.dart';
 import 'package:coolchat/servises/account_setting_provider.dart';
 import 'package:coolchat/servises/main_widget_provider.dart';
 import 'package:coolchat/servises/tab_controller.dart';
@@ -15,7 +15,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 import 'screen/common_chat.dart';
 import 'error_answer.dart';
-import 'popap/login_popup.dart';
+import 'popup/login_popup.dart';
 import 'server/server.dart';
 import 'theme_provider.dart';
 import 'account.dart';
@@ -131,17 +131,14 @@ class _RoomState extends State<Room> {
                   flex: 5,
                   child: GestureDetector(
                     onTap: () async {
-                      const server = Server.server;
-                      final account = await readAccountFromStorage();
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => ChatScreen(
-                            topicName: widget.name,
-                            id: widget.id,
-                            server: server,
-                            account: account,
+                            screenName: widget.name,
+                            screenId: widget.id,
                             hasMessage: widget.countMessages > 0,
+                            private: false,
                           ),
                         ),
                       ).then((value) async {

@@ -1,12 +1,12 @@
 import 'dart:convert';
 
 import 'package:coolchat/account.dart';
-import 'package:coolchat/servises/message_provider.dart';
+import 'package:coolchat/servises/socket_connect.dart';
 import 'package:coolchat/model/messages.dart';
 import 'package:coolchat/model/messages_list.dart';
 import 'package:coolchat/model/token.dart';
 import 'package:coolchat/server/server.dart';
-import 'package:coolchat/servises/message_provider_container.dart';
+import 'package:coolchat/servises/socket_connect_container.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
 
@@ -24,19 +24,16 @@ class TokenBloc extends Bloc<TokenEvent, TokenState> {
       (event, emit) async {
         var error;
         try {
-          late final MessageProvider messageProvider;
+          late final SocketConnect socketConnect;
           Account account = await readAccountFromStorage();
           token =
               await tokenRepository.getToken(account.email, account.password);
-          messageProvider = await MessageProvider.create(
-              'wss://$server/${event.type!}/${event.roomName!}?token=${token!.token["access_token"]}');
-          //await messageProvider.channel.ready;
-          MessageProviderContainer.instance
-              .addProvider(event.roomName!, messageProvider);
+          socketConnect = await SocketConnect.create(
+              'wss://$server/${event.type!}/${event.screenName!}?token=${token!.token["access_token"]}');
+          SocketConnectContainer.instance
+              .addProvider(event.screenName!, socketConnect);
           emit(TokenLoadedState(
-              token: token!,
-              messageProvider: messageProvider,
-              account: account));
+              token: token!, socketConnect: socketConnect, account: account));
         } catch (e) {
           error = e;
           emit(TokenErrorState(error: error));
@@ -49,7 +46,7 @@ class TokenBloc extends Bloc<TokenEvent, TokenState> {
         List<Messages> messagesLoaded = [];
         Account account = await readAccountFromStorage();
         Future<http.Response> getData() async {
-          var url = Uri.https(server, '/$suffix/messages/${event.roomName}');
+          var url = Uri.https(server, '/$suffix/messages/${event.screenName}');
           return await http.get(url);
         }
 
@@ -59,8 +56,8 @@ class TokenBloc extends Bloc<TokenEvent, TokenState> {
             if (response.statusCode == 200) {
               String responseBody = utf8.decode(response.bodyBytes);
               List<dynamic> jsonList = jsonDecode(responseBody);
-              messages = Messages.fromJsonList(
-                      jsonList, event.context, event.roomName!, account.id)
+              messages = Messages.fromJsonList(jsonList, event.context,
+                      event.screenName!, event.screenId!, account.id, false)
                   .reversed
                   .toList();
               final ListMessages listMessages = ListMessages();

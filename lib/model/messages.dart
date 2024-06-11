@@ -5,7 +5,7 @@ import 'package:coolchat/app_localizations.dart';
 import 'package:coolchat/screen/image_view_screen.dart';
 import 'package:coolchat/screen/video_player_screen.dart';
 import 'package:coolchat/servises/audio_player.dart';
-import 'package:coolchat/servises/message_provider.dart';
+import 'package:coolchat/servises/socket_connect.dart';
 import 'package:coolchat/model/messages_list.dart';
 import 'package:coolchat/servises/change_message_provider.dart';
 import 'package:coolchat/servises/file_controller.dart';
@@ -18,7 +18,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import 'package:coolchat/avatar.dart';
-import 'package:coolchat/servises/message_provider_container.dart';
+import 'package:coolchat/servises/socket_connect_container.dart';
 
 import '../theme_provider.dart';
 
@@ -34,10 +34,12 @@ class Messages extends StatelessWidget {
   final bool isPreviousSameMember;
   final int vote;
   final BuildContext contextMessage;
-  final String roomName;
+  final String screenName;
+  final int screenId;
   final int accountId;
   final int? idReturn;
   final bool edited;
+  final bool private;
   const Messages(
       {super.key,
       required this.message,
@@ -50,13 +52,21 @@ class Messages extends StatelessWidget {
       required this.isPreviousSameMember,
       required this.vote,
       required this.contextMessage,
-      required this.roomName,
+      required this.screenName,
+      required this.screenId,
       required this.accountId,
       required this.idReturn,
-      required this.edited});
+      required this.edited,
+      required this.private});
 
-  static Messages fromJsonMessage(dynamic jsonMessage, int previousMemberID,
-      BuildContext contextMessage, String roomName, int accountId) {
+  static Messages fromJsonMessage(
+      dynamic jsonMessage,
+      int previousMemberID,
+      BuildContext contextMessage,
+      String screenName,
+      int screenId,
+      int accountId,
+      bool private) {
     bool isSameMember = jsonMessage['receiver_id'] == previousMemberID;
     final timeZone = DateTime.now().timeZoneOffset;
 
@@ -72,9 +82,11 @@ class Messages extends StatelessWidget {
       vote: jsonMessage['vote'],
       idReturn: jsonMessage['id_return'],
       contextMessage: contextMessage,
-      roomName: roomName,
+      screenName: screenName,
+      screenId: screenId,
       accountId: accountId,
       edited: jsonMessage['edited'],
+      private: private,
     );
   }
 
@@ -82,8 +94,13 @@ class Messages extends StatelessWidget {
     return jsonVote;
   }
 
-  static List<Messages> fromJsonList(dynamic jsonList,
-      BuildContext contextMessage, String roomName, int accountId) {
+  static List<Messages> fromJsonList(
+      dynamic jsonList,
+      BuildContext contextMessage,
+      String screenName,
+      int screenId,
+      int accountId,
+      bool private) {
     int previousMemberID = 0;
     final timeZone = DateTime.now().timeZoneOffset;
     List<Messages> messages = [];
@@ -104,9 +121,11 @@ class Messages extends StatelessWidget {
         vote: jsonMessage['vote'],
         idReturn: jsonMessage['id_return'],
         contextMessage: contextMessage,
-        roomName: roomName,
+        screenName: screenName,
+        screenId: screenId,
         accountId: accountId,
         edited: jsonMessage['edited'],
+        private: private,
       ));
     }).toList();
     return messages;
@@ -148,10 +167,12 @@ class Messages extends StatelessWidget {
           isPreviousSameMember: true,
           vote: 0,
           contextMessage: messagesList.first.contextMessage,
-          roomName: '',
+          screenName: '',
+          screenId: 0,
           accountId: 0,
           idReturn: 0,
-          edited: false);
+          edited: false,
+          private: false);
     } else {
       return null;
     }
@@ -199,7 +220,7 @@ class Messages extends StatelessWidget {
       Offset tapPosition,
       int idMessage,
       String textMessage,
-      MessageProvider? provider) async {
+      SocketConnect? provider) async {
     var newTapPosition = Offset(tapPosition.dx,
         tapPosition.dy + MediaQuery.of(contextMessage).viewInsets.bottom);
     FocusScope.of(contextMessage).unfocus();
@@ -282,7 +303,7 @@ class Messages extends StatelessWidget {
   }
 
   static void _onChangeMessage(
-      ChangeMessageProvider changer, MessageProvider? provider) {
+      ChangeMessageProvider changer, SocketConnect? provider) {
     if (changer.newMessage != null) {
       String newMessage = changer.newMessage!;
       int idMessage = changer.idMessage!;
@@ -310,9 +331,12 @@ class Messages extends StatelessWidget {
             vote: vote,
             isPreviousSameMember: isPreviousSameMember,
             contextMessage: contextMessage,
-            roomName: roomName,
+            screenName: screenName,
+            screenId: screenId,
             idReturn: idReturn,
-            edited: edited)
+            edited: edited,
+            private: private,
+          )
         : TheirMessegeReply(
             screenWidth: screenWidth,
             message: message,
@@ -325,9 +349,12 @@ class Messages extends StatelessWidget {
             vote: vote,
             isPreviousSameMember: isPreviousSameMember,
             contextMessage: contextMessage,
-            roomName: roomName,
+            screenName: screenName,
+            screenId: screenId,
             idReturn: idReturn,
-            edited: edited);
+            edited: edited,
+            private: private,
+          );
   }
 }
 
@@ -343,9 +370,11 @@ class TheirMessegeReply extends StatelessWidget {
   final int vote;
   final bool isPreviousSameMember;
   final BuildContext contextMessage;
-  final String roomName;
+  final String screenName;
+  final int screenId;
   final int? idReturn;
   final bool edited;
+  final bool private;
 
   const TheirMessegeReply(
       {super.key,
@@ -360,9 +389,11 @@ class TheirMessegeReply extends StatelessWidget {
       required this.vote,
       required this.isPreviousSameMember,
       required this.contextMessage,
-      required this.roomName,
+      required this.screenName,
+      required this.screenId,
       required this.idReturn,
-      required this.edited});
+      required this.edited,
+      required this.private});
 
   @override
   Widget build(BuildContext context) {
@@ -380,22 +411,24 @@ class TheirMessegeReply extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.only(right: 3, left: 3),
-                    alignment: Alignment.topCenter,
-                    width: screenWidth * 0.09,
-                    height: 32,
-                    child: isPreviousSameMember
-                        ? Container()
-                        : AvatarMember(
-                            avatar: NetworkImage(avatar),
-                            name: userName,
-                            isOnline: true,
-                            memberID: ownerId,
-                            contextAvatarMember: contextMessage,
-                            big: false,
-                          ),
-                  ),
+                  private
+                      ? Container()
+                      : Container(
+                          padding: const EdgeInsets.only(right: 3, left: 3),
+                          alignment: Alignment.topCenter,
+                          width: screenWidth * 0.09,
+                          height: 32,
+                          child: isPreviousSameMember
+                              ? Container()
+                              : AvatarMember(
+                                  avatar: NetworkImage(avatar),
+                                  name: userName,
+                                  isOnline: true,
+                                  memberID: ownerId,
+                                  contextAvatarMember: contextMessage,
+                                  big: false,
+                                ),
+                        ),
                   Expanded(
                     flex: 12,
                     child: Column(
@@ -407,20 +440,22 @@ class TheirMessegeReply extends StatelessWidget {
                               child: Container(
                                 padding: const EdgeInsets.only(bottom: 5),
                                 alignment: Alignment.centerLeft,
-                                child: isPreviousSameMember
+                                child: private
                                     ? Container()
-                                    : Text(
-                                        userName,
-                                        textScaler: TextScaler.noScaling,
-                                        style: TextStyle(
-                                          color: themeProvider
-                                              .currentTheme.primaryColor,
-                                          fontSize: 14,
-                                          fontFamily: 'Manrope',
-                                          fontWeight: FontWeight.w600,
-                                          height: 1.30,
-                                        ),
-                                      ),
+                                    : isPreviousSameMember
+                                        ? Container()
+                                        : Text(
+                                            userName,
+                                            textScaler: TextScaler.noScaling,
+                                            style: TextStyle(
+                                              color: themeProvider
+                                                  .currentTheme.primaryColor,
+                                              fontSize: 14,
+                                              fontFamily: 'Manrope',
+                                              fontWeight: FontWeight.w600,
+                                              height: 1.30,
+                                            ),
+                                          ),
                               ),
                             ),
                             Container(
@@ -446,8 +481,9 @@ class TheirMessegeReply extends StatelessWidget {
                         ),
                         GestureDetector(
                           onDoubleTap: () {
-                            final provider = MessageProviderContainer.instance
-                                .getProvider(roomName);
+                            final provider = SocketConnectContainer.instance
+                                .getProvider(
+                                    private ? screenId.toString() : screenName);
                             provider?.sendMessage(json.encode({
                               "vote": {"message_id": id, "dir": 1}
                             }));
@@ -655,9 +691,11 @@ class MyMessegeReply extends StatelessWidget {
   final int vote;
   final bool isPreviousSameMember;
   final BuildContext contextMessage;
-  final String roomName;
+  final String screenName;
+  final int screenId;
   final int? idReturn;
   final bool edited;
+  final bool private;
 
   const MyMessegeReply(
       {super.key,
@@ -672,9 +710,11 @@ class MyMessegeReply extends StatelessWidget {
       required this.vote,
       required this.isPreviousSameMember,
       required this.contextMessage,
-      required this.roomName,
+      required this.screenName,
+      required this.screenId,
       required this.idReturn,
-      required this.edited});
+      required this.edited,
+      required this.private});
 
   @override
   Widget build(BuildContext context) {
@@ -722,31 +762,35 @@ class MyMessegeReply extends StatelessWidget {
                               ),
                             ),
                             Expanded(
-                              child: isPreviousSameMember
+                              child: private
                                   ? Container()
-                                  : Container(
-                                      padding: const EdgeInsets.only(bottom: 5),
-                                      alignment: Alignment.centerRight,
-                                      child: Text(
-                                        userName,
-                                        textScaler: TextScaler.noScaling,
-                                        style: TextStyle(
-                                          color: themeProvider
-                                              .currentTheme.primaryColor,
-                                          fontSize: 14,
-                                          fontFamily: 'Manrope',
-                                          fontWeight: FontWeight.w600,
-                                          height: 1.30,
+                                  : isPreviousSameMember
+                                      ? Container()
+                                      : Container(
+                                          padding:
+                                              const EdgeInsets.only(bottom: 5),
+                                          alignment: Alignment.centerRight,
+                                          child: Text(
+                                            userName,
+                                            textScaler: TextScaler.noScaling,
+                                            style: TextStyle(
+                                              color: themeProvider
+                                                  .currentTheme.primaryColor,
+                                              fontSize: 14,
+                                              fontFamily: 'Manrope',
+                                              fontWeight: FontWeight.w600,
+                                              height: 1.30,
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                    ),
                             ),
                           ],
                         ),
                         GestureDetector(
                           onDoubleTap: () {
-                            final provider = MessageProviderContainer.instance
-                                .getProvider(roomName);
+                            final provider = SocketConnectContainer.instance
+                                .getProvider(
+                                    private ? screenId.toString() : screenName);
                             provider?.sendMessage(json.encode({
                               "vote": {"message_id": id, "dir": 1}
                             }));
@@ -754,8 +798,9 @@ class MyMessegeReply extends StatelessWidget {
                           },
                           onTapUp: (details) {
                             HapticFeedback.lightImpact();
-                            final provider = MessageProviderContainer.instance
-                                .getProvider(roomName);
+                            final provider = SocketConnectContainer.instance
+                                .getProvider(
+                                    private ? screenId.toString() : screenName);
                             Messages.showMenuMessageFunction(
                                 contextMessage,
                                 themeProvider,
@@ -943,22 +988,24 @@ class MyMessegeReply extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.only(right: 3, left: 3),
-                    alignment: Alignment.topCenter,
-                    width: screenWidth * 0.09,
-                    height: 32,
-                    child: isPreviousSameMember
-                        ? Container()
-                        : AvatarMember(
-                            avatar: NetworkImage(avatar),
-                            name: userName,
-                            isOnline: true,
-                            memberID: ownerId,
-                            contextAvatarMember: contextMessage,
-                            big: false,
-                          ),
-                  ),
+                  private
+                      ? Container()
+                      : Container(
+                          padding: const EdgeInsets.only(right: 3, left: 3),
+                          alignment: Alignment.topCenter,
+                          width: screenWidth * 0.09,
+                          height: 32,
+                          child: isPreviousSameMember
+                              ? Container()
+                              : AvatarMember(
+                                  avatar: NetworkImage(avatar),
+                                  name: userName,
+                                  isOnline: true,
+                                  memberID: ownerId,
+                                  contextAvatarMember: contextMessage,
+                                  big: false,
+                                ),
+                        ),
                 ]),
           ),
         );

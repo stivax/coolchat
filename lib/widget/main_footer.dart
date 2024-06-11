@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:coolchat/rooms.dart';
-import 'package:coolchat/popap/add_tab_popup.dart';
+import 'package:coolchat/popup/add_tab_popup.dart';
 import 'package:coolchat/screen/private_chat_list.dart';
 import 'package:coolchat/screen/search_screen.dart';
 import 'package:coolchat/servises/main_widget_provider.dart';
@@ -190,16 +190,16 @@ class _MainFooterState extends State<MainFooter> {
                       onPressed: () async {
                         provider.tabShow(true);
                         await Future.delayed(const Duration(milliseconds: 100));
-                        final currentTab = provider.tab;
-                        int index = 0;
-                        for (final t in provider.allTab) {
-                          if (t.nameTab == currentTab.nameTab) {
-                            break;
-                          }
-                          index++;
-                        }
-                        final controller = provider.infiniteCarouselController;
-                        controller.jumpToItem(index);
+                        //final currentTab = provider.tab;
+                        //int index = 0;
+                        //for (final t in provider.allTab) {
+                        //  if (t.nameTab == currentTab.nameTab) {
+                        //    break;
+                        //  }
+                        //  index++;
+                        //}
+                        //final controller = provider.infiniteCarouselController;
+                        //controller.jumpToItem(index);
                         await Future.delayed(const Duration(milliseconds: 500));
                         await provider.loadTab();
                         provider.moveToMain();
